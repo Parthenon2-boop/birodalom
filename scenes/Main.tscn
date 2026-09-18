@@ -1,0 +1,73 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://Main.gd" id="1_main"]
+[ext_resource type="Shader" path="res://assets/shaders/water.gdshader" id="2_water"]
+[ext_resource type="PackedScene" path="res://scenes/world/Terrain.tscn" id="3_terrain"]
+[ext_resource type="PackedScene" path="res://scenes/world/FogOfWar.tscn" id="4_fog"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="5_hud"]
+[ext_resource type="Script" path="res://scripts/ai/BotAI.gd" id="6_bot"]
+[ext_resource type="Script" path="res://scripts/CameraController.gd" id="7_cam"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_water"]
+shader = ExtResource("2_water")
+shader_parameter/time_scale = 0.4
+shader_parameter/water_deep = Color(0.12, 0.38, 0.68, 1)
+shader_parameter/water_light = Color(0.28, 0.58, 0.85, 1)
+shader_parameter/foam_color = Color(0.88, 0.94, 1, 1)
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="WorldRoot" type="Node2D" parent="."]
+
+[node name="WaterLayer" type="Node2D" parent="WorldRoot"]
+
+[node name="WaterSprite" type="Sprite2D" parent="WorldRoot/WaterLayer"]
+z_index = -10
+material = SubResource("ShaderMaterial_water")
+centered = false
+
+[node name="TerrainLayer" type="Node2D" parent="WorldRoot"]
+
+[node name="Terrain" parent="WorldRoot/TerrainLayer" instance=ExtResource("3_terrain")]
+
+[node name="DecoLayer" type="Node2D" parent="WorldRoot"]
+z_index = 1
+
+[node name="BuildingLayer" type="Node2D" parent="WorldRoot"]
+z_index = 2
+y_sort_enabled = true
+
+[node name="UnitLayer" type="Node2D" parent="WorldRoot"]
+z_index = 4
+y_sort_enabled = true
+
+[node name="FogLayer" type="CanvasLayer" parent="."]
+layer = 5
+follow_viewport_enabled = true
+
+[node name="FogOfWar" parent="FogLayer" instance=ExtResource("4_fog")]
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="HUD" parent="UILayer" instance=ExtResource("5_hud")]
+process_mode = 3
+
+[node name="SelectionRect" type="ColorRect" parent="UILayer"]
+visible = false
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+color = Color(0.3, 0.8, 0.4, 0.18)
+
+[node name="BotAI" type="Node" parent="."]
+script = ExtResource("6_bot")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+limit_right = 3400
+limit_bottom = 2400
+position_smoothing_enabled = true
+position_smoothing_speed = 5.0
+script = ExtResource("7_cam")

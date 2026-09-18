@@ -1,0 +1,198 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/Menu.gd" id="1_menu"]
+
+[node name="Menu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.06, 0.06, 0.14, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(660, 0)
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 42
+text = "BIRODALOM"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ModeSection" type="VBoxContainer" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/ModeSection"]
+layout_mode = 2
+text = "Játékmód:"
+
+[node name="ModeButtons" type="HBoxContainer" parent="CenterContainer/VBoxContainer/ModeSection"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="ModeSkirmish" type="Button" parent="CenterContainer/VBoxContainer/ModeSection/ModeButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Helyi csata"
+
+[node name="ModePirate" type="Button" parent="CenterContainer/VBoxContainer/ModeSection/ModeButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Kalózok"
+
+[node name="ModeCampaign" type="Button" parent="CenterContainer/VBoxContainer/ModeSection/ModeButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hadjárat"
+
+[node name="ModeDesc" type="Label" parent="CenterContainer/VBoxContainer/ModeSection"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "-"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="EraSection" type="VBoxContainer" parent="CenterContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/EraSection"]
+layout_mode = 2
+text = "Válassz korszakot:"
+
+[node name="EraButtons" type="GridContainer" parent="CenterContainer/VBoxContainer/EraSection"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 2
+
+[node name="EraBtn0" type="Button" parent="CenterContainer/VBoxContainer/EraSection/EraButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "15. század"
+
+[node name="EraBtn1" type="Button" parent="CenterContainer/VBoxContainer/EraSection/EraButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "17. század"
+
+[node name="EraBtn2" type="Button" parent="CenterContainer/VBoxContainer/EraSection/EraButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "19–20. század"
+
+[node name="EraBtn3" type="Button" parent="CenterContainer/VBoxContainer/EraSection/EraButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Modern kor"
+
+[node name="EraDesc" type="Label" parent="CenterContainer/VBoxContainer/EraSection"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "-"
+horizontal_alignment = 1
+
+[node name="NationSection" type="HBoxContainer" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="NationCol" type="VBoxContainer" parent="CenterContainer/VBoxContainer/NationSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/NationSection/NationCol"]
+layout_mode = 2
+text = "Válassz nemzetet:"
+
+[node name="NationButtons" type="GridContainer" parent="CenterContainer/VBoxContainer/NationSection/NationCol"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 4
+
+[node name="RulerCol" type="VBoxContainer" parent="CenterContainer/VBoxContainer/NationSection"]
+custom_minimum_size = Vector2(170, 0)
+layout_mode = 2
+
+[node name="RulerImage" type="TextureRect" parent="CenterContainer/VBoxContainer/NationSection/RulerCol"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="RulerName" type="Label" parent="CenterContainer/VBoxContainer/NationSection/RulerCol"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+text = "-"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="DiffSection" type="VBoxContainer" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/VBoxContainer/DiffSection"]
+layout_mode = 2
+text = "Nehézség:"
+
+[node name="DiffButtons" type="HBoxContainer" parent="CenterContainer/VBoxContainer/DiffSection"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DiffEasy" type="Button" parent="CenterContainer/VBoxContainer/DiffSection/DiffButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Könnyű"
+
+[node name="DiffMedium" type="Button" parent="CenterContainer/VBoxContainer/DiffSection/DiffButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Közepes"
+
+[node name="DiffHard" type="Button" parent="CenterContainer/VBoxContainer/DiffSection/DiffButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Nehéz"
+
+[node name="HSeparator2" type="HSeparator" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="CenterContainer/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 52)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+text = "JÁTÉK INDÍTÁSA"
+
+[node name="ContinueButton" type="Button" parent="CenterContainer/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(300, 34)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Mentés betöltése"

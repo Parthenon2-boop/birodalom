@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/FogOfWar.gd" id="1_fog"]
+[ext_resource type="Shader" path="res://assets/shaders/fog.gdshader" id="2_fogshader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fog"]
+shader = ExtResource("2_fogshader")
+
+[node name="FogOfWar" type="Node2D"]
+script = ExtResource("1_fog")
+
+[node name="FogSprite" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_fog")
+centered = false

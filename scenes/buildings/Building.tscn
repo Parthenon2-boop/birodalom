@@ -1,0 +1,38 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/buildings/Building.gd" id="1_building"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(104, 104)
+
+[node name="Building" type="StaticBody2D"]
+z_index = 2
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_building")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="HPBar" type="Control" parent="."]
+layout_mode = 3
+offset_left = -52.0
+offset_top = -64.0
+offset_right = 52.0
+offset_bottom = -59.0
+
+[node name="ProgressBar" type="ProgressBar" parent="HPBar"]
+layout_mode = 0
+offset_right = 104.0
+offset_bottom = 5.0
+max_value = 1000.0
+value = 1000.0
+show_percentage = false
+
+[node name="ProductionTimer" type="Timer" parent="."]
+wait_time = 8.0
+
+[node name="RallyPoint" type="Marker2D" parent="."]
+position = Vector2(0, 86)

@@ -1,0 +1,266 @@
+{
+    "hu_5":  {
+                 "name":  "Der Frühling von Achtundvierzig",
+                 "brief":  "Die Honvéd-Armee braucht Ausrüstung. Fördere siebenhundert Gold für die Kriegskasse."
+             },
+    "kaloz_sb_3":  {
+                       "name":  "Der Partner, der das Schiff nahm",
+                       "brief":  "Blackbeard kam als sein Gast und setzte am Ende die eigenen Leute auf die Revenge. Bonnet las in seiner Kajüte. Verdiene sechshundert Gold aus eigener Kraft."
+                   },
+    "es_4":  {
+                 "name":  "Die Entdeckung des Paradieses",
+                 "brief":  "Dreiunddreißig Tage auf offener See, dann die Vögel, die Land anzeigen. Dichte Waldinseln, kaum Gold. Schlage das erste Lager auf: zwölf Gebäude."
+             },
+    "es_2":  {
+                 "name":  "Die Einnahme von Granada",
+                 "brief":  "Die letzte maurische Feste der Halbinsel. Brich die Verteidiger, und acht Jahrhunderte Reconquista enden."
+             },
+    "kaloz_bb_5":  {
+                       "name":  "Die Insel Ocracoke",
+                       "brief":  "In die flache Bucht läuft nur ein, wer die Fahrrinne kennt. Hier sammelt sich die Mannschaft — und hierher fährt das Geschwader des Gouverneurs von Virginia. Vierzig Feinde müssen fallen."
+                   },
+    "hu_1":  {
+                 "name":  "Belgrad",
+                 "brief":  "Das Tor der südlichen Grenzmark. Baue sechs Bauernhöfe: in der Belagerung ist Nahrung mehr wert als das Schwert."
+             },
+    "fr_1":  {
+                 "name":  "Die königliche Domäne",
+                 "brief":  "Ludwig XI. webt mit der Geduld einer Spinne. Fange beim Land an: sechs Bauernhöfe."
+             },
+    "kaloz_ns_1":  {
+                       "name":  "Der Kodex der Bruderschaft",
+                       "brief":  "Der Krieg ist vorbei, die Matrosen sind ohne Arbeit. Im Hafen von Nassau schrieben wir einen Kodex: geteilte Beute, gewählter Kapitän. Baue sechs Bauernhöfe — die Freiheit will ernährt werden."
+                   },
+    "kaloz_bb_2":  {
+                       "name":  "Schrecken als Waffe",
+                       "brief":  "Er flocht brennende Lunten in seinen Bart, um in Rauch und Flammen an Bord zu gehen. Der Ruf eilt dem Schiff voraus: vernichte zwanzig feindliche Einheiten."
+                   },
+    "kaloz_sb_4":  {
+                       "name":  "Gnade und Wendemantel",
+                       "brief":  "Er nahm die Begnadigung an und kehrte als „Herr Thomas“ zur Piraterie zurück — das Schiff taufte er Royal James. Zwanzig feindliche Einheiten müssen fallen."
+                   },
+    "pl_3":  {
+                 "name":  "Geflügelte Husaren",
+                 "brief":  "Die gefürchtetste Reiterei der Welt gehört dir. Fege den Feind in einem einzigen Ansturm hinweg."
+             },
+    "de_1":  {
+                 "name":  "Die Reichsordnung",
+                 "brief":  "Zersplitterte Fürstentümer. Fange bei den Grundlagen an: sechs Bauernhöfe für das tägliche Brot."
+             },
+    "kaloz_ns_6":  {
+                       "name":  "Der eiserne Käfig",
+                       "brief":  "Im Hafen von Port Royal wartet ein eiserner Käfig auf jeden, der dem Kodex treu blieb. Wenn das das Ende ist, dann ein würdiges: brich die Macht des Feindes."
+                   },
+    "gb_5":  {
+                 "name":  "Der Handel des Reiches",
+                 "brief":  "Wohin die Schiffe fahren, dorthin geht auch das Gold. Fördere achthundert Gold."
+             },
+    "ru_4":  {
+                 "name":  "Die Reform Peters des Großen",
+                 "brief":  "Wir schlagen ein Fenster nach Europa. Flotte und Stadt brauchen Gold: achthundert."
+             },
+    "kaloz_sb_5":  {
+                       "name":  "Der Cape-Fear-Fluss",
+                       "brief":  "Er reparierte das Schiff in der Flussmündung, als Oberst Rhett ihn fand. Fünf Stunden Feuergefecht zwischen den Sandbänken — dreißig Feinde sind zu überstehen."
+                   },
+    "kaloz_bb_6":  {
+                       "name":  "Leutnant Maynard",
+                       "brief":  "Fünf Schüsse und zwanzig Hiebe brauchte es, bis er fiel — sein Kopf wurde an den Mast gebunden. Wenn das die letzte Schlacht ist, bleibe vom Feind nichts stehen."
+                   },
+    "kaloz_bb_3":  {
+                       "name":  "Die Blockade von Charleston",
+                       "brief":  "Eine Woche lang sperrte er den Hafen und forderte statt Lösegeld eine Arzneikiste. Hole achthundert Gold aus der Stadt."
+                   },
+    "es_5":  {
+                 "name":  "Die erste Kolonie",
+                 "brief":  "Die Palisade von La Navidad steht, doch die Inselbewohner bedrängen uns immer heftiger. Halte fünf Minuten durch."
+             },
+    "es_3":  {
+                 "name":  "Der Hafen von Palos",
+                 "brief":  "Der Weg nach Westen verlangt Schiffe. Baue einen Hafen und sammle sechshundert Gold für die Ausrüstung der drei Karavellen."
+             },
+    "pl_4":  {
+                 "name":  "Der Entsatz von Wien",
+                 "brief":  "Sobieski steigt vom Kahlenberg herab. Das christliche Europa schaut auf dich — halte fünf Minuten durch."
+             },
+    "fr_5":  {
+                 "name":  "Die Grande Armée",
+                 "brief":  "Napoleons Heer marschiert. Der Kaiser kennt das Wort „genug“ nicht."
+             },
+    "at_6":  {
+                 "name":  "Der Große Krieg",
+                 "brief":  "Der letzte Sommer der alten Welt. Führe die Monarchie ins zwanzigste Jahrhundert."
+             },
+    "gb_6":  {
+                 "name":  "Der längste Tag",
+                 "brief":  "Die Insel hat gehalten. Führe nun dein Reich ins zwanzigste Jahrhundert."
+             },
+    "kaloz_ns_3":  {
+                       "name":  "Der Gnadenbrief",
+                       "brief":  "Woodes Rogers ist mit der Begnadigung des Königs eingetroffen. Wer sie annimmt, geht frei — wer nicht, wird gehängt. Schlage die Blockade zurück: zwanzig feindliche Einheiten."
+                   },
+    "pl_5":  {
+                 "name":  "Kościuszkos Aufstand",
+                 "brief":  "Sensenschützen stehen an der Seite des Adels. Du wirbst vom Gut aus an, ohne Kaserne."
+             },
+    "es_1":  {
+                 "name":  "Die Katholischen Könige",
+                 "brief":  "Ferdinand und Isabella vereinten die Kronen. Zuerst das Land: baue sechs Bauernhöfe für den Feldzug gegen Granada."
+             },
+    "de_5":  {
+                 "name":  "Blut und Eisen",
+                 "brief":  "Bismarcks Wort: die großen Fragen der Zeit werden nicht durch Reden entschieden. Brich den Widerstand."
+             },
+    "ru_2":  {
+                 "name":  "Die Mauern des Kreml",
+                 "brief":  "Stein auf Stein: zwanzig Gebäude sollen stehen, ehe der Winter kommt."
+             },
+    "fr_2":  {
+                 "name":  "Das Ende des Hundertjährigen Krieges",
+                 "brief":  "Die Engländer werden vom Kontinent verdrängt. Zerstreue den Rest ihres Heeres."
+             },
+    "fr_4":  {
+                 "name":  "Vaubans Festungen",
+                 "brief":  "Wir verteidigen die Grenze mit Stein, nicht mit Blut. Baue zwanzig Gebäude entlang der Verteidigungslinie."
+             },
+    "es_6":  {
+                 "name":  "Herr der Neuen Welt",
+                 "brief":  "Entweder gehört uns die Insel, oder wir werden ins Meer gedrängt. Brich den Widerstand der Inselbewohner."
+             },
+    "fr_6":  {
+                 "name":  "Die Republik",
+                 "brief":  "Kaiser kamen und gingen, die Nation blieb. Tritt ins zwanzigste Jahrhundert ein."
+             },
+    "pl_1":  {
+                 "name":  "Das Land der Jagiellonen",
+                 "brief":  "Das Land um Krakau ist reich. Baue sechs Bauernhöfe, damit es im langen Winter zu essen gibt."
+             },
+    "kaloz_sb_2":  {
+                       "name":  "Die Revenge",
+                       "brief":  "Zehn Kanonen, siebzig Mann und ein Kapitän, der nicht segeln konnte. Die Mannschaft lachte ihm ins Gesicht. Baue acht Gebäude, um Ansehen zu gewinnen."
+                   },
+    "kaloz_bb_1":  {
+                       "name":  "Queen Anne’s Revenge",
+                       "brief":  "Aus einem erbeuteten französischen Sklavenschiff wurde die gefürchtetste Fregatte der Karibik. Baue den Stützpunkt aus: die Mannschaft braucht sechs Bauernhöfe."
+                   },
+    "at_2":  {
+                 "name":  "Die Belagerung Wiens",
+                 "brief":  "Unter den Mauern steht das Heer des Sultans. Halte fünf Minuten durch, bis das Entsatzheer eintrifft."
+             },
+    "pl_2":  {
+                 "name":  "Der Deutsche Orden",
+                 "brief":  "Aus dem Norden nähert sich ein gepanzerter Keil. Halte die Linie vier Minuten."
+             },
+    "at_5":  {
+                 "name":  "Der Ausgleich",
+                 "brief":  "Das Reich ist doppelt geworden. Baue zwanzig Gebäude — Ordnung zeigt sich auch im Stein."
+             },
+    "ru_3":  {
+                 "name":  "Die Zeit der Wirren",
+                 "brief":  "Thronprätendenten und fremde Heere. Halte fünf Minuten durch, bis die Ordnung zurückkehrt."
+             },
+    "hu_6":  {
+                 "name":  "Das Zeitalter der Maschinen",
+                 "brief":  "Die Welt hat sich gewandelt: Stahl, Öl und Flugzeuge. Führe dein Reich ins zwanzigste Jahrhundert."
+             },
+    "de_6":  {
+                 "name":  "Das geeinte Reich",
+                 "brief":  "Aus den Fürstentümern wurde eine Nation. Tritt ins zwanzigste Jahrhundert ein."
+             },
+    "at_1":  {
+                 "name":  "Das habsburgische Erbe",
+                 "brief":  "Was andere durch Krieg gewinnen, gewinnst du durch Heirat. Doch zuerst braucht es Nahrung: sechs Bauernhöfe."
+             },
+    "kaloz_ns_4":  {
+                       "name":  "Das brennende Schiff",
+                       "brief":  "Vane steckte ein erbeutetes französisches Schiff in Brand und ließ es in die Blockade laufen. Brich im Durcheinander aus: baue acht Gebäude im Freihafen."
+                   },
+    "fr_3":  {
+                 "name":  "Versailles",
+                 "brief":  "Der Hof des Sonnenkönigs verlangt Gold. Fördere achthundert Gold."
+             },
+    "at_4":  {
+                 "name":  "Der Erbfolgekrieg",
+                 "brief":  "Der Thron Maria Theresias wankt. Krieg kostet Geld: achthundert Gold in die Kriegskasse."
+             },
+    "ru_6":  {
+                 "name":  "Industrielle Großmacht",
+                 "brief":  "Das Reich baut Fabriken. Tritt ins zwanzigste Jahrhundert ein."
+             },
+    "kaloz_sb_6":  {
+                       "name":  "Der Galgen von Charleston",
+                       "brief":  "Der Gentleman-Pirat flehte um Gnade und hielt unter dem Galgen einen Blumenstrauß. Das Ende der Geschichte steht geschrieben — du kannst es anders schreiben."
+                   },
+    "kaloz_sb_1":  {
+                       "name":  "Der Pflanzer aus Barbados",
+                       "brief":  "Bonnet war ein reicher Gutsbesitzer, der aus Langeweile ein Schiff KAUFTE statt es zu kapern — und seiner Mannschaft Lohn zahlte. Beginne mit dem Gut: sechs Bauernhöfe."
+                   },
+    "ru_5":  {
+                 "name":  "Verbrannte Erde",
+                 "brief":  "Der Feind ist tief vorgedrungen. Winter und Entfernung stehen auf unserer Seite."
+             },
+    "hu_2":  {
+                 "name":  "Der lange Winter",
+                 "brief":  "Die türkischen Streifzüge hören nicht auf. Halte die Burg vier Minuten — wer durchhält, gewinnt."
+             },
+    "ru_1":  {
+                 "name":  "Der Aufstieg Moskaus",
+                 "brief":  "Das Tatarenjoch ist zu Ende. Baue sechs Bauernhöfe für die Ernte des gefrorenen Landes."
+             },
+    "kaloz_bb_4":  {
+                       "name":  "Die auf Grund gelaufene Beute",
+                       "brief":  "Die Queen Anne’s Revenge lief auf Grund — viele sagen absichtlich, damit der Kapitän die zu große Mannschaft loswurde. Baue die Flotte neu auf: zehn Gebäude."
+                   },
+    "de_2":  {
+                 "name":  "Die Landsknechtsregimenter",
+                 "brief":  "Söldner sind teuer, aber unerschütterlich. Zerschlage das Heer des Nachbarn."
+             },
+    "gb_4":  {
+                 "name":  "Die New Model Army",
+                 "brief":  "Cromwells disziplinierte Regimenter kennen keine Flucht. Brich die Royalisten."
+             },
+    "gb_1":  {
+                 "name":  "Nach den Rosen",
+                 "brief":  "Der Bürgerkrieg ist vorbei, das Land erschöpft. Sechs Bauernhöfe, damit es zu essen gibt."
+             },
+    "kaloz_ns_2":  {
+                       "name":  "Der Hafen der Republik",
+                       "brief":  "Ein Freihafen lebt nur, wenn er etwas zu verkaufen hat. Baue einen Hafen und einen Markt und sammle sechshundert Gold."
+                   },
+    "hu_4":  {
+                 "name":  "Rákóczis Freiheitskampf",
+                 "brief":  "„Cum Deo pro Patria et Libertate.“ Die Kurutzen greifen zu den Waffen. Zerschlage die kaiserlichen Truppen."
+             },
+    "hu_3":  {
+                 "name":  "Das Schwarze Heer",
+                 "brief":  "Die Söldner des Matthias kommen nicht aus der Kaserne, sondern aus der königlichen Schatzkammer. Du wirbst vom Hauptquartier aus an."
+             },
+    "pl_6":  {
+                 "name":  "Die Befreiung Warschaus",
+                 "brief":  "Die Hauptstadt liegt in Trümmern, doch sie schweigt nicht. Baue das Land an der Schwelle zum zwanzigsten Jahrhundert wieder auf."
+             },
+    "gb_2":  {
+                 "name":  "Das Zeitalter der Bogenschützen",
+                 "brief":  "Der Langbogen ist noch immer die furchtbarste Waffe. Beweise es auf dem Schlachtfeld."
+             },
+    "de_4":  {
+                 "name":  "Preußische Disziplin",
+                 "brief":  "Der Große Kurfürst baut ein stehendes Heer auf. Zwanzig Gebäude, in militärischer Ordnung."
+             },
+    "de_3":  {
+                 "name":  "Der Dreißigjährige Krieg",
+                 "brief":  "Halb Europa steht in Flammen. Halte fünf Minuten durch — dieser Krieg gehört nicht den Schnellen."
+             },
+    "at_3":  {
+                 "name":  "Die Heilige Liga",
+                 "brief":  "Prinz Eugen von Savoyen führt das kaiserliche Heer. Brich die Kraft des Feindes entlang der Donau."
+             },
+    "gb_3":  {
+                 "name":  "Die Armada",
+                 "brief":  "Die Bedrohung kommt vom Meer. Halte fünf Minuten durch, der Sturm ist dein Verbündeter."
+             },
+    "kaloz_ns_5":  {
+                       "name":  "Der abgewählte Kapitän",
+                       "brief":  "Der Kodex hat sich gegen dich gewandt: die Mannschaft klagt dich der Feigheit an. Beweise das Gegenteil — vernichte fünfunddreißig feindliche Einheiten."
+                   }
+}

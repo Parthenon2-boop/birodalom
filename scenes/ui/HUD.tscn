@@ -1,0 +1,596 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/HUD.gd" id="1_hud"]
+[ext_resource type="Shader" path="res://assets/shaders/minimap.gdshader" id="2_minimap"]
+[ext_resource type="Script" path="res://scripts/ui/MiniMap.gd" id="3_minimapjs"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_minimap"]
+shader = ExtResource("2_minimap")
+shader_parameter/land_color = Color(0.3, 0.48, 0.22, 1)
+shader_parameter/water_color = Color(0.12, 0.26, 0.46, 1)
+shader_parameter/dark_color = Color(0.04, 0.04, 0.06, 1)
+shader_parameter/use_fog = true
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="TopBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 40.0
+grow_horizontal = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="WoodBox" type="HBoxContainer" parent="TopBar/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="TopBar/HBoxContainer/WoodBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+
+[node name="WoodLabel" type="Label" parent="TopBar/HBoxContainer/WoodBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(92, 0)
+layout_mode = 2
+text = "Fa 0"
+
+[node name="StoneBox" type="HBoxContainer" parent="TopBar/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="TopBar/HBoxContainer/StoneBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+
+[node name="StoneLabel" type="Label" parent="TopBar/HBoxContainer/StoneBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(92, 0)
+layout_mode = 2
+text = "Kő 0"
+
+[node name="GoldBox" type="HBoxContainer" parent="TopBar/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="TopBar/HBoxContainer/GoldBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+
+[node name="GoldLabel" type="Label" parent="TopBar/HBoxContainer/GoldBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(104, 0)
+layout_mode = 2
+text = "Arany 0"
+
+[node name="FoodBox" type="HBoxContainer" parent="TopBar/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="TopBar/HBoxContainer/FoodBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+
+[node name="FoodLabel" type="Label" parent="TopBar/HBoxContainer/FoodBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 0)
+layout_mode = 2
+text = "Élelem 0"
+
+[node name="CoalBox" type="HBoxContainer" parent="TopBar/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="TopBar/HBoxContainer/CoalBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+
+[node name="CoalLabel" type="Label" parent="TopBar/HBoxContainer/CoalBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 0)
+layout_mode = 2
+text = "Szén 0"
+
+[node name="ArmyBox" type="HBoxContainer" parent="TopBar/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="TopBar/HBoxContainer/ArmyBox"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+expand_mode = 1
+
+[node name="ArmyLabel" type="Label" parent="TopBar/HBoxContainer/ArmyBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+text = "Hadsereg 0 / 20"
+
+[node name="MenuSpacer" type="Control" parent="TopBar/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TopMenuBtn" type="Button" parent="TopBar/HBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "☰"
+
+[node name="EraBar" type="Label" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 30)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = -150.0
+offset_top = 44.0
+offset_right = 150.0
+offset_bottom = 74.0
+grow_horizontal = 2
+text = "15. század  –  Középkor"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FlagIcon" type="TextureRect" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(36, 24)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -196.0
+offset_top = 46.0
+offset_right = -160.0
+offset_bottom = 70.0
+grow_horizontal = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="EraButton" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 28)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -150.0
+offset_top = 78.0
+offset_right = 150.0
+offset_bottom = 106.0
+grow_horizontal = 2
+text = "Korszakváltás"
+
+[node name="MissionPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 0.0
+anchor_right = 0.0
+offset_left = 12.0
+offset_top = 46.0
+offset_right = 340.0
+offset_bottom = 96.0
+
+[node name="VBox" type="VBoxContainer" parent="MissionPanel"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="MissionTitle" type="Label" parent="MissionPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "-"
+
+[node name="ObjectiveLabel" type="Label" parent="MissionPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "-"
+autowrap_mode = 2
+
+[node name="FamePanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_top = 0.0
+anchor_right = 0.5
+anchor_bottom = 0.0
+offset_left = -150.0
+offset_top = 78.0
+offset_right = 150.0
+offset_bottom = 122.0
+grow_horizontal = 2
+
+[node name="VBox" type="VBoxContainer" parent="FamePanel"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="FameLabel" type="Label" parent="FamePanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "HÍRNÉV 0"
+horizontal_alignment = 1
+
+[node name="FameBar" type="ProgressBar" parent="FamePanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="MiniMapPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -224.0
+offset_top = -165.0
+offset_right = -12.0
+offset_bottom = -12.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="MapRoot" type="Control" parent="MiniMapPanel"]
+custom_minimum_size = Vector2(198, 140)
+layout_mode = 2
+
+[node name="Ground" type="TextureRect" parent="MiniMapPanel/MapRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("ShaderMaterial_minimap")
+expand_mode = 1
+stretch_mode = 0
+
+[node name="Overlay" type="Control" parent="MiniMapPanel/MapRoot"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_minimapjs")
+
+[node name="TrainPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -220.0
+offset_right = 292.0
+offset_bottom = -144.0
+grow_vertical = 0
+
+[node name="VBox" type="VBoxContainer" parent="TrainPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TrainTitle" type="Label" parent="TrainPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "-"
+
+[node name="BldHPBar" type="ProgressBar" parent="TrainPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+max_value = 100.0
+value = 100.0
+
+[node name="TrainButtons" type="GridContainer" parent="TrainPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 2
+
+[node name="QueueLabel" type="Label" parent="TrainPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+
+[node name="RallyRow" type="HBoxContainer" parent="TrainPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="RallyBtn" type="Button" parent="TrainPanel/VBox/RallyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Gyülekező"
+
+[node name="RallyClearBtn" type="Button" parent="TrainPanel/VBox/RallyRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "X"
+
+[node name="RallyHint" type="Label" parent="TrainPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = ""
+autowrap_mode = 3
+
+[node name="SelectionPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -132.0
+offset_right = 292.0
+offset_bottom = -12.0
+grow_vertical = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SelectionPanel"]
+layout_mode = 2
+
+[node name="SelTitle" type="Label" parent="SelectionPanel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "-"
+
+[node name="SelHPBar" type="ProgressBar" parent="SelectionPanel/VBoxContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+max_value = 100.0
+value = 100.0
+
+[node name="SelInfo" type="Label" parent="SelectionPanel/VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = ""
+autowrap_mode = 3
+
+[node name="ActionButtons" type="HBoxContainer" parent="SelectionPanel/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="MoveBtn" type="Button" parent="SelectionPanel/VBoxContainer/ActionButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mozgás"
+
+[node name="AttackBtn" type="Button" parent="SelectionPanel/VBoxContainer/ActionButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Támadás"
+
+[node name="StopBtn" type="Button" parent="SelectionPanel/VBoxContainer/ActionButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Megáll"
+
+[node name="BuildPanel" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -166.0
+offset_top = -502.0
+offset_right = -12.0
+offset_bottom = -173.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 4
+
+[node name="PauseOverlay" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="PauseLabel" type="Label" parent="PauseOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -20.0
+offset_right = 100.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "SZÜNET"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GameMenu" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.62)
+
+[node name="Center" type="CenterContainer" parent="GameMenu"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Box" type="VBoxContainer" parent="GameMenu/Center"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MenuPanel" type="PanelContainer" parent="GameMenu/Center/Box"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="GameMenu/Center/Box/MenuPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="MenuTitle" type="Label" parent="GameMenu/Center/Box/MenuPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Menü"
+horizontal_alignment = 1
+
+[node name="ResumeBtn" type="Button" parent="GameMenu/Center/Box/MenuPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 34)
+layout_mode = 2
+text = "Folytatás"
+
+[node name="SaveBtn" type="Button" parent="GameMenu/Center/Box/MenuPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 34)
+layout_mode = 2
+text = "Mentés"
+
+[node name="SettingsBtn" type="Button" parent="GameMenu/Center/Box/MenuPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 34)
+layout_mode = 2
+text = "Beállítások"
+
+[node name="ToMenuBtn" type="Button" parent="GameMenu/Center/Box/MenuPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 34)
+layout_mode = 2
+text = "Vissza a főmenübe"
+
+[node name="QuitBtn" type="Button" parent="GameMenu/Center/Box/MenuPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 34)
+layout_mode = 2
+text = "Kilépés a játékból"
+
+[node name="MenuNote" type="Label" parent="GameMenu/Center/Box/MenuPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = ""
+horizontal_alignment = 1
+
+[node name="SettingsHost" type="VBoxContainer" parent="GameMenu/Center/Box"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SettingsBack" type="Button" parent="GameMenu/Center/Box/SettingsHost"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(280, 32)
+layout_mode = 2
+text = "Vissza"
+
+[node name="GameOverOverlay" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.72)
+
+[node name="VBox" type="VBoxContainer" parent="GameOverOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -70.0
+offset_right = 160.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="OverLabel" type="Label" parent="GameOverOverlay/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "VÉGE"
+horizontal_alignment = 1
+
+[node name="OverBrief" type="Label" parent="GameOverOverlay/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="NextBtn" type="Button" parent="GameOverOverlay/VBox"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Következő küldetés"
+
+[node name="MenuBtn" type="Button" parent="GameOverOverlay/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Vissza a főmenübe"

@@ -1,0 +1,27 @@
+; Játékindító – önálló Godot-projekt (a Birodalom mellett, ugyanabban a tárolóban).
+; EGY indító KÉT játékhoz: Birodalom és Heptarchia.
+
+config_version=5
+
+[application]
+
+config/name="Játékindító"
+config/description="Birodalom és Heptarchia: mindig a legfrissebb változatot tölti le a GitHubról."
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=780
+window/size/viewport_height=660
+window/size/resizable=false
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+; Az univerzális (Apple Silicon) macOS export ezt megköveteli.
+textures/vram_compression/import_etc2_astc=true

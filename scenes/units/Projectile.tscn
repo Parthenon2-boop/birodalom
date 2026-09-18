@@ -1,0 +1,58 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="GDScript" id="GDScript_proj"]
+script/source = "extends Area2D
+
+# Egyszerű lövedék: a célpont felé repül, találatkor sebez.
+# A távolsági egységek és a tornyok használják.
+
+var speed     : float  = 320.0
+var dmg       : float  = 10.0
+var owner_id  : int    = 0
+var target    : Node2D = null
+var dir       : Vector2 = Vector2.RIGHT
+var life      : float  = 4.0
+var color     : Color  = Color(0.95, 0.9, 0.6)
+
+func setup(from: Vector2, to_node: Node2D, damage: float, side: int, spd: float = 320.0) -> void:
+	global_position = from
+	target   = to_node
+	dmg      = damage
+	owner_id = side
+	speed    = spd
+	if is_instance_valid(to_node):
+		dir = (to_node.global_position - from).normalized()
+
+func _physics_process(delta: float) -> void:
+	life -= delta
+	if life <= 0.0:
+		queue_free()
+		return
+	if is_instance_valid(target):
+		dir = (target.global_position - global_position).normalized()
+		if global_position.distance_to(target.global_position) < 12.0:
+			if target.has_method(\"take_damage\"):
+				target.take_damage(dmg)
+			SFX.play(\"becsapodas\", -14.0)
+			queue_free()
+			return
+	rotation = dir.angle()
+	global_position += dir * speed * delta
+	queue_redraw()
+
+func _draw() -> void:
+	draw_line(Vector2(-6, 0), Vector2(6, 0), color, 2.0)
+	draw_circle(Vector2(6, 0), 2.0, color)
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_proj"]
+radius = 4.0
+
+[node name="Projectile" type="Area2D"]
+z_index = 6
+collision_layer = 0
+collision_mask = 0
+script = SubResource("GDScript_proj")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_proj")

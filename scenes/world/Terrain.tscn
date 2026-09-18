@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/Terrain.gd" id="1_terrain"]
+[ext_resource type="Shader" path="res://assets/shaders/land.gdshader" id="2_land"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_land"]
+shader = ExtResource("2_land")
+shader_parameter/world_size = Vector2(3400, 2400)
+shader_parameter/tile_px = 192.0
+
+[node name="Terrain" type="Node2D"]
+script = ExtResource("1_terrain")
+
+[node name="LandSprite" type="Sprite2D" parent="."]
+z_index = -5
+texture_filter = 1
+texture_repeat = 2
+material = SubResource("ShaderMaterial_land")
+centered = false

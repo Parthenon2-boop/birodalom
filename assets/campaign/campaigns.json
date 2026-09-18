@@ -1,0 +1,1364 @@
+{
+    "kaloz_ns":  [
+                     {
+                         "id":  "kaloz_ns_1",
+                         "name":  "A Testvériség kódexe",
+                         "brief":  "A háború véget ért, a matrózok munka nélkül maradtak. Nassau kikötőjében kódexet írtunk: közös zsákmány, választott kapitány. Építs hat majorságot — a szabadságot etetni kell.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  520,
+                                     "stone":  340,
+                                     "gold":  260,
+                                     "food":  400
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  0.5,
+                         "aiWave":  80,
+                         "obj":  {
+                                     "type":  "build",
+                                     "b":  "farm",
+                                     "n":  6
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_ns_2",
+                         "name":  "A köztársaság kikötője",
+                         "brief":  "Egy szabad kikötő csak akkor él meg, ha van mit eladnia. Építs kikötőt és piacot, és gyűjts hatszáz aranyat.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  700,
+                                     "stone":  420,
+                                     "gold":  120,
+                                     "food":  520
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  0.7,
+                         "aiWave":  95,
+                         "obj":  {
+                                     "type":  "gather",
+                                     "res":  "gold",
+                                     "amount":  600
+                                 },
+                         "enemy":  "es",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_ns_3",
+                         "name":  "A kegyelemlevél",
+                         "brief":  "Woodes Rogers megérkezett a király kegyelmével. Aki elfogadja, szabad ember lesz — aki nem, azt felakasztják. Verd vissza a blokádot: húsz ellenséges egység.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  800,
+                                     "stone":  560,
+                                     "gold":  420,
+                                     "food":  640
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1,
+                         "aiWave":  80,
+                         "obj":  {
+                                     "type":  "kill",
+                                     "n":  20
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_ns_4",
+                         "name":  "Az égő hajó",
+                         "brief":  "Vane felgyújtott egy zsákmányolt francia hajót, és nekiengedte a blokádnak. A zűrzavarban ki kell törni: építs nyolc épületet a szabad kikötőben.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  900,
+                                     "stone":  620,
+                                     "gold":  480,
+                                     "food":  700
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1.1,
+                         "aiWave":  75,
+                         "obj":  {
+                                     "type":  "buildAny",
+                                     "n":  8
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_ns_5",
+                         "name":  "A leszavazott kapitány",
+                         "brief":  "A kódex ellened fordult: a legénység gyávasággal vádol. Bizonyíts — semmisíts meg harmincöt ellenséges egységet.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  1000,
+                                     "stone":  700,
+                                     "gold":  560,
+                                     "food":  820
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1.2,
+                         "aiWave":  70,
+                         "obj":  {
+                                     "type":  "kill",
+                                     "n":  35
+                                 },
+                         "enemy":  "es",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_ns_6",
+                         "name":  "A vasketrec",
+                         "brief":  "Port Royal kikötőjében vasketrec vár mindenkire, aki a kódexhez hű maradt. Ha ez a vég, legyen méltó: döntsd meg az ellenség hatalmát.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  1200,
+                                     "stone":  900,
+                                     "gold":  720,
+                                     "food":  1000
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1.35,
+                         "aiWave":  62,
+                         "obj":  {
+                                     "type":  "destroy"
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     }
+                 ],
+    "kaloz_bb":  [
+                     {
+                         "id":  "kaloz_bb_1",
+                         "name":  "A Queen Anne bosszúja",
+                         "brief":  "Egy zsákmányolt francia rabszolgahajóból lett a legfélelmetesebb fregatt a Karib-tengeren. Építsd ki a támaszpontot: hat majorság kell a legénységnek.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  560,
+                                     "stone":  380,
+                                     "gold":  300,
+                                     "food":  430
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  0.6,
+                         "aiWave":  78,
+                         "obj":  {
+                                     "type":  "build",
+                                     "b":  "farm",
+                                     "n":  6
+                                 },
+                         "enemy":  "es",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_bb_2",
+                         "name":  "A rettegés fegyver",
+                         "brief":  "Égő kanócokat font a szakállába, hogy füstben és lángban lépjen a fedélzetre. A hír megelőzi a hajót: törj meg húsz ellenséges egységet.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  720,
+                                     "stone":  460,
+                                     "gold":  380,
+                                     "food":  560
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  0.9,
+                         "aiWave":  86,
+                         "obj":  {
+                                     "type":  "kill",
+                                     "n":  20
+                                 },
+                         "enemy":  "es",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_bb_3",
+                         "name":  "Charleston blokádja",
+                         "brief":  "Egy hétig zárta el a kikötőt, és váltságdíj helyett gyógyszerládát követelt. Szerezz nyolcszáz aranyat a városból.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  820,
+                                     "stone":  540,
+                                     "gold":  220,
+                                     "food":  640
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1,
+                         "aiWave":  82,
+                         "obj":  {
+                                     "type":  "gather",
+                                     "res":  "gold",
+                                     "amount":  800
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_bb_4",
+                         "name":  "A zátonyra futott zsákmány",
+                         "brief":  "A Queen Anne bosszúja zátonyra futott — sokak szerint szándékosan, hogy a kapitány megszabaduljon a túl nagy legénységtől. Építsd újjá a flottát: tíz épület.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  940,
+                                     "stone":  640,
+                                     "gold":  500,
+                                     "food":  720
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1.1,
+                         "aiWave":  76,
+                         "obj":  {
+                                     "type":  "buildAny",
+                                     "n":  10
+                                 },
+                         "enemy":  "es",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_bb_5",
+                         "name":  "Ocracoke szigete",
+                         "brief":  "A sekély öbölbe csak az fut be, aki ismeri a járást. Itt gyülekezik a legénység — és ide tart a virginiai kormányzó hajóhada. Negyven ellenséget kell megtörni.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  1050,
+                                     "stone":  760,
+                                     "gold":  600,
+                                     "food":  860
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1.25,
+                         "aiWave":  66,
+                         "obj":  {
+                                     "type":  "kill",
+                                     "n":  40
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_bb_6",
+                         "name":  "Maynard hadnagy",
+                         "brief":  "Öt lövés és húsz vágás kellett hozzá, hogy elessen — a fejét az árbocra kötötték. Ha ez az utolsó csata, ne maradjon állva semmi az ellenségből.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  1250,
+                                     "stone":  950,
+                                     "gold":  780,
+                                     "food":  1050
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1.4,
+                         "aiWave":  60,
+                         "obj":  {
+                                     "type":  "destroy"
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     }
+                 ],
+    "kaloz_sb":  [
+                     {
+                         "id":  "kaloz_sb_1",
+                         "name":  "A barbadosi ültetvényes",
+                         "brief":  "Bonnet gazdag földbirtokos volt, aki unalmában hajót VÁSÁROLT, nem zsákmányolt — és fizetett bért a legénységnek. Kezdd a birtokkal: hat majorság.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  620,
+                                     "stone":  420,
+                                     "gold":  420,
+                                     "food":  460
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  0.5,
+                         "aiWave":  88,
+                         "obj":  {
+                                     "type":  "build",
+                                     "b":  "farm",
+                                     "n":  6
+                                 },
+                         "enemy":  "es",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_sb_2",
+                         "name":  "A Bosszú",
+                         "brief":  "Tíz ágyú, hetven ember, és egy kapitány, aki nem tudott hajót vezetni. A legénység a szemébe nevetett. Építs nyolc épületet, hogy legyen tekintélyed.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  760,
+                                     "stone":  500,
+                                     "gold":  380,
+                                     "food":  580
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  0.8,
+                         "aiWave":  90,
+                         "obj":  {
+                                     "type":  "buildAny",
+                                     "n":  8
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_sb_3",
+                         "name":  "A társ, aki elvette a hajót",
+                         "brief":  "Fekete Szakáll a vendégeként érkezett, és a végén a saját embereit ültette a Bosszú fedélzetére. Bonnet a kabinjában olvasott. Szerezz hatszáz aranyat a magad erejéből.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  840,
+                                     "stone":  560,
+                                     "gold":  180,
+                                     "food":  620
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  0.95,
+                         "aiWave":  84,
+                         "obj":  {
+                                     "type":  "gather",
+                                     "res":  "gold",
+                                     "amount":  600
+                                 },
+                         "enemy":  "es",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_sb_4",
+                         "name":  "Kegyelem és köpönyeg",
+                         "brief":  "Kegyelmet kapott, majd „Thomas úr\" néven visszatért a kalózkodáshoz — a hajót átkeresztelte Királyi Jakabra. Húsz ellenséges egységet kell megtörni.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  960,
+                                     "stone":  660,
+                                     "gold":  520,
+                                     "food":  740
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1.1,
+                         "aiWave":  78,
+                         "obj":  {
+                                     "type":  "kill",
+                                     "n":  20
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_sb_5",
+                         "name":  "A Cape Fear folyó",
+                         "brief":  "A folyó torkolatában javította a hajót, amikor Rhett ezredes rátalált. Öt óra tűzharc a homokpadok között — harminc ellenséget kell kiállni.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  1080,
+                                     "stone":  780,
+                                     "gold":  620,
+                                     "food":  880
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1.2,
+                         "aiWave":  70,
+                         "obj":  {
+                                     "type":  "kill",
+                                     "n":  30
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     },
+                     {
+                         "id":  "kaloz_sb_6",
+                         "name":  "A charlestoni akasztófa",
+                         "brief":  "Az úri kalóz kegyelemért könyörgött, és virágcsokrot tartott a kezében az akasztófa alatt. A történet vége meg van írva — te viszont másképp is befejezheted.",
+                         "age":  1,
+                         "res":  {
+                                     "wood":  1300,
+                                     "stone":  980,
+                                     "gold":  820,
+                                     "food":  1080
+                                 },
+                         "aiAge":  1,
+                         "aiRate":  1.35,
+                         "aiWave":  64,
+                         "obj":  {
+                                     "type":  "destroy"
+                                 },
+                         "enemy":  "gb",
+                         "map":  "karib"
+                     }
+                 ],
+    "es":  [
+               {
+                   "id":  "es_1",
+                   "name":  "A Katolikus Királyok",
+                   "brief":  "Ferdinánd és Izabella egyesítette a koronákat. Előbb a föld: építs hat majorságot a granadai hadjárat ellátására.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  470,
+                               "stone":  350,
+                               "gold":  250,
+                               "food":  380
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.5,
+                   "aiWave":  72,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "farm",
+                               "n":  6
+                           },
+                   "map":  "mezo"
+               },
+               {
+                   "id":  "es_2",
+                   "name":  "Granada visszavétele",
+                   "brief":  "A félsziget utolsó mór erőssége. Törd meg a védőket, és zárul a nyolcszáz éves reconquista.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  680,
+                               "stone":  540,
+                               "gold":  420,
+                               "food":  600
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.85,
+                   "aiWave":  92,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  14
+                           },
+                   "map":  "mezo"
+               },
+               {
+                   "id":  "es_3",
+                   "name":  "Palos kikötője",
+                   "brief":  "A nyugati út hajót kíván. Építs kikötőt, és gyűjts hatszáz aranyat a három karavella felszereléséhez.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  760,
+                               "stone":  560,
+                               "gold":  180,
+                               "food":  640
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.7,
+                   "aiWave":  110,
+                   "obj":  {
+                               "type":  "gather",
+                               "res":  "gold",
+                               "amount":  600
+                           },
+                   "map":  "tavak"
+               },
+               {
+                   "id":  "es_4",
+                   "name":  "A Paradicsom felfedezése",
+                   "brief":  "Harminchárom nap a nyílt vízen, aztán a partjelző madarak. Sűrű erdős szigetek, alig arany. Verd fel az első tábort: tizenkét épület.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  520,
+                               "stone":  300,
+                               "gold":  140,
+                               "food":  420
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.8,
+                   "aiWave":  80,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "any",
+                               "n":  12
+                           },
+                   "enemy":  "nat",
+                   "map":  "szigetek"
+               },
+               {
+                   "id":  "es_5",
+                   "name":  "Az első kolónia",
+                   "brief":  "La Navidad palánkja áll, de az őslakók egyre sűrűbben törnek ránk. Tarts ki öt percen át.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  640,
+                               "stone":  420,
+                               "gold":  200,
+                               "food":  520
+                           },
+                   "aiAge":  0,
+                   "aiRate":  1.05,
+                   "aiWave":  58,
+                   "obj":  {
+                               "type":  "survive",
+                               "sec":  300
+                           },
+                   "enemy":  "nat",
+                   "map":  "szigetek"
+               },
+               {
+                   "id":  "es_6",
+                   "name":  "Az Újvilág ura",
+                   "brief":  "A sziget a miénk lesz, vagy a tengerbe szorulunk. Törd meg az őslakók ellenállását.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  820,
+                               "stone":  600,
+                               "gold":  420,
+                               "food":  760
+                           },
+                   "aiAge":  0,
+                   "aiRate":  1.1,
+                   "aiWave":  64,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  22
+                           },
+                   "enemy":  "nat",
+                   "map":  "szigetek"
+               }
+           ],
+    "hu":  [
+               {
+                   "id":  "hu_1",
+                   "name":  "Nándorfehérvár",
+                   "brief":  "A déli végek kapuja. Építs hat majorságot: ostrom idején az élelem többet ér a kardnál.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  460,
+                               "stone":  340,
+                               "gold":  240,
+                               "food":  360
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.5,
+                   "aiWave":  70,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "farm",
+                               "n":  6
+                           }
+               },
+               {
+                   "id":  "hu_2",
+                   "name":  "A hosszú tél",
+                   "brief":  "A török portyák nem szűnnek. Tartsd a várat négy percen át — aki kitart, az győz.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  640,
+                               "stone":  480,
+                               "gold":  320,
+                               "food":  520
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.85,
+                   "aiWave":  70,
+                   "obj":  {
+                               "type":  "survive",
+                               "sec":  240
+                           }
+               },
+               {
+                   "id":  "hu_3",
+                   "name":  "A fekete sereg",
+                   "brief":  "Mátyás zsoldosait nem kaszárnya adja, hanem a királyi kincstár. A főhadiszállásról toborzol.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  700,
+                               "stone":  520,
+                               "gold":  560,
+                               "food":  640
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.8,
+                   "aiWave":  100,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  14
+                           },
+                   "ban":  [
+                               "barracks",
+                               "stable"
+                           ],
+                   "hqTrains":  [
+                                    "worker",
+                                    "melee",
+                                    "ranged",
+                                    "spear"
+                                ]
+               },
+               {
+                   "id":  "hu_4",
+                   "name":  "Rákóczi szabadságharca",
+                   "brief":  "„Cum Deo pro Patria et Libertate.\" A kurucok fegyvert fognak. Verd szét a császári erőket.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  820,
+                               "stone":  620,
+                               "gold":  600,
+                               "food":  760
+                           },
+                   "aiAge":  1,
+                   "aiRate":  0.95,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  20
+                           }
+               },
+               {
+                   "id":  "hu_5",
+                   "name":  "Negyvennyolc tavasza",
+                   "brief":  "A honvédsereg felszerelést kíván. Termelj ki hétszáz aranyat a hadikassza feltöltésére.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  900,
+                               "stone":  700,
+                               "gold":  300,
+                               "food":  820
+                           },
+                   "aiAge":  2,
+                   "aiRate":  0.9,
+                   "aiWave":  110,
+                   "obj":  {
+                               "type":  "gather",
+                               "res":  "gold",
+                               "amount":  700
+                           }
+               },
+               {
+                   "id":  "hu_6",
+                   "name":  "A gépek kora",
+                   "brief":  "A világ átalakult: acél, olaj és repülő. Vezesd birodalmadat a huszadik századba.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  1100,
+                               "stone":  850,
+                               "gold":  800,
+                               "food":  1000
+                           },
+                   "aiAge":  2,
+                   "aiRate":  1,
+                   "aiWave":  100,
+                   "obj":  {
+                               "type":  "age",
+                               "age":  3
+                           }
+               }
+           ],
+    "pl":  [
+               {
+                   "id":  "pl_1",
+                   "name":  "A Jagellók földje",
+                   "brief":  "Krakkó körül gazdag a föld. Építs hat majorságot, hogy legyen mit enni a hosszú télen.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  480,
+                               "stone":  360,
+                               "gold":  260,
+                               "food":  380
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.5,
+                   "aiWave":  70,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "farm",
+                               "n":  6
+                           }
+               },
+               {
+                   "id":  "pl_2",
+                   "name":  "A német lovagrend",
+                   "brief":  "Északról páncélos ék közeledik. Tartsd a vonalat négy percen át.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  660,
+                               "stone":  520,
+                               "gold":  340,
+                               "food":  540
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.9,
+                   "aiWave":  66,
+                   "obj":  {
+                               "type":  "survive",
+                               "sec":  240
+                           }
+               },
+               {
+                   "id":  "pl_3",
+                   "name":  "Szárnyas huszárok",
+                   "brief":  "A világ legfélelmetesebb lovassága a tiéd. Sodord el az ellenséget egyetlen rohammal.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  760,
+                               "stone":  560,
+                               "gold":  640,
+                               "food":  700
+                           },
+                   "aiAge":  1,
+                   "aiRate":  0.85,
+                   "aiWave":  100,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  18
+                           }
+               },
+               {
+                   "id":  "pl_4",
+                   "name":  "Bécs felmentése",
+                   "brief":  "Sobieski a Kahlenbergről ereszkedik alá. A keresztény Európa téged néz — tarts ki öt percig.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  880,
+                               "stone":  700,
+                               "gold":  660,
+                               "food":  820
+                           },
+                   "aiAge":  1,
+                   "aiRate":  1.05,
+                   "aiWave":  80,
+                   "obj":  {
+                               "type":  "survive",
+                               "sec":  300
+                           }
+               },
+               {
+                   "id":  "pl_5",
+                   "name":  "Kościuszko felkelése",
+                   "brief":  "Kaszás parasztok állnak a nemesek mellé. Kaszárnya nélkül, a birtokról toborzol.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  940,
+                               "stone":  760,
+                               "gold":  700,
+                               "food":  880
+                           },
+                   "aiAge":  2,
+                   "aiRate":  0.95,
+                   "aiWave":  105,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  20
+                           },
+                   "ban":  [
+                               "barracks",
+                               "stable"
+                           ],
+                   "hqTrains":  [
+                                    "worker",
+                                    "spear",
+                                    "ranged"
+                                ]
+               },
+               {
+                   "id":  "pl_6",
+                   "name":  "Varsó felszabadítása",
+                   "brief":  "A főváros romokban, de nem néma. Építsd újjá az országot a huszadik század küszöbén.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  1150,
+                               "stone":  900,
+                               "gold":  820,
+                               "food":  1000
+                           },
+                   "aiAge":  2,
+                   "aiRate":  1.05,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "age",
+                               "age":  3
+                           }
+               }
+           ],
+    "at":  [
+               {
+                   "id":  "at_1",
+                   "name":  "A Habsburg örökség",
+                   "brief":  "Amit más háborúval szerez, azt te frigyekkel. Előbb azonban élelem kell: hat majorság.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  470,
+                               "stone":  350,
+                               "gold":  280,
+                               "food":  370
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.5,
+                   "aiWave":  72,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "farm",
+                               "n":  6
+                           }
+               },
+               {
+                   "id":  "at_2",
+                   "name":  "Bécs ostroma",
+                   "brief":  "A falak alatt a szultán serege. Tarts ki öt percen át, míg a felmentő had megérkezik.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  700,
+                               "stone":  560,
+                               "gold":  360,
+                               "food":  560
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.95,
+                   "aiWave":  64,
+                   "obj":  {
+                               "type":  "survive",
+                               "sec":  300
+                           }
+               },
+               {
+                   "id":  "at_3",
+                   "name":  "A törökellenes liga",
+                   "brief":  "Savoyai Jenő vezeti a császári hadat. Törd meg az ellenség erejét a Duna mentén.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  800,
+                               "stone":  620,
+                               "gold":  600,
+                               "food":  740
+                           },
+                   "aiAge":  1,
+                   "aiRate":  0.9,
+                   "aiWave":  100,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  18
+                           }
+               },
+               {
+                   "id":  "at_4",
+                   "name":  "Az örökösödési háború",
+                   "brief":  "Mária Terézia trónja inog. A hadviselés pénzbe kerül: nyolcszáz arany a hadikasszába.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  880,
+                               "stone":  700,
+                               "gold":  300,
+                               "food":  800
+                           },
+                   "aiAge":  1,
+                   "aiRate":  0.9,
+                   "aiWave":  110,
+                   "obj":  {
+                               "type":  "gather",
+                               "res":  "gold",
+                               "amount":  800
+                           }
+               },
+               {
+                   "id":  "at_5",
+                   "name":  "A kiegyezés",
+                   "brief":  "A birodalom kettős lett. Építs húsz épületet — a rend a kőben is látszik.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  1000,
+                               "stone":  820,
+                               "gold":  760,
+                               "food":  900
+                           },
+                   "aiAge":  2,
+                   "aiRate":  0.95,
+                   "aiWave":  105,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "any",
+                               "n":  20
+                           }
+               },
+               {
+                   "id":  "at_6",
+                   "name":  "A nagy háború",
+                   "brief":  "A régi világ utolsó nyara. Vezesd a monarchiát a huszadik századba.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  1120,
+                               "stone":  880,
+                               "gold":  840,
+                               "food":  1020
+                           },
+                   "aiAge":  2,
+                   "aiRate":  1.05,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "age",
+                               "age":  3
+                           }
+               }
+           ],
+    "de":  [
+               {
+                   "id":  "de_1",
+                   "name":  "A birodalmi rend",
+                   "brief":  "Széttagolt fejedelemségek. Kezdd az alapoknál: hat majorság a mindennapi kenyérért.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  470,
+                               "stone":  360,
+                               "gold":  250,
+                               "food":  370
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.55,
+                   "aiWave":  70,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "farm",
+                               "n":  6
+                           }
+               },
+               {
+                   "id":  "de_2",
+                   "name":  "A Landsknecht ezredek",
+                   "brief":  "A zsoldosok drágák, de rendíthetetlenek. Verd szét a szomszéd seregét.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  680,
+                               "stone":  520,
+                               "gold":  520,
+                               "food":  600
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.8,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  14
+                           }
+               },
+               {
+                   "id":  "de_3",
+                   "name":  "A harmincéves háború",
+                   "brief":  "Fél Európa lángol. Tarts ki öt percen át — ez a háború nem a gyorsakról szól.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  800,
+                               "stone":  640,
+                               "gold":  560,
+                               "food":  760
+                           },
+                   "aiAge":  1,
+                   "aiRate":  1,
+                   "aiWave":  70,
+                   "obj":  {
+                               "type":  "survive",
+                               "sec":  300
+                           }
+               },
+               {
+                   "id":  "de_4",
+                   "name":  "Porosz fegyelem",
+                   "brief":  "A Nagy Választófejedelem állandó hadsereget épít. Húsz épület, katonás rendben.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  880,
+                               "stone":  720,
+                               "gold":  620,
+                               "food":  820
+                           },
+                   "aiAge":  1,
+                   "aiRate":  0.9,
+                   "aiWave":  105,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "any",
+                               "n":  20
+                           }
+               },
+               {
+                   "id":  "de_5",
+                   "name":  "Vas és vér",
+                   "brief":  "Bismarck szava: a kor nagy kérdéseit nem beszédek döntik el. Törd meg az ellenállást.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  980,
+                               "stone":  800,
+                               "gold":  740,
+                               "food":  900
+                           },
+                   "aiAge":  2,
+                   "aiRate":  1,
+                   "aiWave":  100,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  24
+                           }
+               },
+               {
+                   "id":  "de_6",
+                   "name":  "Az egyesült birodalom",
+                   "brief":  "A fejedelemségekből nemzet lett. Lépj be a huszadik századba.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  1120,
+                               "stone":  900,
+                               "gold":  840,
+                               "food":  1020
+                           },
+                   "aiAge":  2,
+                   "aiRate":  1.05,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "age",
+                               "age":  3
+                           }
+               }
+           ],
+    "fr":  [
+               {
+                   "id":  "fr_1",
+                   "name":  "A királyi birtok",
+                   "brief":  "XI. Lajos a pókháló türelmével sző. Kezdd a földdel: hat majorság.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  480,
+                               "stone":  350,
+                               "gold":  270,
+                               "food":  380
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.5,
+                   "aiWave":  72,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "farm",
+                               "n":  6
+                           }
+               },
+               {
+                   "id":  "fr_2",
+                   "name":  "A százéves háború vége",
+                   "brief":  "Az angolok kiszorulnak a kontinensről. Szórd szét a maradék seregüket.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  660,
+                               "stone":  500,
+                               "gold":  480,
+                               "food":  600
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.8,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  14
+                           }
+               },
+               {
+                   "id":  "fr_3",
+                   "name":  "Versailles",
+                   "brief":  "A Napkirály udvara aranyat kíván. Termelj ki nyolcszáz aranyat.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  820,
+                               "stone":  640,
+                               "gold":  280,
+                               "food":  780
+                           },
+                   "aiAge":  1,
+                   "aiRate":  0.85,
+                   "aiWave":  110,
+                   "obj":  {
+                               "type":  "gather",
+                               "res":  "gold",
+                               "amount":  800
+                           }
+               },
+               {
+                   "id":  "fr_4",
+                   "name":  "Vauban erődjei",
+                   "brief":  "A határt kővel védjük, nem vérrel. Építs húsz épületet a védelmi vonal mentén.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  900,
+                               "stone":  760,
+                               "gold":  640,
+                               "food":  820
+                           },
+                   "aiAge":  1,
+                   "aiRate":  0.9,
+                   "aiWave":  100,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "any",
+                               "n":  20
+                           }
+               },
+               {
+                   "id":  "fr_5",
+                   "name":  "A Grande Armée",
+                   "brief":  "Napóleon serege menetel. A császár nem ismeri a szót: elég.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  1000,
+                               "stone":  800,
+                               "gold":  780,
+                               "food":  920
+                           },
+                   "aiAge":  2,
+                   "aiRate":  1,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  24
+                           }
+               },
+               {
+                   "id":  "fr_6",
+                   "name":  "A köztársaság",
+                   "brief":  "Császárok jöttek és mentek, a nemzet maradt. Lépj a huszadik századba.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  1120,
+                               "stone":  880,
+                               "gold":  840,
+                               "food":  1020
+                           },
+                   "aiAge":  2,
+                   "aiRate":  1.05,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "age",
+                               "age":  3
+                           }
+               }
+           ],
+    "gb":  [
+               {
+                   "id":  "gb_1",
+                   "name":  "A rózsák után",
+                   "brief":  "A polgárháború véget ért, az ország kimerült. Hat majorság, hogy legyen mit enni.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  470,
+                               "stone":  350,
+                               "gold":  260,
+                               "food":  370
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.5,
+                   "aiWave":  70,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "farm",
+                               "n":  6
+                           }
+               },
+               {
+                   "id":  "gb_2",
+                   "name":  "Az íjászok kora",
+                   "brief":  "A hosszúíj még mindig a legfélelmetesebb fegyver. Bizonyítsd be a csatatéren.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  660,
+                               "stone":  500,
+                               "gold":  460,
+                               "food":  600
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.8,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  14
+                           }
+               },
+               {
+                   "id":  "gb_3",
+                   "name":  "Az Armada",
+                   "brief":  "A tengerről érkezik a fenyegetés. Tarts ki öt percen át, a vihar a szövetségesed.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  800,
+                               "stone":  640,
+                               "gold":  560,
+                               "food":  760
+                           },
+                   "aiAge":  1,
+                   "aiRate":  1,
+                   "aiWave":  70,
+                   "obj":  {
+                               "type":  "survive",
+                               "sec":  300
+                           }
+               },
+               {
+                   "id":  "gb_4",
+                   "name":  "Az új mintájú hadsereg",
+                   "brief":  "Cromwell fegyelmezett ezredei nem ismerik a menekülést. Törd meg a királypártiakat.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  860,
+                               "stone":  700,
+                               "gold":  620,
+                               "food":  820
+                           },
+                   "aiAge":  1,
+                   "aiRate":  0.95,
+                   "aiWave":  100,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  20
+                           }
+               },
+               {
+                   "id":  "gb_5",
+                   "name":  "A birodalom kereskedelme",
+                   "brief":  "Ahol a hajó jár, ott az arany is. Termelj ki nyolcszáz aranyat.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  980,
+                               "stone":  800,
+                               "gold":  300,
+                               "food":  900
+                           },
+                   "aiAge":  2,
+                   "aiRate":  0.95,
+                   "aiWave":  110,
+                   "obj":  {
+                               "type":  "gather",
+                               "res":  "gold",
+                               "amount":  800
+                           }
+               },
+               {
+                   "id":  "gb_6",
+                   "name":  "A leghosszabb nap",
+                   "brief":  "A sziget kitartott. Most vezesd birodalmadat a huszadik századba.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  1120,
+                               "stone":  880,
+                               "gold":  840,
+                               "food":  1020
+                           },
+                   "aiAge":  2,
+                   "aiRate":  1.05,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "age",
+                               "age":  3
+                           }
+               }
+           ],
+    "ru":  [
+               {
+                   "id":  "ru_1",
+                   "name":  "Moszkva felemelkedése",
+                   "brief":  "A tatár iga véget ért. Építs hat majorságot a fagyos föld termésére.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  500,
+                               "stone":  380,
+                               "gold":  250,
+                               "food":  400
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.5,
+                   "aiWave":  72,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "farm",
+                               "n":  6
+                           }
+               },
+               {
+                   "id":  "ru_2",
+                   "name":  "A Kreml falai",
+                   "brief":  "Kő kövön: húsz épület álljon, mire a tél beköszönt.",
+                   "age":  0,
+                   "res":  {
+                               "wood":  700,
+                               "stone":  600,
+                               "gold":  300,
+                               "food":  560
+                           },
+                   "aiAge":  0,
+                   "aiRate":  0.7,
+                   "aiWave":  90,
+                   "obj":  {
+                               "type":  "build",
+                               "b":  "any",
+                               "n":  20
+                           }
+               },
+               {
+                   "id":  "ru_3",
+                   "name":  "A zavaros idők",
+                   "brief":  "Trónkövetelők és idegen seregek. Tarts ki öt percen át, amíg a rend visszatér.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  820,
+                               "stone":  680,
+                               "gold":  540,
+                               "food":  780
+                           },
+                   "aiAge":  1,
+                   "aiRate":  1,
+                   "aiWave":  70,
+                   "obj":  {
+                               "type":  "survive",
+                               "sec":  300
+                           }
+               },
+               {
+                   "id":  "ru_4",
+                   "name":  "Nagy Péter reformja",
+                   "brief":  "Ablakot vágunk Európára. A flottához és a városhoz arany kell: nyolcszáz.",
+                   "age":  1,
+                   "res":  {
+                               "wood":  900,
+                               "stone":  740,
+                               "gold":  280,
+                               "food":  840
+                           },
+                   "aiAge":  1,
+                   "aiRate":  0.9,
+                   "aiWave":  110,
+                   "obj":  {
+                               "type":  "gather",
+                               "res":  "gold",
+                               "amount":  800
+                           }
+               },
+               {
+                   "id":  "ru_5",
+                   "name":  "Felperzselt föld",
+                   "brief":  "Az ellenség mélyen benyomult. A tél és a távolság a mi oldalunkon áll.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  1000,
+                               "stone":  820,
+                               "gold":  760,
+                               "food":  920
+                           },
+                   "aiAge":  2,
+                   "aiRate":  1.05,
+                   "aiWave":  90,
+                   "obj":  {
+                               "type":  "kill",
+                               "n":  24
+                           }
+               },
+               {
+                   "id":  "ru_6",
+                   "name":  "Ipari nagyhatalom",
+                   "brief":  "A birodalom gyárakat épít. Lépj be a huszadik századba.",
+                   "age":  2,
+                   "res":  {
+                               "wood":  1150,
+                               "stone":  900,
+                               "gold":  860,
+                               "food":  1040
+                           },
+                   "aiAge":  2,
+                   "aiRate":  1.05,
+                   "aiWave":  95,
+                   "obj":  {
+                               "type":  "age",
+                               "age":  3
+                           }
+               }
+           ]
+}

@@ -1,0 +1,266 @@
+{
+    "hu_5":  {
+                 "name":  "The spring of forty-eight",
+                 "brief":  "The honvéd army needs equipping. Gather seven hundred gold to fill the war chest."
+             },
+    "kaloz_sb_3":  {
+                       "name":  "The partner who took the ship",
+                       "brief":  "Blackbeard came as his guest and ended up putting his own men aboard the Revenge. Bonnet stayed in his cabin, reading. Earn six hundred gold by your own hand."
+                   },
+    "es_4":  {
+                 "name":  "The discovery of paradise",
+                 "brief":  "Thirty-three days on open water, then the birds that mark the shore. Dense wooded islands, hardly any gold. Pitch the first camp: twelve buildings."
+             },
+    "es_2":  {
+                 "name":  "The taking of Granada",
+                 "brief":  "The last Moorish stronghold on the peninsula. Break the defenders, and eight hundred years of reconquest come to a close."
+             },
+    "kaloz_bb_5":  {
+                       "name":  "The island of Ocracoke",
+                       "brief":  "Only someone who knows the channel runs into that shallow bay. The crew gathers here — and so does the Virginia governor’s squadron. Forty enemies must be broken."
+                   },
+    "hu_1":  {
+                 "name":  "Belgrade",
+                 "brief":  "The gate of the southern marches. Build six farms: under siege, food is worth more than the sword."
+             },
+    "fr_1":  {
+                 "name":  "The royal domain",
+                 "brief":  "Louis XI weaves with the patience of a spider. Start with the land: six farms."
+             },
+    "kaloz_ns_1":  {
+                       "name":  "The Code of the Brotherhood",
+                       "brief":  "The war is over and the sailors are out of work. In the harbour of Nassau we wrote a code: shared plunder, an elected captain. Build six farms — freedom has to be fed."
+                   },
+    "kaloz_bb_2":  {
+                       "name":  "Terror as a weapon",
+                       "brief":  "He wove burning fuses into his beard so as to board in smoke and flame. The rumour arrives before the ship: destroy twenty enemy units."
+                   },
+    "kaloz_sb_4":  {
+                       "name":  "Pardon and turncoat",
+                       "brief":  "He took the pardon, then returned to piracy as “Mister Thomas” — renaming the ship the Royal James. Twenty enemy units must be broken."
+                   },
+    "pl_3":  {
+                 "name":  "Winged hussars",
+                 "brief":  "The most feared cavalry in the world is yours. Sweep the enemy away in a single charge."
+             },
+    "de_1":  {
+                 "name":  "The order of the empire",
+                 "brief":  "Scattered principalities. Start with the foundations: six farms for the daily bread."
+             },
+    "kaloz_ns_6":  {
+                       "name":  "The iron cage",
+                       "brief":  "In the harbour of Port Royal an iron cage waits for everyone who stayed true to the code. If this is the end, make it worthy: break the enemy’s power."
+                   },
+    "gb_5":  {
+                 "name":  "The trade of the empire",
+                 "brief":  "Where the ships go, the gold goes too. Gather eight hundred gold."
+             },
+    "ru_4":  {
+                 "name":  "Peter the Great’s reform",
+                 "brief":  "We are cutting a window onto Europe. The fleet and the city need gold: eight hundred."
+             },
+    "kaloz_sb_5":  {
+                       "name":  "The Cape Fear river",
+                       "brief":  "He was repairing the ship in the river mouth when Colonel Rhett found him. Five hours of gunfire among the sandbars — thirty enemies must be withstood."
+                   },
+    "kaloz_bb_6":  {
+                       "name":  "Lieutenant Maynard",
+                       "brief":  "It took five shots and twenty cuts to bring him down — his head was lashed to the bowsprit. If this is the last battle, leave nothing of the enemy standing."
+                   },
+    "kaloz_bb_3":  {
+                       "name":  "The blockade of Charleston",
+                       "brief":  "For a week he closed the harbour, and instead of ransom he demanded a chest of medicine. Take eight hundred gold from the town."
+                   },
+    "es_5":  {
+                 "name":  "The first colony",
+                 "brief":  "The palisade of La Navidad stands, but the islanders press us ever harder. Hold out for five minutes."
+             },
+    "es_3":  {
+                 "name":  "The port of Palos",
+                 "brief":  "The westward route calls for ships. Build a harbour and gather six hundred gold to fit out the three caravels."
+             },
+    "pl_4":  {
+                 "name":  "The relief of Vienna",
+                 "brief":  "Sobieski comes down from the Kahlenberg. Christian Europe is watching you — hold out for five minutes."
+             },
+    "fr_5":  {
+                 "name":  "The Grande Armée",
+                 "brief":  "Napoleon’s army is on the march. The emperor does not know the word “enough”."
+             },
+    "at_6":  {
+                 "name":  "The Great War",
+                 "brief":  "The last summer of the old world. Lead the monarchy into the twentieth century."
+             },
+    "gb_6":  {
+                 "name":  "The longest day",
+                 "brief":  "The island has held. Now lead your empire into the twentieth century."
+             },
+    "kaloz_ns_3":  {
+                       "name":  "The letter of pardon",
+                       "brief":  "Woodes Rogers has arrived with the king’s pardon. Whoever takes it walks free — whoever refuses hangs. Beat back the blockade: twenty enemy units."
+                   },
+    "pl_5":  {
+                 "name":  "Kościuszko’s uprising",
+                 "brief":  "Scythe-bearing peasants stand beside the nobles. You recruit from the estate, without a barracks."
+             },
+    "es_1":  {
+                 "name":  "The Catholic Monarchs",
+                 "brief":  "Ferdinand and Isabella united the crowns. The land comes first: build six farms to supply the Granada campaign."
+             },
+    "de_5":  {
+                 "name":  "Blood and iron",
+                 "brief":  "Bismarck’s word: the great questions of the age are not settled by speeches. Break the resistance."
+             },
+    "ru_2":  {
+                 "name":  "The walls of the Kremlin",
+                 "brief":  "Stone upon stone: let twenty buildings stand before winter comes."
+             },
+    "fr_2":  {
+                 "name":  "The end of the Hundred Years’ War",
+                 "brief":  "The English are being pushed off the continent. Scatter what is left of their army."
+             },
+    "fr_4":  {
+                 "name":  "Vauban’s fortresses",
+                 "brief":  "We defend the border with stone, not blood. Build twenty buildings along the line of defence."
+             },
+    "es_6":  {
+                 "name":  "Lord of the New World",
+                 "brief":  "Either the island is ours, or we are pushed into the sea. Break the islanders’ resistance."
+             },
+    "fr_6":  {
+                 "name":  "The republic",
+                 "brief":  "Emperors came and went; the nation remained. Step into the twentieth century."
+             },
+    "pl_1":  {
+                 "name":  "The land of the Jagiellons",
+                 "brief":  "The land around Kraków is rich. Build six farms so there is food through the long winter."
+             },
+    "kaloz_sb_2":  {
+                       "name":  "The Revenge",
+                       "brief":  "Ten guns, seventy men, and a captain who could not sail. The crew laughed in his face. Build eight buildings to earn some standing."
+                   },
+    "kaloz_bb_1":  {
+                       "name":  "Queen Anne’s Revenge",
+                       "brief":  "A captured French slave ship became the most feared frigate in the Caribbean. Build up the base: the crew needs six farms."
+                   },
+    "at_2":  {
+                 "name":  "The siege of Vienna",
+                 "brief":  "The sultan’s army stands beneath the walls. Hold out for five minutes until the relief force arrives."
+             },
+    "pl_2":  {
+                 "name":  "The Teutonic Order",
+                 "brief":  "An armoured wedge is coming from the north. Hold the line for four minutes."
+             },
+    "at_5":  {
+                 "name":  "The Compromise",
+                 "brief":  "The empire has become dual. Build twenty buildings — order shows in stone as well."
+             },
+    "ru_3":  {
+                 "name":  "The Time of Troubles",
+                 "brief":  "Pretenders and foreign armies. Hold out for five minutes until order returns."
+             },
+    "hu_6":  {
+                 "name":  "The age of machines",
+                 "brief":  "The world has changed: steel, oil and aircraft. Lead your empire into the twentieth century."
+             },
+    "de_6":  {
+                 "name":  "The united empire",
+                 "brief":  "Out of the principalities a nation has grown. Step into the twentieth century."
+             },
+    "at_1":  {
+                 "name":  "The Habsburg inheritance",
+                 "brief":  "What others gain by war, you gain by marriage. But food comes first: six farms."
+             },
+    "kaloz_ns_4":  {
+                       "name":  "The burning ship",
+                       "brief":  "Vane set fire to a captured French ship and sent it into the blockade. Break out in the confusion: build eight buildings in the free port."
+                   },
+    "fr_3":  {
+                 "name":  "Versailles",
+                 "brief":  "The Sun King’s court demands gold. Gather eight hundred gold."
+             },
+    "at_4":  {
+                 "name":  "The war of succession",
+                 "brief":  "Maria Theresa’s throne is shaking. War costs money: eight hundred gold for the war chest."
+             },
+    "ru_6":  {
+                 "name":  "Industrial great power",
+                 "brief":  "The empire is building factories. Step into the twentieth century."
+             },
+    "kaloz_sb_6":  {
+                       "name":  "The gallows at Charleston",
+                       "brief":  "The gentleman pirate begged for mercy and held a posy of flowers under the gallows. The end of the story is written — but you may finish it differently."
+                   },
+    "kaloz_sb_1":  {
+                       "name":  "The planter from Barbados",
+                       "brief":  "Bonnet was a wealthy landowner who out of boredom BOUGHT a ship rather than taking one — and paid his crew wages. Start with the estate: six farms."
+                   },
+    "ru_5":  {
+                 "name":  "Scorched earth",
+                 "brief":  "The enemy has driven deep. Winter and distance are on our side."
+             },
+    "hu_2":  {
+                 "name":  "The long winter",
+                 "brief":  "The Turkish raids do not cease. Hold the castle for four minutes — whoever endures, wins."
+             },
+    "ru_1":  {
+                 "name":  "The rise of Moscow",
+                 "brief":  "The Tatar yoke is over. Build six farms for the harvest of the frozen land."
+             },
+    "kaloz_bb_4":  {
+                       "name":  "The prize run aground",
+                       "brief":  "Queen Anne’s Revenge ran aground — many say on purpose, so the captain could be rid of too large a crew. Rebuild the fleet: ten buildings."
+                   },
+    "de_2":  {
+                 "name":  "The Landsknecht regiments",
+                 "brief":  "Mercenaries are expensive but unshakeable. Scatter the neighbour’s army."
+             },
+    "gb_4":  {
+                 "name":  "The New Model Army",
+                 "brief":  "Cromwell’s disciplined regiments do not know flight. Break the royalists."
+             },
+    "gb_1":  {
+                 "name":  "After the roses",
+                 "brief":  "The civil war is over and the country is exhausted. Six farms, so there is something to eat."
+             },
+    "kaloz_ns_2":  {
+                       "name":  "The harbour of the republic",
+                       "brief":  "A free port only survives if it has something to sell. Build a harbour and a market, and gather six hundred gold."
+                   },
+    "hu_4":  {
+                 "name":  "Rákóczi’s war of independence",
+                 "brief":  "“Cum Deo pro Patria et Libertate.” The kuruc take up arms. Scatter the imperial forces."
+             },
+    "hu_3":  {
+                 "name":  "The Black Army",
+                 "brief":  "Matthias’s mercenaries come not from a barracks but from the royal treasury. You recruit from the headquarters."
+             },
+    "pl_6":  {
+                 "name":  "The liberation of Warsaw",
+                 "brief":  "The capital lies in ruins, but it is not silent. Rebuild the country on the threshold of the twentieth century."
+             },
+    "gb_2":  {
+                 "name":  "The age of the archers",
+                 "brief":  "The longbow is still the most fearsome weapon. Prove it on the battlefield."
+             },
+    "de_4":  {
+                 "name":  "Prussian discipline",
+                 "brief":  "The Great Elector is building a standing army. Twenty buildings, in soldierly order."
+             },
+    "de_3":  {
+                 "name":  "The Thirty Years’ War",
+                 "brief":  "Half of Europe is ablaze. Hold out for five minutes — this war is not about the swift."
+             },
+    "at_3":  {
+                 "name":  "The Holy League",
+                 "brief":  "Eugene of Savoy leads the imperial army. Break the enemy’s strength along the Danube."
+             },
+    "gb_3":  {
+                 "name":  "The Armada",
+                 "brief":  "The threat comes from the sea. Hold out for five minutes; the storm is your ally."
+             },
+    "kaloz_ns_5":  {
+                       "name":  "The captain voted down",
+                       "brief":  "The code has turned against you: the crew accuse you of cowardice. Prove them wrong — destroy thirty-five enemy units."
+                   }
+}
