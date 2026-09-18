@@ -1958,6 +1958,119 @@ func _test_modules() -> void:
 	check("a nem létező fél nem él", not GameState.side_alive(main.get_tree(), ures))
 	check("alapból senki nincs kiesve", not GameState.is_out(0))
 
+	# --- ÉLŐVILÁG (13/C) ---
+	var wl = main.wildlife
+	check("van élővilág-réteg", wl != null)
+	if wl != null:
+		check("madarak húznak az égen", wl._madarak.size() >= 3,
+			"%d madár" % wl._madarak.size())
+		check("őzek legelnek az erdőszélen", wl._ozek.size() > 0,
+			"%d őz" % wl._ozek.size())
+		check("sirályok köröznek", wl._siralyok.size() > 0)
+		# Az őz megijed a katonától: elugrik a helyéről.
+		if wl._ozek.size() > 0:
+			var oz: Dictionary = wl._ozek[0]
+			var hely: Vector2 = oz["p"]
+			var riaszto = main.spawn_unit("melee", 0, hely + Vector2(20, 0), 0)
+			await _frames(2)
+			wl._oz_t = 0.0
+			wl._oz_lep(0.1)
+			check("az őz megijed a katonától", float(oz["ijedt"]) > 0.0)
+			wl._oz_lep(0.4)
+			check("az ijedt őz elszalad", (oz["p"] as Vector2).distance_to(hely) > 1.0)
+			if is_instance_valid(riaszto): riaszto.queue_free()
+		# Az élővilág takarékos módban kimarad.
+		var ment_d := Settings.detail
+		Settings.detail = 0
+		wl._process(0.1)
+		check("takarékos módban nem mozog az élővilág", true)
+		Settings.detail = ment_d
+
+	# --- NYOMOK, POR ÉS CSATANYOMOK (13/D, 13/F) ---
+	var sc = main.scars
+	check("van nyomréteg", sc != null)
+	if sc != null:
+		sc._nyomok.clear()
+		sc.add_scar(Vector2(500, 500), "krater")
+		check("a csatanyom megmarad a földön", sc._nyomok.size() == 1)
+		sc._por.clear()
+		sc.add_dust(Vector2(500, 500))
+		check("a porfelhő felszáll", sc._por.size() == 1)
+		# A por elszáll, a nyom marad.
+		for _i in range(20): sc._process(0.1)
+		check("a porfelhő eloszlik", sc._por.is_empty())
+		check("a csatanyom viszont megmarad", sc._nyomok.size() == 1)
+		# Ahol járnak, kopik a fű.
+		sc._kopas.clear()
+		var hq2 = _player_hq()
+		var alap: Vector2 = hq2.global_position if hq2 != null \
+			else Vector2(GameState.WORLD_W * 0.5, GameState.WORLD_H * 0.5)
+		var jaro = main.spawn_unit("melee", 0,
+			main.find_land_near(alap + Vector2(180, 0), 40.0), 0)
+		await _frames(2)
+		jaro.velocity = Vector2(40, 0)
+		sc._t = 0.0
+		sc._kopas_gyujtes()
+		check("a járás koptatja a füvet", not sc._kopas.is_empty(),
+			"%d cella" % sc._kopas.size())
+		# ... és lassan visszanő.
+		var kopott: float = float(sc._kopas.values()[0])
+		for _i in range(30): sc._visszanoves()
+		var maradt: float = float(sc._kopas.values()[0]) if not sc._kopas.is_empty() else 0.0
+		check("a fű lassan visszanő", maradt < kopott,
+			"%.2f -> %.2f" % [kopott, maradt])
+		if is_instance_valid(jaro): jaro.queue_free()
+		# Az elesett egység nyomot hagy.
+		sc._nyomok.clear()
+		var aldozat2 = main.spawn_unit("melee", 1,
+			main.find_land_near(alap + Vector2(-180, 0), 40.0), 0)
+		await _frames(2)
+		aldozat2.take_damage(99999.0)
+		await _frames(3)
+		check("az elesett katona nyomot hagy", sc._nyomok.size() > 0)
+
+	# --- SORTŰZ (16/C) ---
+	var bs = main.broadside
+	check("van sortűz-réteg", bs != null)
+	if bs != null:
+		bs._fx.clear()
+		var viz2 := _find_water_point()
+		var agyus_hajo = main.spawn_unit("galleon", 0, viz2, 1)
+		var cel_hajo = main.spawn_unit("warship", 1, viz2 + Vector2(120, 0), 1)
+		await _frames(2)
+		check("a gálya sok ágyút visz", agyus_hajo.gun_count() > 30,
+			"%d ágyú" % agyus_hajo.gun_count())
+		check("a szlúp keveset", main.spawn_unit("transport", 0,
+			viz2 + Vector2(0, 60), 1).gun_count() < 20)
+		bs.fire(agyus_hajo, cel_hajo)
+		check("a sortűz több torkolatot villant", bs._fx.size() >= 4,
+			"%d effekt" % bs._fx.size())
+		check("a sortűz megrázza a kamerát", main.camera._razas > 0.0,
+			"%.2f" % main.camera._razas)
+		# Az effektek maguktól elülnek.
+		for _i in range(40): bs._process(0.1)
+		check("a füst eloszlik", bs._fx.is_empty())
+		main.camera._razas = 0.0
+		main.camera.offset = Vector2.ZERO
+		for h in [agyus_hajo, cel_hajo]:
+			if is_instance_valid(h): h.queue_free()
+
+	# --- UTÓMUNKA (16/D) ÉS FOTÓMÓD (26/B) ---
+	check("van utómunka-réteg", main.postfx != null)
+	if main.postfx != null:
+		check("az utómunka a világ fölött, a HUD alatt ül",
+			main.postfx.layer > 0 and main.postfx.layer < 10,
+			"réteg %d" % main.postfx.layer)
+	check("alapból nem vagyunk fotómódban", not main.photo_mode)
+	main.toggle_photo(true)
+	check("fotómódban eltűnik a felület", main.photo_mode and not main.hud.visible)
+	check("fotómódban áll a játék", main.get_tree().paused)
+	check("fotómódban is jár a kamera",
+		main.camera.process_mode == Node.PROCESS_MODE_ALWAYS)
+	main.toggle_photo(false)
+	check("a fotómódból visszatérve minden a helyén van",
+		not main.photo_mode and main.hud.visible and not main.get_tree().paused)
+
 	# --- NAPPAL ÉS ÉJSZAKA (17/B) ---
 	var dn = main.day_night
 	check("van nappal-éjszaka ciklus", dn != null)

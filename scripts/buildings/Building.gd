@@ -560,6 +560,12 @@ func take_damage(amount: float, _tamado: Node = null) -> void:
 	if hp <= 0:
 		if tipus == "hq":
 			_on_hq_destroyed()
+		# A ledőlt épület helyén kráter és felperzselt föld marad.
+		var fo := get_tree().get_first_node_in_group("main")
+		if fo != null and fo.scars != null and is_instance_valid(fo.scars):
+			fo.scars.add_scar(global_position, "krater")
+			fo.scars.add_scar(global_position + Vector2(_size.x * 0.3,
+				_size.y * 0.25), "eges")
 		if GameState.hostile(GameState.en_id, owner_id):
 			GameState.kills += 1
 			Achievements.bump("kills")

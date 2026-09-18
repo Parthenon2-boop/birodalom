@@ -39,6 +39,28 @@ func _process(delta: float) -> void:
 	if ep != Vector2.ZERO and Rect2(Vector2.ZERO, vps).has_point(mp):
 		position += ep.normalized() * PAN_SPEED * 0.5 * delta / zoom.x
 	_clamp()
+	_shake_tick(delta)
+
+# --- KAMERAREMEGÉS ---
+#
+# A hajóágyúk sortüze és a nagyobb becsapódások megrázzák a képet. Az
+# `offset`-et mozgatjuk, nem a `position`-t: így a kamera határai és a
+# követés érintetlen marad, a remegés pedig magától elül.
+const RAZAS_CSILLAPODAS := 3.2
+const RAZAS_KITERES := 9.0
+
+var _razas: float = 0.0
+
+func shake(amount: float) -> void:
+	_razas = clampf(_razas + amount, 0.0, 1.0)
+
+func _shake_tick(delta: float) -> void:
+	if _razas <= 0.001:
+		if offset != Vector2.ZERO: offset = Vector2.ZERO
+		return
+	_razas = maxf(0.0, _razas - delta * RAZAS_CSILLAPODAS)
+	var e := _razas * _razas * RAZAS_KITERES
+	offset = Vector2(randf_range(-e, e), randf_range(-e, e))
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:

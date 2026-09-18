@@ -74,6 +74,16 @@ var diplomacy      : Node        = null
 var scoreboard     : Control     = null
 # Nappal-éjszaka ciklus (scripts/systems/DayNight.gd).
 var day_night      : Node2D      = null
+# Élővilág: madarak, őzek, sirályok, halak (scripts/world/Wildlife.gd).
+var wildlife       : Node2D      = null
+# A táj emlékezete: ösvények, por és csatanyomok (scripts/world/Scars.gd).
+var scars          : Node2D      = null
+# Hajóágyúk sortüze (scripts/world/Broadside.gd).
+var broadside      : Node2D      = null
+# Utómunka: színhangolás és peremsötétítés (scripts/systems/PostFx.gd).
+var postfx         : CanvasLayer = null
+# FOTÓMÓD: a felület eltűnik, a játék megáll, a kamera szabadon jár.
+var photo_mode     : bool        = false
 var _nid_seq       : int         = 0
 var _forced_seed   : int         = 0
 
@@ -402,6 +412,24 @@ func _start_world() -> void:
 	# IDŐJÁRÁS: a szárazföldi idő és a tenger állapota.
 	weather = (load("res://scripts/systems/Weather.gd") as GDScript).new(self)
 	add_child(weather)
+	# UTÓMUNKA: napszak szerinti színhangolás és peremsötétítés.
+	postfx = (load("res://scripts/systems/PostFx.gd") as GDScript).new()
+	postfx.main = self
+	add_child(postfx)
+	# SORTŰZ: a hajóágyúk torkolattüze és füstje.
+	broadside = (load("res://scripts/world/Broadside.gd") as GDScript).new()
+	broadside.main = self
+	$WorldRoot/UnitLayer.add_child(broadside)
+	# A TÁJ EMLÉKEZETE: kitaposott ösvények, porfelhő, hajónyom és a
+	# csaták nyomai (égett folt, kráter, elhagyott fegyver).
+	scars = (load("res://scripts/world/Scars.gd") as GDScript).new()
+	scars.main = self
+	$WorldRoot/DecoLayer.add_child(scars)
+	# ÉLŐVILÁG: madarak, őzek, sirályok, ugró halak. Nem játékelem, csak
+	# ettől él a táj (takarékos módban kimarad).
+	wildlife = (load("res://scripts/world/Wildlife.gd") as GDScript).new()
+	wildlife.main = self
+	$WorldRoot/DecoLayer.add_child(wildlife)
 	# NAPPAL–ÉJSZAKA: a világ órája hat perc alatt fordul egyet. A sötétség
 	# a VILÁG rétegére kerül (a felület nem sötétedik el vele).
 	day_night = (load("res://scripts/systems/DayNight.gd") as GDScript).new()
@@ -798,6 +826,20 @@ class BuildGhost extends Node2D:
 # --- Bemenet ---
 
 func _unhandled_input(event: InputEvent) -> void:
+	# FOTÓMÓD: F a be- és kikapcsolás, Enter/szóköz a kép mentése, Esc kilép.
+	if event is InputEventKey and event.pressed and not event.echo:
+		var kb := event as InputEventKey
+		if kb.keycode == KEY_F:
+			toggle_photo()
+			return
+		if photo_mode:
+			if kb.keycode == KEY_ENTER or kb.keycode == KEY_KP_ENTER:
+				save_photo()
+				return
+			if kb.keycode == KEY_ESCAPE:
+				toggle_photo(false)
+				return
+	if photo_mode: return            # fotómódban nincs más parancs
 	if event.is_action_pressed("pause"):
 		_toggle_pause()
 		return
@@ -839,6 +881,39 @@ func _unhandled_input(event: InputEvent) -> void:
 # világkoordinátában: kinagyított térképen ugyanakkora legyen a jelölő
 # találati sávja, mint kicsinyítve. A névtábla a jelölő ALATT van, ezért
 # lefelé nyújtjuk a sávot (index.html: portHit).
+# --- FOTÓMÓD  (index.html 26/B) ---
+#
+# A felület eltűnik, a játék megáll, a kamera szabadon jár, a képet pedig
+# el lehet menteni. Belépés és kilépés: F billentyű (kilépés Esc-re is).
+# A kép a user://kepek mappába kerül, dátummal.
+const KEP_MAPPA := "user://kepek"
+
+func toggle_photo(be: bool = not photo_mode) -> void:
+	photo_mode = be
+	hud.visible = not be
+	if scoreboard != null: scoreboard.visible = false if be else scoreboard.visible
+	if port_menu != null and be: port_menu.close()
+	# A játék megáll, hogy nyugodtan be lehessen állítani a képet — a kamera
+	# viszont szabadon jár, ezért az szünet alatt is kap képkockát.
+	camera.process_mode = Node.PROCESS_MODE_ALWAYS if be else Node.PROCESS_MODE_INHERIT
+	get_tree().paused = be
+	if be:
+		hud.show_toast(Lang.t("foto_be"), 3.0)
+	else:
+		hud.show_toast(Lang.t("foto_ki"), 2.0)
+
+# A kép mentése: a teljes látvány, felület nélkül.
+func save_photo() -> String:
+	if not DirAccess.dir_exists_absolute(KEP_MAPPA):
+		DirAccess.make_dir_recursive_absolute(KEP_MAPPA)
+	await RenderingServer.frame_post_draw
+	var kep := get_viewport().get_texture().get_image()
+	var nev := "%s/birodalom_%s.png" % [KEP_MAPPA,
+		Time.get_datetime_string_from_system().replace(":", "-").replace("T", "_")]
+	if kep.save_png(nev) != OK: return ""
+	hud.show_toast(Lang.t("foto_mentve") % ProjectSettings.globalize_path(nev), 6.0)
+	return nev
+
 func _port_click(wp: Vector2) -> bool:
 	if port_menu == null or cities == null: return false
 	var z: float = maxf(camera.zoom.x, 0.05)

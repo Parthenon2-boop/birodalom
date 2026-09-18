@@ -100,6 +100,25 @@ func night() -> float:
 func sight_mul() -> float:
 	return 1.0 - (1.0 - EJ_LATOTAV) * night()
 
+# A NAP ÁLLÁSA  (index.html 16/D)
+#
+# Reggel keleten alacsonyan áll, ezért az árnyék hosszan nyugatra nyúlik;
+# délben magasan, rövid árnyékkal; este fordítva. A visszaadott érték az
+# árnyék iránya és hosszszorzója — a figurák rajza ezt használja.
+func sun_shadow() -> Dictionary:
+	if not Settings.day_night:
+		return {"dx": 0.34, "dy": 0.17, "len": 1.0}
+	var t := time_of_day()
+	var nap := clampf(t / EJ_TOL, 0.0, 1.0)
+	var szog := (nap - 0.5) * 2.0            # -1 reggel, 0 dél, +1 este
+	var magas := cos(szog * 1.15)            # délben a legmagasabb
+	var hossz := 1.0 / maxf(0.42, magas)     # alacsony nap: hosszú árnyék
+	return {
+		"dx": 0.34 * hossz * szog * 1.9,     # reggel nyugatra, este keletre
+		"dy": 0.17 * maxf(0.5, hossz * 0.8),
+		"len": hossz,
+	}
+
 func napszak() -> String:
 	var n := night()
 	if n <= 0.02: return "nappal"

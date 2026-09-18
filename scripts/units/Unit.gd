@@ -373,7 +373,11 @@ func _draw() -> void:
 	var s := radius / 9.2
 	var cy := 3.4 * s
 	if not naval:
-		_ellipse(Vector2(2.0 * s, cy), Vector2(radius * 0.7, radius * 0.3),
+		# KONTAKTÁRNYÉK a figura alatt, a NAP ÁLLÁSA szerint dőlve: reggel
+		# hosszan nyugatra, délben rövid, este keletre (index.html 16/D).
+		var nap := _nap_arnyek()
+		_ellipse(Vector2(radius * float(nap["dx"]), cy + radius * 0.06),
+			Vector2(radius * 0.7 * float(nap["len"]), radius * 0.3),
 			Color(0, 0, 0, 0.14), true)
 	var ring := _ring_color()
 	ring.a = 0.6
@@ -392,6 +396,13 @@ func _draw() -> void:
 # VETERÁN JELZÉS: egy-két apró arany ék a talpvonalnál. Épp csak annyi,
 # hogy egy pillantásra látszódjon, melyik csapat megélt már valamit —
 # és előléptetéskor felvillan egy gyűrű.
+# A nap állása az árnyékhoz. Ha nincs nap-éjszaka (vagy még nem áll a
+# csomópont), marad az eddigi, rögzített dőlés.
+func _nap_arnyek() -> Dictionary:
+	var d := _daynight()
+	if d == null: return {"dx": 0.22, "dy": 0.17, "len": 1.0}
+	return d.sun_shadow()
+
 func _draw_vet() -> void:
 	if vet <= 0: return
 	var arany := Color("e8c96a")
@@ -725,6 +736,12 @@ static func toltet_of(owner_id: int) -> String:
 
 func agyus() -> bool:
 	return role in AGYUS_HAJOK
+
+# Hány ágyúja van? Ebből lesz a sortűz torkolatainak száma (16/C).
+const AGYU_DB := {"transport": 10, "warship": 17, "galleon": 50}
+
+func gun_count() -> int:
+	return int(AGYU_DB.get(role, 0))
 
 # A lövedék becsapódása a TÖLTET szerint: mi sérül, a test, a vitorla vagy
 # a fedélzeten álló csapat. Szárazföldi célnál a töltet nem számít.
@@ -1295,7 +1312,11 @@ func _on_attack() -> void:
 	if role in PROJECTILE_ROLES:
 		var main := get_tree().get_first_node_in_group("main")
 		if main and main.has_method("spawn_projectile"):
-			# Az ágyús hajó a HAJÓHAD töltetével lő (golyó/láncos/kartács).
+			# Az ágyús hajó a HAJÓHAD töltetével lő (golyó/láncos/kartács),
+			# és nem egyetlen villanással: az egész oldal dörren (16/C).
+			if naval and gun_count() > 0 and main.broadside != null \
+					and is_instance_valid(main.broadside):
+				main.broadside.fire(self, target)
 			main.spawn_projectile(global_position + Vector2(0, -12), target,
 				amount, owner_id, self, toltet_of(owner_id) if agyus() else "")
 			return
@@ -1342,6 +1363,12 @@ func take_damage(amount: float, tamado: Node = null) -> void:
 				if is_instance_valid(u): u.queue_free()
 			cargo.clear()
 		SFX.play_death()
+		# A FÖLD EMLÉKSZIK: ahol elesett valaki, ott marad a nyoma
+		# (elhagyott fegyver, felperzselt fű) — lásd Scars.gd.
+		var fo2 := get_tree().get_first_node_in_group("main")
+		if fo2 != null and fo2.scars != null and is_instance_valid(fo2.scars):
+			fo2.scars.add_scar(global_position,
+				"fegyver" if randf() < 0.55 else "eges")
 		# A kalózvilágban a zsákmány hírnevet hoz: a hajó többet ér.
 		if GameState.hostile(GameState.en_id, owner_id):
 			GameState.kills += 1
