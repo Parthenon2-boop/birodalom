@@ -74,14 +74,17 @@ func _draw() -> void:
 		var k := t / maxf(float(f["elet"]), 0.01)
 		var p: Vector2 = f["p"]
 		if str(f["fajta"]) == "agyu":
-			# torkolattűz: fényes mag, előtte sárga nyelv
+			# Torkolattűz: fényes mag, előtte sárga nyelv. A színe SZÁNDÉKOSAN
+			# egynél nagyobb — így csordul túl a ragyogásban (PostFx). Ha a
+			# ragyogás ki van kapcsolva, a motor visszavágja fehérre, és
+			# pontosan a régi képet kapjuk.
 			var e := (1.0 - k) * float(f["ero"])
-			draw_circle(p, 3.4 + k * 5.0, Color(1.0, 0.96, 0.84, 0.95 * e))
+			draw_circle(p, 3.4 + k * 5.0, Color(2.6, 2.45, 2.05, 0.95 * e))
 			var sz := float(f["szog"])
 			var elore := Vector2(cos(sz), sin(sz))
 			var oldal := elore.orthogonal() * (3.4 + k * 3.0)
 			draw_colored_polygon([p - oldal, p + elore * (13.0 + k * 16.0),
-				p + oldal], Color(1.0, 0.73, 0.29, 0.7 * e))
+				p + oldal], Color(2.1, 1.45, 0.52, 0.7 * e))
 		else:
 			# lőporfüst: tágul, sodródik, világosból szürkébe fordul
 			var r := float(f["r"]) * (0.6 + k * 2.6)

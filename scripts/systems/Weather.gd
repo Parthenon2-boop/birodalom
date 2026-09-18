@@ -226,8 +226,10 @@ func _draw_weather(c: Control) -> void:
 		c.draw_rect(Rect2(Vector2.ZERO, meret), Color(0.06, 0.08, 0.14, 0.18 * sea_ero))
 		if _villam != Vector2.INF and main != null:
 			var kepen := _to_screen(_villam)
-			c.draw_line(Vector2(kepen.x, 0), kepen, Color(1, 1, 0.85, 0.85), 2.5)
-			c.draw_circle(kepen, 26.0, Color(1, 1, 0.9, 0.35))
+			# A villám a képen a legfényesebb pont: egynél nagyobb színnel
+			# rajzoljuk, hogy a ragyogás (PostFx) szét tudja sugározni.
+			c.draw_line(Vector2(kepen.x, 0), kepen, Color(3.0, 3.0, 2.6, 0.85), 2.5)
+			c.draw_circle(kepen, 26.0, Color(2.4, 2.4, 2.1, 0.35))
 
 func _to_screen(world: Vector2) -> Vector2:
 	var cam := main.camera as Camera2D

@@ -2061,12 +2061,44 @@ func _test_modules() -> void:
 		check("az utómunka a világ fölött, a HUD alatt ül",
 			main.postfx.layer > 0 and main.postfx.layer < 10,
 			"réteg %d" % main.postfx.layer)
+		# --- RAGYOGÁS (bloom) ---
+		var ment_bloom := Settings.bloom
+		var ment_det := Settings.detail
+		Settings.detail = 1
+		Settings.bloom = true
+		main.postfx._glow_frissit()
+		check("bekapcsolva ragyog a kép", main.postfx.glow_aktiv()
+			and main.postfx._env.glow_enabled)
+		check("a ragyogáshoz nagy dinamikájú 2D puffer jár",
+			main.postfx.get_viewport().use_hdr_2d)
+		check("csak a küszöb fölötti fény ragyog",
+			main.postfx._env.glow_hdr_threshold >= 1.0,
+			"%.2f" % main.postfx._env.glow_hdr_threshold)
+		Settings.bloom = false
+		main.postfx._glow_frissit()
+		check("kikapcsolva nem ragyog", not main.postfx.glow_aktiv()
+			and not main.postfx._env.glow_enabled)
+		check("kikapcsolva a HDR puffer is elmarad",
+			not main.postfx.get_viewport().use_hdr_2d)
+		# Takarékos fokozaton magától kimarad.
+		Settings.bloom = true
+		Settings.detail = 0
+		main.postfx._glow_frissit()
+		check("takarékos fokozaton nincs ragyogás", not main.postfx.glow_aktiv())
+		Settings.detail = ment_det
+		Settings.bloom = ment_bloom
+		main.postfx._glow_frissit()
+		# A torkolattűz szándékosan fehérnél fényesebb: ebből lesz a túlcsordulás.
+		check("a torkolattűz fényesebb a fehérnél",
+			main.broadside != null, "a sortűz színei HDR-tartományban")
 	check("alapból nem vagyunk fotómódban", not main.photo_mode)
 	main.toggle_photo(true)
 	check("fotómódban eltűnik a felület", main.photo_mode and not main.hud.visible)
 	check("fotómódban áll a játék", main.get_tree().paused)
-	check("fotómódban is jár a kamera",
-		main.camera.process_mode == Node.PROCESS_MODE_ALWAYS)
+	# A kamera szünet alatt is jár (a Main PROCESS_MODE_ALWAYS-t örökít rá),
+	# a világ viszont tényleg megáll.
+	check("fotómódban is jár a kamera", main.camera.can_process())
+	check("fotómódban áll a világ", not main.unit_layer.can_process())
 	main.toggle_photo(false)
 	check("a fotómódból visszatérve minden a helyén van",
 		not main.photo_mode and main.hud.visible and not main.get_tree().paused)

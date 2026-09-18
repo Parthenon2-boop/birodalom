@@ -134,6 +134,9 @@ func _ready() -> void:
 			_forced_seed = absi(int(arg.substr(7)))
 		if arg == "--nocull":
 			Settings.cull_offscreen = false
+		# Ragyogás nélküli összehasonlító futás:  -- --nobloom
+		if arg == "--nobloom":
+			Settings.bloom = false
 	# Hálózati próba két folyamattal:  -- --nethost  /  -- --netjoin=KOD
 	var uargs := dev_args()
 	if ("--nethost" in uargs or _has_prefix(uargs, "--netjoin=")
@@ -271,6 +274,10 @@ func _ready() -> void:
 			GameState.t = fmod(cel * hossz - hossz * 0.18 + hossz, hossz)
 			print("[napszak] %.2f — %s" % [day_night.time_of_day(),
 				day_night.napszak()])
+		# Ragyogás ellenőrzéshez:  -- --pirate --bloomtest --tod=0.8 --shot=...
+		# Két hajóhad egymás mellett a vízen: sortűz, torkolattűz, füst.
+		if arg == "--bloomtest":
+			_bloom_test()
 		if arg == "--portmenu" or arg.begins_with("--portmenu="):
 			_open_nearest_port(arg.substr(11) if arg.length() > 11 else "")
 		if arg.begins_with("--stress="):
@@ -298,6 +305,44 @@ func _ready() -> void:
 	for arg in dev_args():
 		if arg.begins_with("--shot="):
 			_capture_after(arg.substr(7))
+
+# Sortűz-próba a ragyogáshoz: két hajóhad lőtávon belül, a kamera köztük.
+func _bloom_test() -> void:
+	var viz := find_land_near(Vector2(GameState.WORLD_W * 0.5,
+		GameState.WORLD_H * 0.5), 60.0, true)
+	for i in range(3):
+		var mienk := spawn_unit("galleon", 0,
+			find_land_near(viz + Vector2(-90.0, -70.0 + i * 70.0), 30.0, true),
+			GameState.start_age)
+		var ove := spawn_unit("warship", 1,
+			find_land_near(viz + Vector2(90.0, -70.0 + i * 70.0), 30.0, true),
+			GameState.start_age)
+		if mienk != null and ove != null:
+			mienk.start_attacking(ove)
+			ove.start_attacking(mienk)
+			_bloom_parok.append([mienk, ove])
+	camera.position = viz
+	camera.reset_smoothing()
+	print("[ragyogas-proba] hat hajo a vizen: %s" % str(viz))
+	# A torkolattűz harmadmásodpercig él, ezért a képhez EL IS SÜTJÜK a
+	# sortüzeket, és megállítjuk a világot: így a villanás a képen marad.
+	await get_tree().create_timer(0.4).timeout
+	for par in _bloom_parok:
+		if is_instance_valid(par[0]) and is_instance_valid(par[1]):
+			broadside.fire(par[0], par[1])
+			broadside.fire(par[1], par[0])
+	for _i in range(8):
+		await get_tree().process_frame
+	# A kamerát az egérszéli görgetés közben elvihette: visszaállítjuk, és a
+	# próbához a kamerát is megállítjuk (különben a képernyő szélén álló
+	# egér tovább görgetne).
+	_vilag_szunet(true)
+	camera.process_mode = Node.PROCESS_MODE_PAUSABLE
+	camera.position = viz
+	camera.reset_smoothing()
+	get_tree().paused = true
+
+var _bloom_parok: Array = []
 
 # A kikötőmenü ellenőrzése képernyőképpel:
 #   -- --skip-menu --pirate --portmenu=build --shot=...
@@ -894,9 +939,23 @@ func toggle_photo(be: bool = not photo_mode) -> void:
 	if scoreboard != null: scoreboard.visible = false if be else scoreboard.visible
 	if port_menu != null and be: port_menu.close()
 	# A játék megáll, hogy nyugodtan be lehessen állítani a képet — a kamera
-	# viszont szabadon jár, ezért az szünet alatt is kap képkockát.
-	camera.process_mode = Node.PROCESS_MODE_ALWAYS if be else Node.PROCESS_MODE_INHERIT
+	# viszont szabadon jár.
+	#
+	# FIGYELEM: a Main maga PROCESS_MODE_ALWAYS (hogy szünet alatt is lehessen
+	# gombot nyomni), és a gyerekei ezt ÖRÖKLIK. Ezért a puszta
+	# `get_tree().paused` nem állítaná meg a világot: a szimulációt vivő
+	# csomópontokat külön szünetelhetővé kell tenni.
+	_vilag_szunet(be)
 	get_tree().paused = be
+
+# A szimulációt vivő csomópontok szünetelhetővé tétele (és vissza).
+func _vilag_szunet(be: bool) -> void:
+	var mod := Node.PROCESS_MODE_PAUSABLE if be else Node.PROCESS_MODE_INHERIT
+	for gy in get_children():
+		# A kamera és a felület szünet alatt is éljen: mozgatni és nézni
+		# kell tudni a képet.
+		if gy == camera or gy.name == "UILayer": continue
+		gy.process_mode = mod
 	if be:
 		hud.show_toast(Lang.t("foto_be"), 3.0)
 	else:

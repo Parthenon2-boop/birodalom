@@ -180,5 +180,8 @@ func _lampak_rendez(n: float) -> void:
 		# A korong 128 képpont széles: ekkora sugárhoz ennyi a nagyítás.
 		var r := float(f[1])
 		l.texture_scale = r / 64.0
-		l.energy = float(f[2]) * n
+		# Ragyogás mellett a lámpák magja túlcsordul (a fény egynél
+		# fényesebb lesz a közepén), enélkül marad a régi erősség.
+		var tulcsordul := 1.35 if (Settings.bloom and Settings.detail >= 1) else 1.0
+		l.energy = float(f[2]) * n * tulcsordul
 		l.enabled = true

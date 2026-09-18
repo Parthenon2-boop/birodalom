@@ -29,6 +29,10 @@ var detail : int = 1
 var weather_on : bool = true
 # Nappal-éjszaka ciklus (index.html 17/B). Kikapcsolva örök délelőtt van.
 var day_night  : bool = true
+# RAGYOGÁS (bloom): a tűz, a torkolattűz és a lámpák túlcsordulnak
+# (index.html 16/D). Teljes képernyős utómunka, ezért gyenge gépen
+# kikapcsolható — a takarékos fokozat magától le is veszi.
+var bloom      : bool = true
 
 signal changed
 
@@ -151,7 +155,7 @@ func save_options() -> void:
 		"music_vol": music_vol, "sfx_vol": sfx_vol,
 		"fullscreen": fullscreen, "vsync": vsync, "fps_limit": fps_limit,
 		"detail": detail, "relay": relay_address,
-		"weather": weather_on, "day_night": day_night,
+		"weather": weather_on, "day_night": day_night, "bloom": bloom,
 		"player_name": player_name, "net_port": net_port,
 		"last_address": last_address,
 	}, "\t"))
@@ -174,6 +178,7 @@ func load_options() -> void:
 	detail     = clampi(int(d.get("detail", detail)), 0, 2)
 	weather_on = bool(d.get("weather", weather_on))
 	day_night  = bool(d.get("day_night", day_night))
+	bloom      = bool(d.get("bloom", bloom))
 	relay_address = str(d.get("relay", relay_address))
 	player_name  = str(d.get("player_name", player_name))
 	net_port     = clampi(int(d.get("net_port", net_port)), 1024, 65535)

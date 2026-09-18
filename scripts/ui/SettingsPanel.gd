@@ -37,6 +37,12 @@ func _ready() -> void:
 		func(v: bool) -> void:
 			Settings.day_night = v
 			Settings.save_options())
+	# RAGYOGÁS: a láng, a torkolattűz és a lámpák túlcsordulása. Teljes
+	# képernyős utómunka — gyenge gépen ezt érdemes először levenni.
+	_check(box, "beall_ragyogas", Settings.bloom,
+		func(v: bool) -> void:
+			Settings.bloom = v
+			Settings.save_options())
 
 	box.add_child(HSeparator.new())
 	_section(box, "beall_hang")

@@ -36,10 +36,13 @@ func _physics_process(delta: float) -> void:
 		dir = (target.global_position - global_position).normalized()
 		if global_position.distance_to(target.global_position) < 12.0:
 			if target.has_method(\"take_damage\"):
+				# A lövő ELESHETETT, amíg a golyó repült: a felszabadított
+				# csomópontot nem szabad továbbadni (az ölés ilyenkor senkié).
+				var lovo: Node = shooter if is_instance_valid(shooter) else null
 				if toltet != \"\" and target.has_method(\"hit_toltet\"):
-					target.hit_toltet(dmg, toltet, shooter)
+					target.hit_toltet(dmg, toltet, lovo)
 				else:
-					target.take_damage(dmg, shooter)
+					target.take_damage(dmg, lovo)
 			SFX.play(\"becsapodas\", -14.0)
 			queue_free()
 			return
