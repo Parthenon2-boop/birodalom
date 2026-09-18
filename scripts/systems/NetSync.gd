@@ -217,4 +217,5 @@ func _run_cmd(owner: int, kind: String, args: Array) -> void:
 		"ptrain": main.do_port_train(str(args[0]), str(args[1]), owner)
 		"stance": main.do_stance(args[0], str(args[1]), owner)
 		"form":   main.do_formation(str(args[0]), owner)
+		"ammo":   main.do_toltet(str(args[0]), owner)
 		"upg":    main.do_research(int(args[0]), owner)

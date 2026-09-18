@@ -421,6 +421,16 @@ func enqueue_unit(role: String) -> bool:
 	# Népesség: a sorban álló egységek is foglalnak helyet.
 	if ResourceSystem.pop_used(get_tree(), owner_id) >= ResourceSystem.pop_limit(get_tree(), owner_id):
 		return false
+	# HŐSBŐL EGYSZERRE CSAK EGY vezetheti a sereget (index.html 9/E). Ha
+	# elesik, újra ki lehet állítani — a hőst nem lehet végleg elveszíteni,
+	# csak drágán pótolni.
+	if role == "hero" and hero_busy(get_tree(), owner_id):
+		if owner_id == GameState.en_id:
+			var fo := get_tree().get_first_node_in_group("main")
+			if fo != null and fo.hud != null:
+				fo.hud.show_toast(Lang.t("uz_egy_hos"), 3.0)
+			SFX.play("deny")
+		return false
 	if not GameState.pay(owner_id, train_cost(owner_id, role)): return false
 	train_queue.append(role)
 	if prod_tmr.is_stopped():
@@ -431,6 +441,16 @@ func enqueue_unit(role: String) -> bool:
 # A képzés ára és ideje a fejlesztésektől is függ: a Számvitel olcsóbbá, a
 # Kiképzőtábor gyorsabbá teszi. Egy helyen számoljuk, hogy a felület
 # ugyanazt a számot mutassa, amit a kassza levon.
+# Van-e már hőse ennek a félnek — akár a pályán, akár a képzési sorban?
+static func hero_busy(tree: SceneTree, owner: int) -> bool:
+	for u in tree.get_nodes_in_group("units"):
+		if is_instance_valid(u) and int(u.owner_id) == owner and u.role == "hero":
+			return true
+	for b in tree.get_nodes_in_group("buildings"):
+		if not is_instance_valid(b) or int(b.owner_id) != owner: continue
+		if "hero" in b.train_queue: return true
+	return false
+
 static func train_cost(owner: int, role: String) -> Dictionary:
 	return Upgrades.scale_cost(owner, TRAIN_COST.get(role, {}))
 

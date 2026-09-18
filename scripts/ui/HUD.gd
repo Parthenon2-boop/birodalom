@@ -677,6 +677,8 @@ var _stance_row: HBoxContainer = null
 var _form_row: HBoxContainer = null
 var _stance_btns := {}
 var _form_btns := {}
+var _ammo_row: HBoxContainer = null
+var _ammo_btns := {}
 
 func _build_tactics() -> void:
 	var szulo := action_btns.get_parent()
@@ -704,6 +706,19 @@ func _build_tactics() -> void:
 		b2.pressed.connect(func() -> void: _send("form", [alak]))
 		_form_row.add_child(b2)
 		_form_btns[alak] = b2
+	# TÖLTET: csak ágyús hajó kijelölésekor van értelme.
+	_ammo_row = HBoxContainer.new()
+	_ammo_row.name = "AmmoRow"
+	_ammo_row.add_theme_constant_override("separation", 4)
+	szulo.add_child(_ammo_row)
+	for a2 in Unit.TOLTET_SORREND:
+		var fajta: String = a2
+		var b3 := Button.new()
+		b3.custom_minimum_size = Vector2(84, 24)
+		b3.add_theme_font_size_override("font_size", 11)
+		b3.pressed.connect(func() -> void: _send("ammo", [fajta]))
+		_ammo_row.add_child(b3)
+		_ammo_btns[fajta] = b3
 
 func _on_stance(allas: String) -> void:
 	var ids: Array = []
@@ -717,9 +732,26 @@ func _update_tactics(units: Array) -> void:
 	# Munkásokra nincs értelme: az ő kijelölésüknél nem is látszik.
 	var harcos := false
 	for u in units:
-		if is_instance_valid(u) and u.role != "worker" and int(u.owner_id) == GameState.en_id:
+		if is_instance_valid(u) and u.role != "worker" and not u.naval and not u.air \
+				and int(u.owner_id) == GameState.en_id:
 			harcos = true
 			break
+	# Ágyús hajó a kijelölésben? Akkor a töltetsor is látszik.
+	var agyus := false
+	for u in units:
+		if is_instance_valid(u) and int(u.owner_id) == GameState.en_id \
+				and u.has_method("agyus") and u.agyus():
+			agyus = true
+			break
+	_ammo_row.visible = agyus
+	if agyus:
+		var most_t := Unit.toltet_of(GameState.en_id)
+		for t in _ammo_btns:
+			var bt: Button = _ammo_btns[t]
+			bt.text = Lang.t("toltet_" + str(t))
+			bt.tooltip_text = Lang.t("toltet_%s_al" % str(t))
+			bt.flat = str(t) != most_t
+	# A hajókra nem vonatkozik az alakzat és az állás.
 	_stance_row.visible = harcos
 	_form_row.visible = harcos
 	if not harcos: return

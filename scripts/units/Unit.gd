@@ -143,6 +143,24 @@ func form_armor() -> float:
 	if naval or air or role == "worker": return 0.0
 	return FORM_ARMOR if formation_of(owner_id) == "square" else 0.0
 
+# --- A TEREP HATÁSA  (index.html 9/D) ---
+#
+#   ERDŐ  — fák között +2 páncél: a fedezék véd a nyilaktól és a golyóktól
+#   HEGY  — sziklás magaslaton +15% lőtáv: aki a dombot tartja, messzebbre lő
+#   PART  — a sekély vízparti homokban 20%-kal lassabb a menet
+#
+# Félmásodpercenként számoljuk újra, nem képkockánként — a talaj nem
+# változik olyan gyorsan, a lekérdezés viszont sok egységnél sokba kerül.
+const TEREP_KOZ := 0.5
+const TEREP_PANCEL := 2.0
+const TEREP_LOTAV := 1.15
+const TEREP_TEMPO := 0.80
+
+var terep_pancel : float = 0.0
+var terep_lotav  : float = 1.0
+var terep_tempo  : float = 1.0
+var _terep_t     : float = 0.0
+
 # Hálózati azonosító: a házigazda osztja, a csatlakozó ebből ismeri fel,
 # melyik bábut kell mozgatnia.
 var nid: int = 0
@@ -651,7 +669,7 @@ func _move(delta: float) -> void:
 			face = dir.angle()
 		# AZ IDŐJÁRÁS a menetre is hat: a hó és a felázott föld lassít, a
 		# szélcsend a vitorlát ejti össze (scripts/systems/Weather.gd).
-		var v := spd * _weather_speed() * form_mul("speed")
+		var v := spd * _weather_speed() * form_mul("speed") * terep_tempo
 		velocity = dir * v
 		walk += delta * v * 0.09
 	move_and_slide()
@@ -681,6 +699,50 @@ var kialtas_t: float = 0.0        # a hős újratöltése
 # A VITORLA sérülése (0..1): a találat rongálja, és kb. fél perc alatt
 # javítják ki. Amíg sérült, a hajó lassabb.
 var sail_dmg: float = 0.0
+
+# --- TÖLTETEK  (index.html 09/G) ---
+#
+# Ugyanabból az ágyúból három félét lehet lőni. A választás a hajóhad
+# egészére vonatkozik, és menet közben váltható:
+#
+#   GOLYÓ   — a hajótestet töri; ezzel lehet elsüllyeszteni
+#   LÁNCOS  — az árbocot és a kötélzetet tépi: a testet alig sebzi,
+#             viszont a megsérült vitorlázat LASSÍTJA a hajót
+#   KARTÁCS — a fedélzeten söpör végig: a testet szinte nem bántja, a
+#             partra szálló csapatot viszont sokszorosan fogyasztja
+const TOLTETEK := {
+	"golyo":   {"test": 1.00, "legeny": 1.0, "vitorla": 0.0},
+	"lancos":  {"test": 0.35, "legeny": 0.5, "vitorla": 1.0},
+	"kartacs": {"test": 0.25, "legeny": 3.5, "vitorla": 0.0},
+}
+const TOLTET_SORREND := ["golyo", "lancos", "kartacs"]
+# Ágyús hajó: csak ezeknél van értelme a töltetváltásnak.
+const AGYUS_HAJOK := ["warship", "galleon"]
+
+static func toltet_of(owner_id: int) -> String:
+	var t := str(GameState.get_side(owner_id).get("toltet", "golyo"))
+	return t if TOLTETEK.has(t) else "golyo"
+
+func agyus() -> bool:
+	return role in AGYUS_HAJOK
+
+# A lövedék becsapódása a TÖLTET szerint: mi sérül, a test, a vitorla vagy
+# a fedélzeten álló csapat. Szárazföldi célnál a töltet nem számít.
+func hit_toltet(amount: float, toltet: String, tamado: Node = null) -> void:
+	if not naval:
+		take_damage(amount, tamado)
+		return
+	var t: Dictionary = TOLTETEK.get(toltet, TOLTETEK["golyo"])
+	if float(t["vitorla"]) > 0.0:
+		sail_dmg = minf(1.0, sail_dmg + float(t["vitorla"]) * 0.09)
+	# A kartács a fedélzeten söpör: a szállított csapatot tizedeli. Egy
+	# szétlőtt hajóról kevesebben érnek partot.
+	var legeny := float(t["legeny"])
+	if legeny > 1.0 and not cargo.is_empty():
+		for u in cargo.duplicate():
+			if is_instance_valid(u): u.take_damage(amount * 0.45 * legeny, tamado)
+		_prune_cargo()
+	take_damage(amount * float(t["test"]), tamado)
 
 func kialtas_kesz() -> bool:
 	return role == "hero" and kialtas_t <= 0.0
@@ -714,6 +776,68 @@ func _tick_buffs(delta: float) -> void:
 	if kialtas_t > 0.0: kialtas_t = maxf(0.0, kialtas_t - delta)
 	if kialtas_el > 0.0: kialtas_el = maxf(0.0, kialtas_el - delta)
 	if sail_dmg > 0.0: sail_dmg = maxf(0.0, sail_dmg - delta * 0.035)
+	_terep_tick(delta)
+	_moral_tick(delta)
+
+# --- MORÁL  (index.html 9/E) ---
+#
+# Egy csapat nem harcol az utolsó emberig. Ha a közelben kétszeres túlerő
+# van, és az egység már megsérült, megfutamodik: hat másodpercre kivonja
+# magát a harcból, majd összeszedi magát.
+#
+# A HŐS AURÁJA véd ettől: aki a hős közelében küzd, nem futamodik meg.
+# Maga a hős pedig sosem hátrál.
+const MORAL_KOZ := 0.7            # ennyinként nézzük meg
+const MORAL_SUGAR := 200.0        # ekkora körben számoljuk a túlerőt
+const MORAL_TULERO := 2.0         # ennyiszeres ellenfél töri meg
+const MORAL_SERULES := 0.6        # eddig az életerőig még kitart
+const MORAL_FUTAS := 6.0          # ennyi ideig fut
+
+var _moral_t: float = 0.0
+
+func _moral_tick(delta: float) -> void:
+	if role == "worker" or role == "hero" or naval or air: return
+	if Combat.can_heal(role): return
+	_moral_t -= delta
+	if _moral_t > 0.0: return
+	_moral_t = MORAL_KOZ
+	if GameState.t < _moral_futas_ig: return
+	if hp >= max_hp * MORAL_SERULES: return
+	if inspired(): return                    # a hős mellett nincs futás
+	var baratok := 1.0
+	var ellen := 0.0
+	var r2 := MORAL_SUGAR * MORAL_SUGAR
+	for u in get_tree().get_nodes_in_group("units"):
+		if u == self or not is_instance_valid(u): continue
+		if u.role == "worker" or u.aboard(): continue
+		if global_position.distance_squared_to(u.global_position) > r2: continue
+		if GameState.hostile(owner_id, int(u.owner_id)): ellen += 1.0
+		else: baratok += 1.0
+	if ellen >= baratok * MORAL_TULERO and ellen > 0.0:
+		_moral_futas_ig = GameState.t + MORAL_FUTAS
+		queue_redraw()
+
+# Min áll az egység? A fedezék, a magaslat és a homok hatása.
+func _terep_tick(delta: float) -> void:
+	if naval or air: return
+	_terep_t -= delta
+	if _terep_t > 0.0: return
+	_terep_t = TEREP_KOZ
+	var t := _terrain()
+	if t == null: return
+	terep_pancel = TEREP_PANCEL if t.in_forest(global_position) else 0.0
+	terep_lotav  = TEREP_LOTAV  if t.on_rocks(global_position) else 1.0
+	terep_tempo  = TEREP_TEMPO  if t.on_shore(global_position) else 1.0
+
+# A tájat is egyszer keressük meg, mint az időjárást.
+static var _terrain_cache: Node = null
+
+func _terrain() -> Node:
+	if _terrain_cache != null and is_instance_valid(_terrain_cache):
+		return _terrain_cache
+	var m := get_tree().get_first_node_in_group("main")
+	_terrain_cache = m.terrain if m != null and is_instance_valid(m) else null
+	return _terrain_cache
 
 # A csomópontot egyszer keressük meg, és minden egység közösen használja —
 # képkockánként több száz keresés fölösleges volna.
@@ -1156,8 +1280,9 @@ func _on_attack() -> void:
 	if role in PROJECTILE_ROLES:
 		var main := get_tree().get_first_node_in_group("main")
 		if main and main.has_method("spawn_projectile"):
+			# Az ágyús hajó a HAJÓHAD töltetével lő (golyó/láncos/kartács).
 			main.spawn_projectile(global_position + Vector2(0, -12), target,
-				amount, owner_id, self)
+				amount, owner_id, self, toltet_of(owner_id) if agyus() else "")
 			return
 	target.take_damage(amount, self)
 
@@ -1173,8 +1298,8 @@ func _effective_range(t: Node2D) -> float:
 		tr = t.hit_radius()
 	elif "radius" in t:
 		tr = float(t.radius)
-	# A VONAL alakzatban a lövész messzebbre lő.
-	return atk_range * form_mul("range") + radius + tr
+	# A VONAL alakzatban a lövész messzebbre lő, a sziklás magaslatról is.
+	return atk_range * form_mul("range") * terep_lotav + radius + tr
 
 # A `tamado` azért kell, hogy az ölést jóvá lehessen írni: abból lesz a
 # veterán fokozat (index.html: creditKill).
@@ -1183,11 +1308,12 @@ func take_damage(amount: float, tamado: Node = null) -> void:
 	# késői páncél ellen a korai gyalogos ártalmatlan lenne, és a játszma
 	# menthetetlenül elakadna. A hős közelében állók egy kicsivel többet
 	# bírnak ki.
-	var ved := armor + (Combat.AURA_ARMOR if inspired() else 0.0)
+	# A páncélhoz hozzáadódik a FEDEZÉK is: fák között nehezebb eltalálni.
+	var ved := armor + terep_pancel + (Combat.AURA_ARMOR if inspired() else 0.0)
 	hp -= maxf(Upgrades.MIN_DAMAGE, amount - ved)
-	# A hajó VITORLÁJA is sérül a találattól: amíg a legénység ki nem
-	# javítja, lassabban jár (index.html: sailDmg).
-	if naval: sail_dmg = minf(1.0, sail_dmg + 0.05)
+	# A VITORLÁT a LÁNCOS golyó tépi (lásd hit_toltet) — a sima találat a
+	# testet bontja. Az eredetiben is így van: a sailDmg csak a töltetből
+	# jön, különben minden lövés egyformán lassítana.
 	_hit_at = GameState.t
 	queue_redraw()
 	if hp <= 0.0:

@@ -631,9 +631,74 @@ func _cell_water(x: int, y: int) -> bool:
 
 func add_tree(pos: Vector2) -> void:
 	trees.append(pos)
+	_deco_kesz = false
 
 func add_rock(pos: Vector2) -> void:
 	rocks.append(pos)
+	_deco_kesz = false
+
+# --- A TEREP HATÁSA  (index.html 9/D) ---
+#
+# A tájtípusok nemcsak látványban különböznek: az erdő fedez, a sziklás
+# magaslatról messzebbre látni, a parti homokban pedig nehéz a menet.
+# Az egységek másodpercenként kétszer kérdezik meg — ezért a fákat és a
+# sziklákat EGYSZER egy durva rácsba soroljuk be, és utána csak a rács
+# egy-egy celláját nézzük meg. Enélkül kétszáz katona × ezer fa lenne
+# minden lekérdezés.
+const DECO_CELL := 64
+const DECO_FA := 1
+const DECO_SZIKLA := 2
+
+var _deco: PackedByteArray = PackedByteArray()
+var _deco_w: int = 0
+var _deco_h: int = 0
+var _deco_kesz: bool = false
+
+func _build_deco_index() -> void:
+	_deco_w = int(ceil(float(GameState.WORLD_W) / float(DECO_CELL))) + 1
+	_deco_h = int(ceil(float(GameState.WORLD_H) / float(DECO_CELL))) + 1
+	_deco = PackedByteArray()
+	_deco.resize(_deco_w * _deco_h)
+	_deco.fill(0)
+	for p in trees: _deco_set(p, DECO_FA)
+	for p in rocks: _deco_set(p, DECO_SZIKLA)
+	_deco_kesz = true
+
+func _deco_set(p: Vector2, jel: int) -> void:
+	var x := int(p.x / DECO_CELL)
+	var y := int(p.y / DECO_CELL)
+	if x < 0 or y < 0 or x >= _deco_w or y >= _deco_h: return
+	_deco[y * _deco_w + x] = _deco[y * _deco_w + x] | jel
+
+func _deco_at(p: Vector2, jel: int) -> bool:
+	if not _deco_kesz: _build_deco_index()
+	var x := int(p.x / DECO_CELL)
+	var y := int(p.y / DECO_CELL)
+	# A szomszédos cellákat is nézzük: a fa a cella szélén is fedezéket ad.
+	for dy in range(-1, 2):
+		for dx in range(-1, 2):
+			var cx := x + dx
+			var cy := y + dy
+			if cx < 0 or cy < 0 or cx >= _deco_w or cy >= _deco_h: continue
+			if (_deco[cy * _deco_w + cx] & jel) != 0: return true
+	return false
+
+# Fák között áll? (fedezék a nyilak és a golyók ellen)
+func in_forest(p: Vector2) -> bool:
+	return _deco_at(p, DECO_FA)
+
+# Sziklás magaslaton áll? (messzebbre lát és messzebbre lő)
+func on_rocks(p: Vector2) -> bool:
+	return _deco_at(p, DECO_SZIKLA)
+
+# Vízparti homokban áll? (nehéz menet, a védőnek előnye van)
+func on_shore(p: Vector2) -> bool:
+	if is_water(p): return false
+	var d := float(water_cell) * SHORE_CELLS * 1.5
+	for i in range(4):
+		var a := float(i) * TAU / 4.0
+		if is_water(p + Vector2(cos(a), sin(a)) * d): return true
+	return false
 
 var _res_seq: int = 0
 

@@ -652,6 +652,157 @@ func _test_combat() -> void:
 	check("a lövedék célba ér és sebez", t.hp < thp, "%.0f -> %.0f" % [thp, t.hp])
 	if is_instance_valid(t): t.queue_free()
 
+	# --- VETERÁNSÁG: három ölés után veterán, hat után elit ---
+	var vp: Vector2 = main.find_land_near(hq.global_position + Vector2(260, 240), 60.0)
+	var vet_kat = main.spawn_unit("melee", 0, vp, 0)
+	await _frames(2)
+	var alap_dmg: float = vet_kat.dmg
+	var alap_hp: float = vet_kat.max_hp
+	check("a friss katona még újonc", vet_kat.vet == 0 and vet_kat.kills == 0)
+	for _i in range(3): vet_kat.credit_kill()
+	check("három ölés után veterán", vet_kat.vet == 1, "%d. fokozat" % vet_kat.vet)
+	check("a veterán nagyobbat üt", vet_kat.dmg > alap_dmg * 1.05,
+		"%.1f -> %.1f" % [alap_dmg, vet_kat.dmg])
+	check("a veterán többet bír", vet_kat.max_hp > alap_hp * 1.05,
+		"%.0f -> %.0f" % [alap_hp, vet_kat.max_hp])
+	check("az előléptetés nem gyógyít teljesen", vet_kat.hp <= vet_kat.max_hp)
+	for _i in range(3): vet_kat.credit_kill()
+	check("hat ölés után elit", vet_kat.vet == 2, "%d. fokozat" % vet_kat.vet)
+	# Az ölést a TÁMADÓ kapja: a lövedék is neki írja jóvá.
+	var aldozat = main.spawn_unit("melee", 1, vp + Vector2(30, 0), 0)
+	await _frames(2)
+	var oles0: int = vet_kat.kills
+	aldozat.take_damage(99999.0, vet_kat)
+	await _frames(2)
+	check("az ölés a támadónak számít", vet_kat.kills == oles0 + 1,
+		"%d -> %d" % [oles0, vet_kat.kills])
+
+	# --- HARCI ÁLLÁS ---
+	check("alapból támadó állásban van", vet_kat.stance == Unit.STANCE_AGGRO)
+	main.do_stance([int(vet_kat.nid)], Unit.STANCE_HOLD, 0)
+	check("a parancs átállítja az állást", vet_kat.stance == Unit.STANCE_HOLD)
+	main.do_stance([int(vet_kat.nid)], "hulyeseg", 0)
+	check("ismeretlen állást nem fogadunk el", vet_kat.stance == Unit.STANCE_HOLD)
+	vet_kat.stance = Unit.STANCE_FLEE
+	vet_kat.hp = vet_kat.max_hp * 0.2
+	check("a visszavonuló sérülten menekül", vet_kat.should_flee())
+	vet_kat.hp = vet_kat.max_hp
+	check("épen nem menekül", not vet_kat.should_flee())
+
+	# --- ALAKZATOK ---
+	vet_kat.stance = Unit.STANCE_AGGRO
+	var lo = main.spawn_unit("ranged", 0, vp + Vector2(0, 60), 0)
+	await _frames(2)
+	check("alapból vonalban állunk", Unit.formation_of(0) == "line")
+	check("vonalban a lövész messzebbre lő", lo.form_mul("range") > 1.05,
+		"%.2f" % lo.form_mul("range"))
+	var dmg_vonal: float = vet_kat.dmg
+	main.do_formation("wedge", 0)
+	await _frames(2)
+	check("ékben nagyobbat üt a csapat", vet_kat.dmg > dmg_vonal,
+		"%.1f -> %.1f" % [dmg_vonal, vet_kat.dmg])
+	check("ékben gyorsabb is", vet_kat.form_mul("speed") > 1.05)
+	main.do_formation("square", 0)
+	await _frames(2)
+	check("négyszögben több a páncél", vet_kat.form_armor() >= 2.0)
+	check("négyszögben lassabb a menet", vet_kat.form_mul("speed") < 1.0)
+	# A munkásra és a hajóra nem hat az alakzat: nem ők állnak csatasorba.
+	var munkas = _first_player_unit("worker")
+	if munkas != null:
+		check("a munkásra nem hat az alakzat",
+			is_equal_approx(munkas.form_mul("speed"), 1.0)
+			and is_equal_approx(munkas.form_armor(), 0.0))
+	main.do_formation("line", 0)
+	await _frames(2)
+
+	# --- A TEREP HATÁSA (9/D) ---
+	var ter = main.terrain
+	check("a táj ismeri az erdőt, a sziklát és a partot",
+		ter.has_method("in_forest") and ter.has_method("on_rocks")
+		and ter.has_method("on_shore"))
+	if ter.trees.size() > 0:
+		var fa: Vector2 = ter.trees[0]
+		check("a fa mellett erdő van", ter.in_forest(fa))
+		vet_kat.global_position = fa
+		vet_kat._terep_t = 0.0
+		vet_kat._terep_tick(0.1)
+		check("erdőben nő a páncél", vet_kat.terep_pancel >= 2.0,
+			"%.1f" % vet_kat.terep_pancel)
+	if ter.rocks.size() > 0:
+		var szikla: Vector2 = ter.rocks[0]
+		vet_kat.global_position = szikla
+		vet_kat._terep_t = 0.0
+		vet_kat._terep_tick(0.1)
+		check("sziklán nagyobb a lőtáv", vet_kat.terep_lotav > 1.1,
+			"%.2f" % vet_kat.terep_lotav)
+	# A pálya közepén (se fa, se szikla, se part) nincs hatás.
+	var tiszta: Vector2 = main.find_land_near(
+		Vector2(GameState.WORLD_W * 0.5, GameState.WORLD_H * 0.5), 140.0)
+	vet_kat.global_position = tiszta
+	vet_kat._terep_t = 0.0
+	vet_kat._terep_tick(0.1)
+	check("nyílt terepen nincs terephatás",
+		is_equal_approx(vet_kat.terep_pancel, 0.0)
+		and is_equal_approx(vet_kat.terep_lotav, 1.0))
+
+	# --- MORÁL (9/E) ---
+	vet_kat.global_position = vp
+	vet_kat.hp = vet_kat.max_hp * 0.3
+	vet_kat._moral_futas_ig = -99.0
+	var tulero: Array = []
+	for i in range(6):
+		tulero.append(main.spawn_unit("melee", 1, vp + Vector2(30 + i * 8, 20), 0))
+	await _frames(2)
+	vet_kat._moral_t = 0.0
+	vet_kat._moral_tick(0.1)
+	check("kétszeres túlerőben, sérülten megtörik a morál",
+		vet_kat.should_flee(), "futás %.1f-ig" % vet_kat._moral_futas_ig)
+	vet_kat._moral_futas_ig = -99.0
+	vet_kat.hp = vet_kat.max_hp
+	vet_kat._moral_t = 0.0
+	vet_kat._moral_tick(0.1)
+	check("épen nem törik meg a morál", not vet_kat.should_flee())
+	for t2 in tulero:
+		if is_instance_valid(t2): t2.queue_free()
+	# A HŐSBŐL egyszerre csak egy lehet.
+	var hos2 = main.spawn_unit("hero", 0, vp + Vector2(0, -60), 0)
+	await _frames(2)
+	check("már van hősünk", Building.hero_busy(main.get_tree(), 0))
+	if is_instance_valid(hos2): hos2.queue_free()
+	await _frames(3)
+	check("a hős elestével újra állítható ki",
+		not Building.hero_busy(main.get_tree(), 0))
+
+	# --- TÖLTETEK (9/G) ---
+	check("alapból golyót lövünk", Unit.toltet_of(0) == "golyo")
+	main.do_toltet("lancos", 0)
+	check("a parancs átállítja a töltetet", Unit.toltet_of(0) == "lancos")
+	main.do_toltet("nincsilyen", 0)
+	check("ismeretlen töltetet nem fogadunk el", Unit.toltet_of(0) == "lancos")
+	var viz := _find_water_point()
+	var hajo1 = main.spawn_unit("warship", 1, viz, 1)
+	await _frames(2)
+	if hajo1 != null:
+		var hhp: float = hajo1.hp
+		hajo1.hit_toltet(100.0, "lancos", null)
+		check("a láncos a vitorlát tépi", hajo1.sail_dmg > 0.0,
+			"%.2f" % hajo1.sail_dmg)
+		check("a láncos a testet alig sebzi", hajo1.hp > hhp - 60.0,
+			"%.0f -> %.0f" % [hhp, hajo1.hp])
+		check("a sérült vitorla lassít", hajo1.sail_mul() < 1.0,
+			"%.2f" % hajo1.sail_mul())
+		var hhp2: float = hajo1.hp
+		hajo1.sail_dmg = 0.0
+		hajo1.hit_toltet(100.0, "golyo", null)
+		check("a golyó a testet töri", hajo1.hp < hhp2 - 60.0)
+		check("a golyó nem tépi a vitorlát", is_equal_approx(hajo1.sail_dmg, 0.0))
+		if is_instance_valid(hajo1): hajo1.queue_free()
+	main.do_toltet("golyo", 0)
+
+	if is_instance_valid(vet_kat): vet_kat.queue_free()
+	if is_instance_valid(lo): lo.queue_free()
+	if is_instance_valid(aldozat): aldozat.queue_free()
+
 # --- 7. Gyűjtés ---
 
 func _test_gathering() -> void:

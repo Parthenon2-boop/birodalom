@@ -864,6 +864,7 @@ func _local_cmd(kind: String, args: Array) -> void:
 		"ptrain": do_port_train(str(args[0]), str(args[1]), me)
 		"stance": do_stance(args[0], str(args[1]), me)
 		"form":   do_formation(str(args[0]), me)
+		"ammo":   do_toltet(str(args[0]), me)
 
 # Az azonosítók hálózaton is átvihetők, ezért minden parancs nid-ekkel
 # dolgozik, nem csomópont-hivatkozásokkal.
@@ -1088,6 +1089,18 @@ func do_formation(alakzat: String, owner: int) -> void:
 	if owner == GameState.en_id:
 		hud.show_toast("%s: %s — %s" % [Lang.t("alakzat"),
 			Lang.t("alakzat_" + alakzat), Lang.t("alakzat_%s_al" % alakzat)], 4.0)
+		SFX.play("click")
+		hud.update_selection(selected_units)
+
+# A hajóhad töltete (index.html 09/G). A bot mindig golyót lő.
+func do_toltet(fajta: String, owner: int) -> void:
+	if not Unit.TOLTETEK.has(fajta): return
+	var side := GameState.get_side(owner)
+	if side.is_empty(): return
+	side["toltet"] = fajta
+	if owner == GameState.en_id:
+		hud.show_toast("%s — %s" % [Lang.t("toltet_" + fajta),
+			Lang.t("toltet_%s_al" % fajta)], 3.5)
 		SFX.play("click")
 		hud.update_selection(selected_units)
 
