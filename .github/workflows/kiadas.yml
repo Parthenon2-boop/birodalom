@@ -1,0 +1,107 @@
+name: Birodalom kiadás
+
+# Mit csinál?
+#   Elkészíti a Windows .exe-t és a macOS .app-ot a játékból és az indítóból, majd
+#   közzéteszi őket GitHub-kiadásként (Release). Az indító ezt a kiadást tölti le a
+#   többi gépre, így azokra nem kell Godotot telepíteni.
+#
+# Mikor fut?
+#   1) ha "v" kezdetű címkét (tag) küldesz fel:   git tag v1.0 && git push origin v1.0
+#   2) kézzel: a tároló Actions fülén -> "Birodalom kiadás" -> "Run workflow"
+#      (ott meg lehet adni a verziót, pl. v1.0)
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      verzio:
+        description: "A kiadás verziója (pl. v1.0)"
+        required: true
+        default: "v1.0"
+
+permissions:
+  contents: write        # a kiadás közzétételéhez kell
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  kiadas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kód letöltése
+        uses: actions/checkout@v4
+
+      - name: Godot és az export sablonok telepítése
+        run: |
+          set -e
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          wget -q "$BASE/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip" -O godot.zip
+          wget -q "$BASE/Godot_v${GODOT_VERSION}-stable_export_templates.tpz" -O templates.tpz
+          unzip -q godot.zip
+          chmod +x Godot_v${GODOT_VERSION}-stable_linux.x86_64
+          sudo mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          unzip -q templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+          godot --version
+
+      - name: Erőforrások előkészítése (import)
+        run: |
+          godot --headless --path . --import || true
+          godot --headless --path . --import || true
+          godot --headless --path launcher --import || true
+
+      - name: A játék exportálása (Windows)
+        run: |
+          mkdir -p build/windows
+          godot --headless --path . --export-release "Windows Desktop" "$PWD/build/windows/Birodalom.exe"
+          ls -la build/windows
+
+      - name: A közös indító exportálása (Windows)
+        run: |
+          mkdir -p build/launcher
+          godot --headless --path launcher --export-release "Windows Desktop" "$PWD/build/launcher/Jatekindito.exe"
+          ls -la build/launcher
+
+      - name: Exportálás macOS-re (a Godot a .app csomagot zip-ként készíti el)
+        run: |
+          mkdir -p build/macos
+          godot --headless --path . --export-release "macOS" "$PWD/build/macos/Birodalom-macos.zip"
+          godot --headless --path launcher --export-release "macOS" "$PWD/build/macos/Jatekindito-macos.zip"
+          ls -la build/macos
+
+      - name: Csomagolás
+        run: |
+          cd build/windows && zip -r ../../Birodalom-windows.zip . && cd ../..
+          cd build/launcher && zip -r ../../Jatekindito-windows.zip . && cd ../..
+          cp build/macos/Birodalom-macos.zip .
+          cp build/macos/Jatekindito-macos.zip .
+          ls -la *.zip
+
+      - name: Kiadás közzététele
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.verzio || github.ref_name }}
+          name: Birodalom ${{ github.event.inputs.verzio || github.ref_name }}
+          body: |
+            Kész, telepítést nem igénylő változat Windowsra és macOS-re.
+
+            **Windows**
+            - **Birodalom-windows.zip** – maga a játék (Birodalom.exe). Godot nem kell hozzá.
+            - **Jatekindito-windows.zip** – a KÖZÖS indító/frissítő: Birodalom és Heptarchia egyben.
+
+            **macOS** (Intel és Apple Silicon, univerzális)
+            - **Birodalom-macos.zip** – a játék (Birodalom.app).
+            - **Jatekindito-macos.zip** – a közös indító/frissítő.
+
+            Macen az első indításnál: jobb klikk az alkalmazáson → **Megnyitás** (az alkalmazás
+            nincs aláírva, ezért a rendszer rákérdez). Az indító a letöltött játékkal ezt magától elintézi.
+
+            Az indító magától a rendszerednek megfelelő csomagot tölti le.
+          files: |
+            Birodalom-windows.zip
+            Jatekindito-windows.zip
+            Birodalom-macos.zip
+            Jatekindito-macos.zip
