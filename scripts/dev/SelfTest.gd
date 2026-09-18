@@ -184,10 +184,36 @@ func _test_world() -> void:
 			all_cells += 1
 			if not bool(w): land_cells += 1
 	var land_pct := 100.0 * float(land_cells) / maxf(all_cells, 1)
-	var alsó := 45.0 if GameState.pirate else 60.0
+	# A kalózvilág a RÖGZÍTETT Karib-tengeren játszik: ott a tenger a játéktér,
+	# a szárazföld néhány sziget (Kuba, a Bahamák, Jamaica, Hispaniola) —
+	# összesen a pálya hatoda. Nem a teljes arány számít, hanem hogy MINDEN
+	# kezdőhely körül legyen elég part; azt külön mérjük alább.
+	var alsó := 12.0 if GameState.pirate else 60.0
 	check("elég szárazföld van a pályán", land_pct >= alsó,
 		"%.0f%% föld (elvárt legalább %.0f%%)" % [land_pct, alsó])
-	check("van tengeri felület is", land_pct <= 92.0, "%.0f%% föld" % land_pct)
+	# Minden kezdőhely körül legyen összefüggő part: bázisnak, majorságnak.
+	var szuk: Array[String] = []
+	for s in WorldGen.start_positions():
+		var szaraz := 0
+		var osszes := 0
+		for dy in range(-12, 13):
+			for dx in range(-12, 13):
+				var p := s + Vector2(dx, dy) * 32.0
+				if p.x < 0 or p.y < 0 or p.x >= GameState.WORLD_W or p.y >= GameState.WORLD_H:
+					continue
+				osszes += 1
+				if not terrain.is_water(p): szaraz += 1
+		var arany_s := 100.0 * float(szaraz) / maxf(osszes, 1)
+		# A kalóz kikötők kis szigeteken ülnek (Nassau, Tortuga), ott
+		# kevesebb part is elég — de teljesen szűk hely ott sem lehet.
+		if arany_s < (30.0 if GameState.pirate else 45.0):
+			szuk.append("%.0f%%" % arany_s)
+	check("minden kezdőhely körül van elég szárazföld", szuk.is_empty(), str(szuk))
+	# Az eredeti tájai SZÁRAZABBAK, mint a régi zajtérkép: a tenger egy parti
+	# sáv a pálya egyik szélén, mellette néhány tó és folyó — így a sima
+	# pályán 88-94% a szárazföld. (A sivatag és a szikes puszta szándékosan
+	# teljesen száraz, de az önellenőrzés az alap tájon fut.)
+	check("van tengeri felület is", land_pct <= 95.0, "%.0f%% föld" % land_pct)
 	# NEM ELÉG, HOGY VAN VÍZ: összefüggőnek is kell lennie. Ha a tenger apró
 	# tócsákra esik szét, a kikötő, a halász és a hadihajók használhatatlanok
 	# — egy pocsolyában nem lehet hajóhadat mozgatni.
@@ -200,9 +226,14 @@ func _test_world() -> void:
 	var viz_cellak: int = tavak[1]
 	var arany := 100.0 * float(legnagyobb) / maxf(float(viz_cellak), 1.0)
 	var pixel: int = legnagyobb * int(terrain.water_cell) * int(terrain.water_cell)
-	check("a legnagyobb vízfelület elég nagy a hajóknak", pixel >= 900000,
+	# A parti tenger a pálya egyik szélén fut végig (3400 x ~200 képpont),
+	# ezért fél millió képpont fölött van, és a víz TÚLNYOMÓ része egyetlen
+	# összefüggő felület — ez a két feltétel számít a hajózáshoz.
+	check("a legnagyobb vízfelület elég nagy a hajóknak", pixel >= 500000,
 		"%d cella (~%.2f millió képpont), a víz %.0f%%-a" % [
 			legnagyobb, float(pixel) / 1e6, arany])
+	check("a víz java egyetlen összefüggő tenger", arany >= 50.0,
+		"%.0f%%" % arany)
 	var lp: NavigationPolygon = terrain.land_region.navigation_polygon
 	var wp: NavigationPolygon = terrain.water_region.navigation_polygon
 	check("a szárazföldi navigációs háló felépült",
@@ -240,6 +271,35 @@ func _test_world() -> void:
 	for b in hqs:
 		if terrain.is_water(b.global_position): dry = false
 	check("a fővárosok szárazföldön állnak", dry)
+
+	# --- TÁJTÍPUSOK (az eredeti MAPS táblája) ---
+	#
+	# Kilenc választható táj (plusz a kalózvilág rögzített Karib-tengere), és
+	# tényleg MÁS pályát kell adniuk: a rengetegben több fa, a hegyvidéken
+	# több szikla, a sivatagban nincs tenger.
+	check("kilenc táj választható", WorldGen.choosable().size() == 9,
+		str(WorldGen.choosable()))
+	check("a Karib-tenger nem választható (az a kalózvilágé)",
+		not ("karib" in WorldGen.choosable()))
+	var hianyzo_taj: Array[String] = []
+	for key in WorldGen.MAPS:
+		var k := str(key["key"])
+		if Lang.t("taj_%s" % k) == "taj_%s" % k: hianyzo_taj.append(k)
+		if Lang.t("taj_%s_leiras" % k) == "taj_%s_leiras" % k:
+			hianyzo_taj.append(k + "_leiras")
+	check("minden tájnak van neve és leírása", hianyzo_taj.is_empty(),
+		str(hianyzo_taj))
+	# A szorzók tényleg különböznek: a rengeteg fában gazdag, a kopár ércben.
+	var erdo := WorldGen.map_def("erdo")
+	var kopar := WorldGen.map_def("kopar")
+	var sivatag := WorldGen.map_def("sivatag")
+	check("a rengetegben több a fa, mint a kopár vidéken",
+		float(erdo["tree"]) > float(kopar["tree"]) * 2.0)
+	check("a kopár vidék ércben gazdagabb",
+		float(kopar["stone"]) > float(erdo["stone"]))
+	check("a sivatagban nincs tenger", float(sivatag["sea"]) == 0.0)
+	check("a hegyvidéken van a legtöbb szikla",
+		float(WorldGen.map_def("hegy")["mountains"]) >= 6.0)
 
 	var units := get_tree().get_nodes_in_group("units")
 	# Oldalanként négy munkás és két gyalogos; a kalózvilágban egy szlúp is.
@@ -313,7 +373,9 @@ func _test_navigation() -> void:
 	# A légvonalbeli távolság átmenetileg NŐHET, ha az útvonal egy öblöt
 	# kerül meg — ezért azt nézzük, hogy végül tényleg odaér.
 	var d0: float = start.distance_to(goal)
-	for _i in range(40):
+	# A tájakon FOLYÓK is vannak (Folyóköz, Hegyvidék): a gázlóig tett
+	# kerülő több ezer képpont is lehet, ezért bőven hagyunk időt rá.
+	for _i in range(70):
 		if u.nav.is_navigation_finished(): break
 		await _frames(30)
 	# Kerülőút mellett nem biztos, hogy pont a célra ér — az a lényeg,
@@ -1227,6 +1289,45 @@ func _test_hud() -> void:
 	# A címlapon már nincs zászlósor a képernyő közepén.
 	check("a nyelvsor nem foglal helyet a címlap közepén",
 		menu._home_box.get_node_or_null("LangSection") == null)
+
+	# --- A CÍMLAP AZ EREDETI (index.html) MENÜJÉNEK KÉPÉT HOZZA ---
+	#
+	# Kétszínű, ritkított cím ("BIRO" + arany "DALOM"), alatta az évszámok,
+	# a háttérben sodródó heraldikai alakzatok.
+	check("a főcím kétszínű (a második fele arany)",
+		menu._home_title != null and menu._home_title.get_meta("parja", null) != null)
+	if menu._home_title != null:
+		var masodik := menu._home_title.get_meta("parja", null) as Label
+		check("a cím első fele BIRO, a másik DALOM",
+			menu._home_title.text == "BIRO" and masodik != null and masodik.text == "DALOM",
+			"%s | %s" % [menu._home_title.text, masodik.text if masodik else "-"])
+		check("a cím betűi ritkítva vannak",
+			menu._home_title.get_theme_font("font") is FontVariation)
+	check("a menü háttere a sodródó címeres háttér",
+		menu.get_node_or_null("Background") != null
+		and menu.get_node("Background").get_script() != null)
+
+	# --- TÁJVÁLASZTÓ az Új játék képernyőn ---
+	menu.show_screen("setup")
+	check("az Új játék képernyőn ott a tájválasztó",
+		menu._map_section != null and menu._map_btns.size() == 9,
+		"%d gomb" % menu._map_btns.size())
+	menu._sel_map("hegy")
+	check("a tájválasztás megjegyződik", menu.chosen_map == "hegy")
+	check("a tájhoz leírás is jár", menu._map_desc.text == Lang.t("taj_hegy_leiras"))
+	menu._sel_mode(1)
+	check("a kalózvilágban nincs tájválasztó (rögzített Karib-tenger)",
+		not menu._map_section.visible)
+	menu._sel_mode(0)
+	menu._sel_map("mezo")
+
+	# --- TÖBBJÁTÉKOS: a Heptarchia lobbijának felépítése ---
+	menu.show_screen("mp")
+	check("a többjátékos képernyőn van kapumező a házigazdának",
+		menu._host_port != null and menu._join_port != null)
+	check("a csatlakozás mezője a házigazda címét kéri",
+		menu._mp_code != null and menu._mp_code.placeholder_text.contains("."))
+	menu.show_screen("home")
 
 	# --- A zászlók körül nincs fehér keret ---
 	# A képek pergamenlapon ülnek; a menü csak magát a lobogót vágja ki.

@@ -32,6 +32,14 @@ var tutorial: bool = false
 # semmit nem szimulál, csak a kapott pillanatképet rajzolja ki.
 var net_client: bool = false
 
+# === TÁJ (pályatípus) ===
+#
+# Az eredeti tízféle tája közül melyiken játszunk: "mezo", "erdo", "kopar",
+# "sivatag", "folyok", "tavak", "hegy", "puszta", "szigetek". A kalózvilág
+# mindig a rögzített "karib" térképet kapja, a hadjárat küldetései pedig
+# megmondhatják a magukét. A leírásuk a WorldGen.MAPS táblában áll.
+var map_type: String = "mezo"
+
 # === Küldetésmérők (a hadjárat céljaihoz) ===
 # `earned`: mennyit termelt ki ÖSSZESEN a játékos — nem a raktárkészlet,
 # hanem a bevétel, különben a költekezés visszavenné a haladást.
@@ -77,10 +85,12 @@ signal era_changed(owner_id: int, new_age: int)
 const RES_MUL: Array[float] = [1.0, 1.9, 3.1, 4.6]
 
 func new_game(nation_key: String, chosen_age: int,
-			  pirate_mode: bool = false) -> void:
+			  pirate_mode: bool = false, taj: String = "") -> void:
 	sim_mag = (Time.get_ticks_msec() ^ randi()) & 0x7FFFFFFF
 	pirate = pirate_mode
 	nation = nation_key
+	# A táj: amit a menüben választottak; a kalózvilág mindig a Karib-tenger.
+	map_type = "karib" if pirate_mode else (taj if taj != "" else map_type)
 	# A kalózvilágban nincs korszakváltás: végig a vitorlások korában
 	# játszunk, és a pálya is jóval nagyobb, mert a tenger a játéktér.
 	start_age = 1 if pirate else chosen_age
@@ -125,6 +135,8 @@ func _apply_mission(m: Dictionary) -> void:
 	bot["waveT"] = float(m.get("aiWave", 115.0))
 	bot["res"] = default_res(int(bot["age"]))
 	if m.has("enemy"): bot["nemzet"] = str(m["enemy"])
+	# A küldetés megmondhatja a tájat is (a kalóz hadjáratok a Karib-tengeren).
+	if m.has("map"): map_type = str(m["map"])
 	banned_buildings = m.get("ban", [])
 	hq_trains = m.get("hqTrains", [])
 
@@ -176,11 +188,11 @@ func allied(a: int, b: int) -> bool:
 # az első a helyi játékos. Innen épül fel az oldalak tömbje.
 func new_battle(sides: Array, chosen_age: int,
 				pirate_mode: bool = false, me: int = 0,
-				seed_value: int = 0) -> void:
+				seed_value: int = 0, taj: String = "") -> void:
 	if sides.is_empty(): return
 	me = clampi(me, 0, sides.size() - 1)
 	var mine: Dictionary = sides[me]
-	new_game(str(mine.get("nemzet", "hu")), chosen_age, pirate_mode)
+	new_game(str(mine.get("nemzet", "hu")), chosen_age, pirate_mode, taj)
 	# Hálózati játszmában a világnak minden gépen ugyanolyannak kell
 	# lennie, ezért a magot a házigazda adja.
 	if seed_value != 0: sim_mag = seed_value

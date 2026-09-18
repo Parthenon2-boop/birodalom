@@ -110,6 +110,24 @@ func set_relay_address(s: String) -> void:
 	relay_address = s.strip_edges().substr(0, 60)
 	save_options()
 
+# --- A többjátékos lobbi mezői (a Heptarchia lobbijához hasonlóan
+# megjegyezzük őket: a nevet, a kaput és a legutóbbi címet) ---
+var player_name: String = ""
+var net_port: int = 27015
+var last_address: String = ""
+
+func set_player_name(s: String) -> void:
+	player_name = s.strip_edges().substr(0, 18)
+	save_options()
+
+func set_net_port(v: int) -> void:
+	net_port = clampi(v, 1024, 65535)
+	save_options()
+
+func set_last_address(s: String) -> void:
+	last_address = s.strip_edges().substr(0, 60)
+	save_options()
+
 # Hány másodpercenként számoljuk újra a ködöt.
 func fog_interval() -> float:
 	return 0.1 if detail >= 1 else 0.22
@@ -128,6 +146,8 @@ func save_options() -> void:
 		"music_vol": music_vol, "sfx_vol": sfx_vol,
 		"fullscreen": fullscreen, "vsync": vsync, "fps_limit": fps_limit,
 		"detail": detail, "relay": relay_address,
+		"player_name": player_name, "net_port": net_port,
+		"last_address": last_address,
 	}, "\t"))
 	f.close()
 
@@ -147,3 +167,6 @@ func load_options() -> void:
 	fps_limit  = int(d.get("fps_limit", fps_limit))
 	detail     = clampi(int(d.get("detail", detail)), 0, 2)
 	relay_address = str(d.get("relay", relay_address))
+	player_name  = str(d.get("player_name", player_name))
+	net_port     = clampi(int(d.get("net_port", net_port)), 1024, 65535)
+	last_address = str(d.get("last_address", last_address))

@@ -147,11 +147,15 @@ func _ready() -> void:
 		else:
 			# `--age=2`: adott korszakban indul (grafikai ellenőrzéshez).
 			# `--sides=4`: csata több féllel (te + botok, mindenki külön csapat).
+			# `--map=hegy`: adott tájon indul (a tájtípusok a WorldGen.MAPS-ban).
 			var kor := GameState.start_age
 			var felek := 0
+			var taj := ""
 			for a in dev_args():
 				if a.begins_with("--age="): kor = clampi(int(a.substr(6)), 0, 3)
 				if a.begins_with("--sides="): felek = clampi(int(a.substr(8)), 2, 6)
+				if a.begins_with("--map="): taj = a.substr(6)
+			if taj != "": GameState.map_type = taj
 			if felek > 0:
 				var lista: Array = [{"tipus": "ember", "nemzet": GameState.nation,
 					"csapat": 0}]
@@ -159,9 +163,9 @@ func _ready() -> void:
 				for i in range(1, felek):
 					lista.append({"tipus": "bot",
 						"nemzet": str(nemzetek[i % nemzetek.size()]), "csapat": i})
-				GameState.new_battle(lista, kor, pir)
+				GameState.new_battle(lista, kor, pir, 0, 0, taj)
 			else:
-				GameState.new_game("ns" if pir else GameState.nation, kor, pir)
+				GameState.new_game("ns" if pir else GameState.nation, kor, pir, taj)
 			if "--tutorial" in dev_args():
 				GameState.tutorial = true
 	if not GameState.on:

@@ -76,7 +76,7 @@ var relay_mode: bool = false
 const RELAY_PORT := 27020
 
 # A játszma beállításai (a házigazda állítja).
-var setup: Dictionary = {"age": 0, "diff": 1, "pirate": false}
+var setup: Dictionary = {"age": 0, "diff": 1, "pirate": false, "map": "mezo"}
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -360,15 +360,20 @@ func parse_address(text: String) -> Array:
 
 # --- Szoba nyitása és csatlakozás ---
 
-func host_game(player_name: String = "") -> bool:
+func host_game(player_name: String = "", kapu: int = 0) -> bool:
 	close()
 	var peer := ENetMultiplayerPeer.new()
-	# Ha a kapu foglalt, próbálkozunk a következővel.
 	var err := ERR_CANT_CREATE
-	for offset in range(0, 16):
-		port = PORT_BASE + offset
+	if kapu > 0:
+		# Megadott kapu (a lobbi kapumezője). Ha foglalt, szólunk érte.
+		port = clampi(kapu, 1024, 65535)
 		err = peer.create_server(port, MAX_PLAYERS - 1)
-		if err == OK: break
+	else:
+		# Ha a kapu foglalt, próbálkozunk a következővel.
+		for offset in range(0, 16):
+			port = PORT_BASE + offset
+			err = peer.create_server(port, MAX_PLAYERS - 1)
+			if err == OK: break
 	if err != OK:
 		error_message.emit(Lang.t("net_nem_nyilt"))
 		return false
@@ -509,7 +514,29 @@ func _new_player(nev: String, index: int, host: bool) -> Dictionary:
 		"nemzet": str(lista[index % lista.size()]),
 		"csapat": index,
 		"hazigazda": host,
+		# KÉSZ-JELÖLÉS (mint a Heptarchiában): a házigazda csak akkor tud
+		# indítani, ha mindenki bejelölte magát. Enélkül a társak fele még a
+		# nemzetét válogatta, amikor elindult a játszma.
+		"kesz": false,
 	}
+
+# Mindenki készen áll-e. A házigazda gombja ettől lesz nyomható.
+func all_ready() -> bool:
+	if players.is_empty(): return false
+	for id in players:
+		if not bool((players[id] as Dictionary).get("kesz", false)): return false
+	return true
+
+# A gép helyi (LAN) címei — ezeket írja ki a lobbi, hogy legyen mit
+# bediktálni a társaknak.
+func lan_addresses() -> Array:
+	var out: Array = []
+	for a in IP.get_local_addresses():
+		var s := str(a)
+		if s.count(".") != 3: continue
+		if s.begins_with("127.") or s.begins_with("169.254."): continue
+		out.append(s)
+	return out
 
 # --- Kapcsolat-események ---
 
@@ -592,22 +619,43 @@ func _srv_set_setup(nemzet: String, csapat: int) -> void:
 	if players.has(id):
 		players[id]["nemzet"] = nemzet
 		players[id]["csapat"] = clampi(csapat, 0, MAX_PLAYERS - 1)
+		players[id]["kesz"] = false          # aki még válogat, az nincs kész
 		_push_lobby()
+
+@rpc("any_peer", "call_remote", "reliable")
+func _srv_set_ready(kesz: bool) -> void:
+	if not is_host(): return
+	var id := multiplayer.get_remote_sender_id()
+	if players.has(id):
+		players[id]["kesz"] = kesz
+		_push_lobby()
+
+# „Kész vagyok” jelölés — a házigazdánál helyben, másnál üzenetben.
+func set_my_ready(kesz: bool) -> void:
+	if is_host():
+		if players.has(my_id):
+			players[my_id]["kesz"] = kesz
+			_push_lobby()
+	else:
+		rpc_id(host_peer, "_srv_set_ready", kesz)
 
 # A saját nemzet/csapat állítása — a házigazdánál helyben, másnál üzenetben.
 func set_my_setup(nemzet: String, csapat: int) -> void:
 	if is_host():
-		if players.has(1):
-			players[1]["nemzet"] = nemzet
-			players[1]["csapat"] = clampi(csapat, 0, MAX_PLAYERS - 1)
+		if players.has(my_id):
+			players[my_id]["nemzet"] = nemzet
+			players[my_id]["csapat"] = clampi(csapat, 0, MAX_PLAYERS - 1)
+			players[my_id]["kesz"] = false
 			_push_lobby()
 	else:
 		rpc_id(host_peer, "_srv_set_setup", nemzet, csapat)
 
-func set_match_setup(age: int, diff: int, pirate: bool) -> void:
+func set_match_setup(age: int, diff: int, pirate: bool, taj: String = "") -> void:
 	if not is_host(): return
 	setup = {"age": clampi(age, 0, 3), "diff": clampi(diff, 0, 2),
-		"pirate": pirate}
+		"pirate": pirate,
+		# A TÁJ is a házigazdáé: mindenkinek ugyanaz a térkép kell.
+		"map": taj if taj != "" else str(setup.get("map", "mezo"))}
 	_push_lobby()
 
 # --- Indítás ---
@@ -630,6 +678,7 @@ func start_match() -> void:
 		"age": int(setup.get("age", 0)),
 		"diff": int(setup.get("diff", 1)),
 		"pirate": bool(setup.get("pirate", false)),
+		"map": str(setup.get("map", "mezo")),
 	}
 	for peer in players.keys():
 		if int(peer) == my_id: continue

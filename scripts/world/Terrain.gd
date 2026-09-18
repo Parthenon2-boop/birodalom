@@ -422,6 +422,12 @@ func _ready() -> void:
 
 # --- WorldGen API ---
 
+# A tájtípus talajszíne ("" = a korszak szerinti alapszín).
+var _ground_override: String = ""
+
+func set_ground_override(hex: String) -> void:
+	_ground_override = hex
+
 func apply_water_map(map: Array, cell: int = 16) -> void:
 	water_map  = map
 	water_cell = cell
@@ -659,6 +665,12 @@ func _make_grass_tex() -> void:
 	var a := clampi(_age, 0, 3)
 	var base: Color = LAND_COLORS[a]
 	var alt: Color = LAND_ALTS[a]
+	# A TÁJTÍPUS talajszíne felülírja a korszakét: a rengeteg sötétzöld, a
+	# sivatag homokszín, a puszta szikes (index.html: MAPS[].ground). A
+	# második árnyalatot ebből keverjük, hogy a fűcsempe mintája megmaradjon.
+	if _ground_override != "":
+		base = Color(_ground_override)
+		alt = base.lightened(0.10)
 	var noise := FastNoiseLite.new()
 	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 	noise.seed = 1337 + a

@@ -103,11 +103,18 @@ func _build_screens() -> void:
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
+	_build_map_section()
 	_home_box = _new_screen(center)
-	_home_title = _title_of(_home_box, Lang.t("cim"), 42)
+	# A CÍM az eredeti (index.html) menüjének mintájára: nagy, ritkított,
+	# csupa nagybetűs felirat, amelynek a MÁSODIK FELE arany —
+	#   <h1>Biro<em>dalom</em></h1>,  letter-spacing: 10px
+	_home_title = _build_title(_home_box, Lang.t("cim"), 42)
 	var lead := Label.new()
 	lead.text = Lang.t("evszamok")
 	lead.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lead.add_theme_font_override("font", Style.spaced_font(2.0))
+	lead.add_theme_font_size_override("font_size", 14)
+	lead.add_theme_color_override("font_color", Style.DIM)
 	_home_box.add_child(lead)
 	_home_lead = lead
 	_home_box.add_child(HSeparator.new())
@@ -284,7 +291,7 @@ func _refresh_battle_list() -> void:
 
 func _on_battle_start() -> void:
 	Campaign.stop()
-	GameState.new_battle(_battle_sides, chosen_era, false)
+	GameState.new_battle(_battle_sides, chosen_era, false, 0, 0, chosen_map)
 	GameState.diff = chosen_diff
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
@@ -297,31 +304,96 @@ var _mp_note   : Label = null
 var _mp_note2  : Label = null
 var _name_edit : LineEdit = null
 var _relay_edit: LineEdit = null
+var _host_port : SpinBox = null
+var _join_port : SpinBox = null
+var _mp_sections : Array = []       # [felirat, nyelvi kulcs] párok
 
+# A TÖBBJÁTÉKOS KÉPERNYŐ — a Heptarchia lobbijának felépítésével:
+# legfelül a név, alatta keretezett szakaszokban a két (nálunk három) út:
+# szoba nyitása kapuval, csatlakozás címmel és kapuval, végül a közvetítő.
 func _build_mp_screen(center: CenterContainer) -> void:
 	_mp_box = _new_screen(center)
-	_mp_box.custom_minimum_size = Vector2(480, 0)
+	_mp_box.custom_minimum_size = Vector2(540, 0)
 	_mp_title = _title_of(_mp_box, Lang.t("tobbjatekos"), 26)
-	_mbtn(_mp_box, "helyi_csata", func() -> void: show_screen("battle"))
-	_mp_box.add_child(HSeparator.new())
+
 	# Név, amivel a lobbiban látszol.
 	var nev_sor := HBoxContainer.new()
+	nev_sor.add_theme_constant_override("separation", 10)
 	var nl := Label.new()
 	nl.text = Lang.t("jatekos_nev")
-	nl.custom_minimum_size = Vector2(110, 0)
+	nl.custom_minimum_size = Vector2(120, 0)
 	nev_sor.add_child(nl)
 	_name_edit = LineEdit.new()
 	_name_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_name_edit.max_length = 18
-	_name_edit.text = Lang.t("jatekos")
+	_name_edit.text = Settings.player_name if Settings.player_name != "" else Lang.t("jatekos")
+	_name_edit.text_changed.connect(func(t: String) -> void: Settings.set_player_name(t))
 	nev_sor.add_child(_name_edit)
 	_mp_box.add_child(nev_sor)
-	# --- Közvetítőn át: bárki, bárhonnan ---
-	_mp_box.add_child(HSeparator.new())
+
+	# --- HELYI (hálózat nélkül) ---
+	var helyi := _mp_section("net_helyi_cim", "net_helyi_leiras")
+	_mbtn(helyi, "helyi_csata", func() -> void: show_screen("battle"))
+
+	# --- SZOBA NYITÁSA (házigazda) ---
+	var gazda := _mp_section("net_gazda_cim", "net_gazda_leiras")
+	var gazda_sor := HBoxContainer.new()
+	gazda_sor.add_theme_constant_override("separation", 10)
+	var pl := Label.new()
+	pl.text = Lang.t("net_kapu")
+	pl.custom_minimum_size = Vector2(120, 0)
+	gazda_sor.add_child(pl)
+	_host_port = _port_box(gazda_sor, Settings.net_port)
+	gazda.add_child(gazda_sor)
+	_mbtn(gazda, "szoba_nyitas", func() -> void:
+		Settings.set_net_port(int(_host_port.value))
+		if Net.host_game(_name_edit.text, int(_host_port.value)):
+			show_screen("lobby"))
+
+	# --- CSATLAKOZÁS (cím + kapu) ---
+	var vendeg := _mp_section("net_vendeg_cim", "net_vendeg_leiras")
+	var cim_sor := HBoxContainer.new()
+	cim_sor.add_theme_constant_override("separation", 10)
+	var kl := Label.new()
+	kl.text = Lang.t("net_hazigazda_cime")
+	kl.custom_minimum_size = Vector2(120, 0)
+	cim_sor.add_child(kl)
+	_mp_code = LineEdit.new()
+	_mp_code.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Elfér benne egy teljes cím ("192.168.0.12") és a közvetítős,
+	# tízbetűs szobakód is ("R6AAA-AJGAA").
+	_mp_code.max_length = 40
+	_mp_code.placeholder_text = "192.168.0.12"
+	_mp_code.text = Settings.last_address
+	_mp_code.text_changed.connect(func(t: String) -> void: Settings.set_last_address(t))
+	cim_sor.add_child(_mp_code)
+	_join_port = _port_box(cim_sor, Settings.net_port)
+	vendeg.add_child(cim_sor)
+	# A csatlakozás magától eldönti, mit kapott: címet, közvetlen kódot vagy
+	# közvetítős kódot (abban a szoba sorszáma is benne van).
+	_mbtn(vendeg, "csatlakozas", func() -> void:
+		Settings.set_net_port(int(_join_port.value))
+		var szoveg := _mp_code.text.strip_edges()
+		var cim := Net.parse_code(szoveg)
+		if cim.size() >= 3:
+			if Net.join_via_relay("%s:%d" % [cim[0], cim[1]], int(cim[2]),
+					_name_edit.text):
+				show_screen("lobby")
+			return
+		if cim.is_empty() and not szoveg.contains(":") and szoveg != "":
+			# Sima cím kapu nélkül: a mellette álló kaput használjuk.
+			szoveg = "%s:%d" % [szoveg, int(_join_port.value)]
+		if Net.join_game(szoveg, _name_edit.text):
+			show_screen("lobby"))
+	_mp_note = _note(vendeg, Lang.t("net_sugo"))
+
+	# --- KÖZVETÍTŐN ÁT (senkinek nem kell kaput nyitnia) ---
+	var relay := _mp_section("net_relay_szakasz", "net_relay_sugo")
 	var relay_sor := HBoxContainer.new()
+	relay_sor.add_theme_constant_override("separation", 10)
 	var rl := Label.new()
 	rl.text = Lang.t("net_relay_cim")
-	rl.custom_minimum_size = Vector2(110, 0)
+	rl.custom_minimum_size = Vector2(120, 0)
 	relay_sor.add_child(rl)
 	_relay_edit = LineEdit.new()
 	_relay_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -331,45 +403,44 @@ func _build_mp_screen(center: CenterContainer) -> void:
 	_relay_edit.text_changed.connect(func(t: String) -> void:
 		Settings.set_relay_address(t))
 	relay_sor.add_child(_relay_edit)
-	_mp_box.add_child(relay_sor)
-	_mbtn(_mp_box, "szoba_nyitas_relay", func() -> void:
+	relay.add_child(relay_sor)
+	_mbtn(relay, "szoba_nyitas_relay", func() -> void:
 		if Net.host_via_relay(_relay_edit.text, _name_edit.text):
 			show_screen("lobby"))
-	_mp_note2 = _note(_mp_box, Lang.t("net_relay_sugo"))
-	_mp_box.add_child(HSeparator.new())
-	_mbtn(_mp_box, "szoba_nyitas", func() -> void:
-		if Net.host_game(_name_edit.text): show_screen("lobby"))
-	# Csatlakozás a HÁZIGAZDA CÍMÉVEL (vagy szobakóddal).
-	#
-	# A mező elsősorban címet vár — ezt írja ki a házigazdának a lobbi, és ez
-	# az az út, amit mindenki ismer: "cím:kapu". A szobakódot is elfogadja,
-	# az ugyanezt a címet rejti betűkbe.
-	var kod_sor := HBoxContainer.new()
-	var kl := Label.new()
-	kl.text = Lang.t("net_hazigazda_cime")
-	kl.custom_minimum_size = Vector2(110, 0)
-	kod_sor.add_child(kl)
-	_mp_code = LineEdit.new()
-	_mp_code.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Elfér benne egy teljes cím ("192.168.0.12:27015") és a közvetítős,
-	# tízbetűs szobakód is ("R6AAA-AJGAA").
-	_mp_code.max_length = 40
-	_mp_code.placeholder_text = "192.168.0.12:27015   vagy   ABCD-EFGH"
-	kod_sor.add_child(_mp_code)
-	_mp_box.add_child(kod_sor)
-	# A csatlakozás magától eldönti, közvetlen vagy közvetítős kódot kapott:
-	# a tízbetűs kódban benne van a szoba sorszáma is.
-	_mbtn(_mp_box, "csatlakozas", func() -> void:
-		var cim := Net.parse_code(_mp_code.text)
-		if cim.size() >= 3:
-			if Net.join_via_relay("%s:%d" % [cim[0], cim[1]], int(cim[2]),
-					_name_edit.text):
-				show_screen("lobby")
-		elif Net.join_game(_mp_code.text, _name_edit.text):
-			show_screen("lobby"))
-	_mp_note = _note(_mp_box, Lang.t("net_sugo"))
+
+	_mp_note2 = _note(_mp_box, "")
+	_mp_note2.add_theme_color_override("font_color", Style.GOLD)
 	_mp_box.add_child(HSeparator.new())
 	_mbtn(_mp_box, "vissza", func() -> void: show_screen("home"))
+
+# Egy keretezett szakasz címmel és rövid magyarázattal (netDoboz / MP_*_HEADER).
+func _mp_section(cim_kulcs: String, leiras_kulcs: String) -> VBoxContainer:
+	var panel := PanelContainer.new()
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	panel.add_child(box)
+	_mp_box.add_child(panel)
+	var c := Label.new()
+	c.text = Lang.t(cim_kulcs)
+	c.add_theme_color_override("font_color", Style.GOLD)
+	c.add_theme_font_override("font", Style.spaced_font(2.0))
+	box.add_child(c)
+	_mp_sections.append([c, cim_kulcs])
+	if leiras_kulcs != "":
+		var l := _note(box, Lang.t(leiras_kulcs))
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		_mp_sections.append([l, leiras_kulcs])
+	return box
+
+func _port_box(parent: Control, ertek: int) -> SpinBox:
+	var s := SpinBox.new()
+	s.min_value = 1024
+	s.max_value = 65535
+	s.step = 1
+	s.value = ertek if ertek >= 1024 else Net.PORT_BASE
+	s.custom_minimum_size = Vector2(110, 0)
+	parent.add_child(s)
+	return s
 
 # --- Lobbi ---
 
@@ -381,7 +452,10 @@ var _lobby_note  : Label = null
 var _lobby_lan   : Label = null
 var _lobby_net   : Label = null
 var _lobby_start : Button = null
+var _lobby_ready : CheckButton = null
 var _lobby_age_row : HBoxContainer = null
+var _lobby_map     : OptionButton = null
+var _lobby_map_row : HBoxContainer = null
 
 func _build_lobby_screen(center: CenterContainer) -> void:
 	_lobby_box = _new_screen(center)
@@ -405,8 +479,34 @@ func _build_lobby_screen(center: CenterContainer) -> void:
 		["kor_nev_0", "kor_nev_1", "kor_nev_2", "kor_nev_3"],
 		func(i: int) -> void:
 			_sel_era(i)
-			Net.set_match_setup(i, chosen_diff, false),
+			Net.set_match_setup(i, chosen_diff, false, chosen_map),
 		func() -> int: return chosen_era)
+	# A TÁJ is a házigazdáé — mindenki ugyanazon a térképen játszik.
+	var taj_sor := HBoxContainer.new()
+	taj_sor.add_theme_constant_override("separation", 10)
+	var tl := Label.new()
+	tl.text = Lang.t("valassz_tajat")
+	tl.custom_minimum_size = Vector2(150, 0)
+	taj_sor.add_child(tl)
+	_lobby_map = OptionButton.new()
+	_lobby_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for key in WorldGen.choosable():
+		_lobby_map.add_item(Lang.t("taj_%s" % str(key)))
+	_lobby_map.item_selected.connect(func(i: int) -> void:
+		var lista := WorldGen.choosable()
+		_sel_map(str(lista[clampi(i, 0, lista.size() - 1)]))
+		Net.set_match_setup(chosen_era, chosen_diff, false, chosen_map))
+	taj_sor.add_child(_lobby_map)
+	_lobby_box.add_child(taj_sor)
+	_lobby_map_row = taj_sor
+	# KÉSZ-JELÖLÉS (Heptarchia-módra): a házigazda csak akkor indíthat, ha
+	# mindenki bejelölte magát.
+	_lobby_ready = CheckButton.new()
+	_lobby_ready.text = Lang.t("net_kesz")
+	_lobby_ready.toggled.connect(func(on: bool) -> void:
+		Net.set_my_ready(on)
+		SFX.play("click"))
+	_lobby_box.add_child(_lobby_ready)
 	_lobby_start = _mbtn(_lobby_box, "kezdes", func() -> void: Net.start_match())
 	_mbtn(_lobby_box, "kilepes_szobabol", func() -> void:
 		Net.close()
@@ -424,19 +524,19 @@ func _refresh_lobby() -> void:
 		_lobby_lan.visible = false
 		_lobby_net.text = Lang.t("net_relay_sugo")
 	elif Net.is_host():
-		# A CÍM az első: ezt írja be a vendég. A szobakód ugyanez betűkkel,
-		# másodsorban — aki inkább azt másolja át, annak is jó.
+		# A CÍM az első: ezt írja be a vendég. Mellette a gép ÖSSZES helyi
+		# címe és a kapu (mint a Heptarchia lobbijában), másodsorban a
+		# szobakód — aki inkább azt másolja át, annak is jó.
 		if Net.public_code != "":
 			_lobby_code.text = "%s:  %s" % [Lang.t("net_cim_internet"),
 				Net.public_address()]
 			_lobby_lan.text = "%s:  %s        %s:  %s / %s" % [
-				Lang.t("net_cim_helyi"), Net.lan_address(),
+				Lang.t("net_cim_helyi"), _lan_list(),
 				Lang.t("szobakod"), Net.pretty(Net.public_code),
 				Net.pretty(Net.lan_code)]
 			_lobby_lan.visible = true
 		else:
-			_lobby_code.text = "%s:  %s" % [Lang.t("net_cim_helyi"),
-				Net.lan_address()]
+			_lobby_code.text = "%s:  %s" % [Lang.t("net_cim_helyi"), _lan_list()]
 			_lobby_lan.text = "%s:  %s" % [Lang.t("szobakod"),
 				Net.pretty(Net.lan_code)]
 			_lobby_lan.visible = true
@@ -456,7 +556,19 @@ func _refresh_lobby() -> void:
 	_lobby_note.text = Lang.t("net_hazigazda_indit") if not Net.is_host() \
 		else Lang.t("net_te_vagy_hazigazda")
 	_lobby_start.visible = Net.is_host()
+	# Csak akkor indítható, ha MINDENKI kész (Heptarchia-módra).
+	_lobby_start.disabled = not Net.all_ready()
+	_lobby_start.tooltip_text = "" if Net.all_ready() else Lang.t("net_varj_keszre")
 	_lobby_age_row.visible = Net.is_host()
+	# A táj a házigazdáé; a többiek csak látják, mit választott.
+	if _lobby_map != null:
+		var lista := WorldGen.choosable()
+		var idx := lista.find(str(Net.setup.get("map", chosen_map)))
+		if idx >= 0: _lobby_map.select(idx)
+		_lobby_map.disabled = not Net.is_host()
+	var enyem_p: Dictionary = Net.players.get(Net.my_id, {})
+	_lobby_ready.set_pressed_no_signal(bool(enyem_p.get("kesz", false)))
+	_lobby_ready.disabled = enyem_p.is_empty()
 	for c in _lobby_list.get_children():
 		_lobby_list.remove_child(c)
 		c.queue_free()
@@ -469,9 +581,15 @@ func _refresh_lobby() -> void:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 4)
 		var nev := Label.new()
-		nev.text = "%d. %s%s" % [i + 1, str(p.get("nev", "?")),
-			"  ★" if bool(p.get("hazigazda", false)) else ""]
-		nev.custom_minimum_size = Vector2(180, 0)
+		# Elöl a KÉSZ-jel (✓ / …), mint a Heptarchia lobbijában.
+		nev.text = "%s  %s%s%s" % [
+			"✓" if bool(p.get("kesz", false)) else "…",
+			str(p.get("nev", "?")),
+			"  ★" if bool(p.get("hazigazda", false)) else "",
+			"  (%s)" % Lang.t("net_te") if id == Net.my_id else ""]
+		nev.custom_minimum_size = Vector2(190, 0)
+		if bool(p.get("kesz", false)):
+			nev.add_theme_color_override("font_color", Style.OK)
 		row.add_child(nev)
 		var enyem := id == Net.my_id
 		var nb := Button.new()
@@ -501,8 +619,18 @@ func _on_net_state(state: String) -> void:
 	_refresh_lobby()
 
 func _on_net_error(text: String) -> void:
-	if _mp_note != null: _mp_note.text = text
+	# A hiba a többjátékos képernyő alján, kiemelve — a Heptarchia lobbijában
+	# is ott, egy helyen jelenik meg minden hálózati üzenet.
+	if _mp_note2 != null: _mp_note2.text = text
 	show_screen("mp")
+
+# A gép helyi címei egy sorban: ezeket diktálhatja be a házigazda.
+func _lan_list() -> String:
+	var cimek := Net.lan_addresses()
+	if cimek.is_empty(): return Net.lan_address()
+	var out: Array[String] = []
+	for c in cimek: out.append("%s:%d" % [str(c), Net.port])
+	return "  /  ".join(out)
 
 # A házigazda elindította a játszmát: mindenki ugyanabból a magból és
 # ugyanazzal az oldal-listával kezd.
@@ -511,7 +639,8 @@ func _on_match_starting(payload: Dictionary) -> void:
 	var sides: Array = payload.get("sides", [])
 	var me := Net.side_index_of(sides, Net.my_id)
 	GameState.new_battle(sides, int(payload.get("age", 0)),
-		bool(payload.get("pirate", false)), me, int(payload.get("seed", 0)))
+		bool(payload.get("pirate", false)), me, int(payload.get("seed", 0)),
+		str(payload.get("map", "mezo")))
 	GameState.diff = int(payload.get("diff", 1))
 	GameState.net_client = Net.is_client()
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
@@ -591,6 +720,101 @@ func _new_screen(center: CenterContainer) -> VBoxContainer:
 	center.add_child(b)
 	return b
 
+# --- TÁJ (pályatípus) ---
+#
+# Az eredetiben az Új játék képernyőn a korszak alatt áll a „Táj” szakasz:
+# kilenc választható tájtípus, mindegyik más erőforrás-eloszlással, vízzel
+# és talajszínnel (a tizedik, a Karib-tenger, a kalózvilág rögzített
+# térképe, ezért nem választható).
+var _map_section : VBoxContainer = null
+var _map_btns    : Array[Button] = []
+var _map_desc    : Label = null
+var _map_title   : Label = null
+var chosen_map   : String = "mezo"
+
+func _build_map_section() -> void:
+	_map_section = VBoxContainer.new()
+	_map_section.name = "MapSection"
+	_map_section.add_theme_constant_override("separation", 4)
+	_map_title = Label.new()
+	_map_title.text = Lang.t("valassz_tajat")
+	_map_section.add_child(_map_title)
+	var racs := GridContainer.new()
+	racs.columns = 5
+	racs.add_theme_constant_override("h_separation", 6)
+	racs.add_theme_constant_override("v_separation", 6)
+	_map_section.add_child(racs)
+	_map_btns.clear()
+	for key in WorldGen.choosable():
+		var k := str(key)
+		var b := Button.new()
+		b.name = "Map_" + k
+		b.text = Lang.t("taj_%s" % k)
+		b.custom_minimum_size = Vector2(120, 30)
+		b.pressed.connect(func() -> void:
+			SFX.play("click")
+			_sel_map(k))
+		racs.add_child(b)
+		_map_btns.append(b)
+	_map_desc = Label.new()
+	_map_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_map_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_map_desc.add_theme_font_size_override("font_size", 12)
+	_map_desc.modulate = Color(1, 1, 1, 0.7)
+	_map_section.add_child(_map_desc)
+	# A korszak alá kerül, a nemzetválasztó fölé — mint az eredetiben.
+	_setup_box.add_child(_map_section)
+	var era := _setup_box.get_node_or_null("EraSection")
+	if era != null:
+		_setup_box.move_child(_map_section, era.get_index() + 1)
+	_sel_map(chosen_map)
+
+func _sel_map(key: String) -> void:
+	chosen_map = key
+	var lista := WorldGen.choosable()
+	for i in _map_btns.size():
+		_mark(_map_btns[i], str(lista[i]) == key)
+	if _map_desc != null:
+		_map_desc.text = Lang.t("taj_%s_leiras" % key)
+
+# A kétszínű főcím: az első fele tintaszín, a második arany — pontosan úgy,
+# ahogy az eredeti menü <h1>Biro<em>dalom</em></h1> felirata. A betűk közti
+# rés a HTML letter-spacing:10px megfelelője (FontVariation.spacing_glyph).
+func _build_title(box: VBoxContainer, text: String, size: int) -> Label:
+	var sor := HBoxContainer.new()
+	sor.alignment = BoxContainer.ALIGNMENT_CENTER
+	sor.add_theme_constant_override("separation", 0)
+	box.add_child(sor)
+	var t := text.to_upper()
+	var vagas := int(ceil(float(t.length()) * 0.5))
+	if t == "BIRODALOM": vagas = 4          # BIRO | DALOM
+	var elso := Label.new()
+	var masodik := Label.new()
+	for l in [elso, masodik]:
+		l.add_theme_font_override("font", Style.spaced_font(10.0))
+		l.add_theme_font_size_override("font_size", size)
+	elso.text = t.substr(0, vagas)
+	masodik.text = t.substr(vagas)
+	masodik.add_theme_color_override("font_color", Style.GOLD)
+	sor.add_child(elso)
+	sor.add_child(masodik)
+	# A hívók egy Labelt várnak vissza (nyelvváltáskor ezt írják át).
+	elso.set_meta("parja", masodik)
+	elso.set_meta("cim_sor", sor)
+	return elso
+
+# Nyelvváltáskor a kétszínű cím mindkét felét újra kell osztani.
+func _set_title(elso: Label, text: String) -> void:
+	var masodik := elso.get_meta("parja", null) as Label
+	var t := text.to_upper()
+	if masodik == null:
+		elso.text = t
+		return
+	var vagas := int(ceil(float(t.length()) * 0.5))
+	if t == "BIRODALOM": vagas = 4
+	elso.text = t.substr(0, vagas)
+	masodik.text = t.substr(vagas)
+
 func _title_of(box: VBoxContainer, text: String, size: int) -> Label:
 	var l := Label.new()
 	l.text = text
@@ -617,6 +841,10 @@ func _mbtn(box: VBoxContainer, key: String, action: Callable,
 	b.name = "Btn_" + key
 	b.text = Lang.t(key)
 	b.custom_minimum_size = Vector2(300, 38)
+	# Az eredeti menü gombjai ritkított, nagyobb betűvel írnak
+	# (.mbtn { font-size:16px; letter-spacing:2px }).
+	b.add_theme_font_override("font", Style.spaced_font(2.0))
+	b.add_theme_font_size_override("font_size", 16)
 	if soon:
 		b.disabled = true
 		b.tooltip_text = Lang.t("hamarosan")
@@ -756,20 +984,15 @@ func _apply_screen_language() -> void:
 	for box in [_home_box, _single_box, _settings_box, _setup_box,
 			_battle_box, _ach_box, _mp_box, _lobby_box]:
 		if box == null: continue
-		for c in box.get_children():
-			if not (c is Button): continue
-			var b := c as Button
-			if b.name == "BackButton":
-				b.text = Lang.t("vissza")
-			elif str(b.name).begins_with("Btn_"):
-				b.text = Lang.t(str(b.name).substr(4))
-				if b.disabled: b.tooltip_text = Lang.t("hamarosan")
+		# Mélyen is keresünk: a többjátékos képernyő gombjai keretezett
+		# szakaszokban ülnek, nem közvetlenül a dobozban.
+		_relabel_buttons(box)
 	if _home_note != null: _home_note.text = Lang.t("halozat_nincs")
 	if _battle_title != null: _battle_title.text = Lang.t("csata_tobb_fel")
 	if _battle_help != null: _battle_help.text = Lang.t("csata_sugo")
 	if _screen == "battle": _refresh_battle_list()
 	if _screen == "ach": _refresh_ach_list()
-	if _home_title != null: _home_title.text = Lang.t("cim")
+	if _home_title != null: _set_title(_home_title, Lang.t("cim"))
 	if _home_lead != null: _home_lead.text = Lang.t("evszamok")
 	if _single_title != null: _single_title.text = Lang.t("egyjatekos")
 	if _settings_title != null: _settings_title.text = Lang.t("beallitasok")
@@ -783,7 +1006,36 @@ func _apply_screen_language() -> void:
 		var sp := SettingsPanel.new()
 		_settings_box.add_child(sp)
 		_settings_box.move_child(sp, 0)
+	# A tájválasztó feliratai
+	if _map_title != null: _map_title.text = Lang.t("valassz_tajat")
+	if not _map_btns.is_empty():
+		var tajak := WorldGen.choosable()
+		for i in mini(_map_btns.size(), tajak.size()):
+			_map_btns[i].text = Lang.t("taj_%s" % str(tajak[i]))
+		_sel_map(chosen_map)
+	if _lobby_map != null:
+		var lista2 := WorldGen.choosable()
+		for i in mini(_lobby_map.item_count, lista2.size()):
+			_lobby_map.set_item_text(i, Lang.t("taj_%s" % str(lista2[i])))
+	# A többjátékos szakaszcímek és a kész-jelölő felirata
+	for par in _mp_sections:
+		var c := par[0] as Label
+		if is_instance_valid(c): c.text = Lang.t(str(par[1]))
+	if _lobby_ready != null: _lobby_ready.text = Lang.t("net_kesz")
 	if _screen == "single": show_screen("single")
+
+# A "Btn_<kulcs>" nevű gombok feliratát mélységben frissíti.
+func _relabel_buttons(node: Node) -> void:
+	for c in node.get_children():
+		if c is Button:
+			var b := c as Button
+			if b.name == "BackButton":
+				b.text = Lang.t("vissza")
+			elif str(b.name).begins_with("Btn_"):
+				b.text = Lang.t(str(b.name).substr(4))
+				if b.disabled: b.tooltip_text = Lang.t("hamarosan")
+		if c.get_child_count() > 0:
+			_relabel_buttons(c)
 
 func _set_label(path: String, text: String) -> void:
 	if _setup_box == null: return
@@ -802,6 +1054,9 @@ func _sel_mode(m: int) -> void:
 		Lang.t("mod_hadjarat_leiras")][clampi(m, 0, 2)]
 	# A hadjáratban a korszakot a küldetés adja meg.
 	era_section.visible = m == 0
+	# A TÁJ csak a szabad csatában választható: a kalózvilág mindig a
+	# Karib-tengeren játszik, a hadjárat küldetése pedig maga mondja meg.
+	if _map_section != null: _map_section.visible = m == 0
 	_build_nation_buttons()
 	var lista := _order()
 	_sel_nation(lista[0] if not lista.is_empty() else "hu")
@@ -936,10 +1191,10 @@ func _on_start() -> void:
 		# kezdőkészletet — a nemzet a hadjárat mögötti frakció.
 		var key := Campaign.nation_key(chosen_nation)
 		Campaign.start(chosen_nation, Campaign.next_index(chosen_nation))
-		GameState.new_game(key, chosen_era, Style.is_pirate(key))
+		GameState.new_game(key, chosen_era, Style.is_pirate(key), chosen_map)
 	else:
 		Campaign.stop()
-		GameState.new_game(chosen_nation, chosen_era, pirate_mode)
+		GameState.new_game(chosen_nation, chosen_era, pirate_mode, chosen_map)
 	GameState.diff = chosen_diff
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 

@@ -284,6 +284,23 @@ static func gold_button_box(age: int = 0) -> StyleBoxFlat:
 	sb.border_width_bottom = 2
 	return sb
 
+# RITKÍTOTT BETŰ — a HTML `letter-spacing` megfelelője.
+#
+# Az eredeti menü címe 10, a feliratai 2 képpontnyi rést hagynak a betűk
+# között; Godotban ezt a FontVariation.spacing_glyph adja. A kész
+# betűváltozatokat eltesszük, hogy ne készüljön minden felirathoz új.
+static var _spaced: Dictionary = {}
+
+static func spaced_font(spacing: float) -> FontVariation:
+	var key := int(round(spacing))
+	if _spaced.has(key): return _spaced[key]
+	var fv := FontVariation.new()
+	var base := ThemeDB.fallback_font
+	if base != null: fv.base_font = base
+	fv.spacing_glyph = key
+	_spaced[key] = fv
+	return fv
+
 # A teljes felület témája. A Control-ok ezt öröklik.
 static func make_theme(age: int = 0) -> Theme:
 	var ui: Dictionary = AGE_UI[clampi(age, 0, 3)]
