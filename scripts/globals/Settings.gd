@@ -34,6 +34,88 @@ var day_night  : bool = true
 # kikapcsolható — a takarékos fokozat magától le is veszi.
 var bloom      : bool = true
 
+# --- BILLENTYŰKIOSZTÁS  (index.html 26/C) ---
+#
+# A gyorsbillentyűk nem lehetnek beégetve: ami magyar kiosztáson kényelmes,
+# az németen (y/z csere) vagy francia AZERTY-n használhatatlan. Ezért
+# TÁBLÁZAT dönti el, és a táblázat a beállításokban átírható.
+#
+# Mi NEM állítható, és miért:
+#   Esc, Tab, Enter, szóköz, nyilak — a felület szerkezetéhez tartoznak
+#   W A S D                        — a kamera mozgatása
+#   F11, F12                       — a rendszer is ismeri őket
+#
+# A választás a JÁTÉKOSHOZ tartozik, nem a világhoz: hálózaton nem megy át,
+# és játszmánként sem változik.
+const KEY_ACTIONS := [
+	{"k": "ep_farm",     "alap": KEY_F, "csoport": "kb_epites"},
+	{"k": "ep_house",    "alap": KEY_L, "csoport": "kb_epites"},
+	{"k": "ep_barracks", "alap": KEY_K, "csoport": "kb_epites"},
+	{"k": "ep_stable",   "alap": KEY_G, "csoport": "kb_epites"},
+	{"k": "ep_tower",    "alap": KEY_T, "csoport": "kb_epites"},
+	{"k": "ep_harbor",   "alap": KEY_Y, "csoport": "kb_epites"},
+	{"k": "ep_temple",   "alap": KEY_M, "csoport": "kb_epites"},
+	{"k": "ep_market",   "alap": KEY_R, "csoport": "kb_epites"},
+	{"k": "ep_goldmine", "alap": KEY_B, "csoport": "kb_epites"},
+	{"k": "ep_smith",    "alap": KEY_V, "csoport": "kb_epites"},
+	{"k": "ep_academy",  "alap": KEY_U, "csoport": "kb_epites"},
+	{"k": "ep_hospital", "alap": KEY_J, "csoport": "kb_epites"},
+	{"k": "allas_aggro", "alap": KEY_1, "csoport": "kb_harc"},
+	{"k": "allas_hold",  "alap": KEY_2, "csoport": "kb_harc"},
+	{"k": "allas_flee",  "alap": KEY_3, "csoport": "kb_harc"},
+	{"k": "toltet_golyo",   "alap": KEY_4, "csoport": "kb_harc"},
+	{"k": "toltet_lancos",  "alap": KEY_5, "csoport": "kb_harc"},
+	{"k": "toltet_kartacs", "alap": KEY_6, "csoport": "kb_harc"},
+	{"k": "alakzat_line",   "alap": KEY_7, "csoport": "kb_harc"},
+	{"k": "alakzat_wedge",  "alap": KEY_8, "csoport": "kb_harc"},
+	{"k": "alakzat_square", "alap": KEY_9, "csoport": "kb_harc"},
+	{"k": "megall",    "alap": KEY_X,      "csoport": "kb_parancs"},
+	{"k": "korszak",   "alap": KEY_E,      "csoport": "kb_parancs"},
+	{"k": "tetlen",    "alap": KEY_PERIOD, "csoport": "kb_parancs"},
+	{"k": "csatakialtas", "alap": KEY_Q,   "csoport": "kb_parancs"},
+	{"k": "fotomod",   "alap": KEY_O,      "csoport": "kb_parancs"},
+]
+
+# Amit nem engedünk hozzárendelni: a felület és a kamera billentyűi.
+const KEY_TILTOTT := [KEY_ESCAPE, KEY_TAB, KEY_ENTER, KEY_KP_ENTER, KEY_SPACE,
+	KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_W, KEY_A, KEY_S, KEY_D,
+	KEY_F11, KEY_F12]
+
+# akció -> billentyűkód. Csak az ALAPTÓL ELTÉRŐ választások kerülnek bele.
+var keys: Dictionary = {}
+
+func key_of(action: String) -> int:
+	if keys.has(action): return int(keys[action])
+	for a in KEY_ACTIONS:
+		if str(a["k"]) == action: return int(a["alap"])
+	return 0
+
+# Melyik akcióhoz tartozik ez a billentyű? (Egy billentyű több akciót is
+# vihet — az építés és a harci állás sosem ütközik, mert más helyzetben
+# érvényes —, ezért listát adunk vissza.)
+func actions_of(keycode: int) -> Array:
+	var ki: Array = []
+	for a in KEY_ACTIONS:
+		if key_of(str(a["k"])) == keycode: ki.append(str(a["k"]))
+	return ki
+
+func set_key(action: String, keycode: int) -> bool:
+	if keycode in KEY_TILTOTT: return false
+	keys[action] = keycode
+	save_options()
+	changed.emit()
+	return true
+
+func reset_keys() -> void:
+	keys.clear()
+	save_options()
+	changed.emit()
+
+# Ahogy a gombon megjelenik.
+static func key_label(keycode: int) -> String:
+	if keycode == 0: return "—"
+	return OS.get_keycode_string(keycode)
+
 signal changed
 
 func _ready() -> void:
@@ -156,6 +238,7 @@ func save_options() -> void:
 		"fullscreen": fullscreen, "vsync": vsync, "fps_limit": fps_limit,
 		"detail": detail, "relay": relay_address,
 		"weather": weather_on, "day_night": day_night, "bloom": bloom,
+		"keys": keys,
 		"player_name": player_name, "net_port": net_port,
 		"last_address": last_address,
 	}, "\t"))
@@ -179,6 +262,11 @@ func load_options() -> void:
 	weather_on = bool(d.get("weather", weather_on))
 	day_night  = bool(d.get("day_night", day_night))
 	bloom      = bool(d.get("bloom", bloom))
+	# A billentyűkiosztás: csak az alaptól eltérő választások vannak benne.
+	keys = {}
+	var mentett = d.get("keys", {})
+	if mentett is Dictionary:
+		for k in mentett: keys[str(k)] = int(mentett[k])
 	relay_address = str(d.get("relay", relay_address))
 	player_name  = str(d.get("player_name", player_name))
 	net_port     = clampi(int(d.get("net_port", net_port)), 1024, 65535)

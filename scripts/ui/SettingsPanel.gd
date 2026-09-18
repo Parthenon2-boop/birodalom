@@ -55,7 +55,100 @@ func _ready() -> void:
 	_slider(box, "beall_hangok_hangero", Settings.sfx_vol,
 		func(v: float) -> void: Settings.set_sfx_vol(v))
 
+	box.add_child(HSeparator.new())
+	_billentyuk(box)
+
 	custom_minimum_size = Vector2(340, 0)
+
+# --- BILLENTYŰK  (index.html 26/C) ---
+#
+# Csoportonként felsorolva; a gombra kattintva a KÖVETKEZŐ leütött billentyű
+# lesz az új kiosztás. Esc közben visszalép. A lista görgethető, hogy a
+# panel ne nőjön a képernyőn túl.
+var _kb_gombok := {}
+var _kb_varakozik: String = ""
+
+func _billentyuk(box: VBoxContainer) -> void:
+	var fejlec := HBoxContainer.new()
+	box.add_child(fejlec)
+	var cim := Label.new()
+	cim.text = Lang.t("beall_billentyuk")
+	cim.add_theme_font_size_override("font_size", 15)
+	cim.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	fejlec.add_child(cim)
+	var vissza := Button.new()
+	vissza.text = Lang.t("beall_alaphelyzet")
+	vissza.add_theme_font_size_override("font_size", 11)
+	vissza.pressed.connect(func() -> void:
+		Settings.reset_keys()
+		_kb_varakozik = ""
+		_kb_frissit()
+		SFX.play("click"))
+	fejlec.add_child(vissza)
+	# Görgethető lista: sok akció van, a panel viszont ne nyúljon el.
+	var gorgo := ScrollContainer.new()
+	gorgo.custom_minimum_size = Vector2(0, 190)
+	gorgo.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(gorgo)
+	var lista := VBoxContainer.new()
+	lista.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gorgo.add_child(lista)
+	_kb_gombok.clear()
+	var elozo := ""
+	for a in Settings.KEY_ACTIONS:
+		var akcio := str(a["k"])
+		var csoport := str(a["csoport"])
+		if csoport != elozo:
+			elozo = csoport
+			var cs := Label.new()
+			cs.text = Lang.t(csoport)
+			cs.add_theme_font_size_override("font_size", 12)
+			cs.add_theme_color_override("font_color", Color(0.72, 0.68, 0.58))
+			lista.add_child(cs)
+		var sor := HBoxContainer.new()
+		sor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var l := Label.new()
+		l.text = Lang.t("kb_" + akcio)
+		l.add_theme_font_size_override("font_size", 12)
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		sor.add_child(l)
+		var g := Button.new()
+		g.custom_minimum_size = Vector2(88, 24)
+		g.add_theme_font_size_override("font_size", 12)
+		g.pressed.connect(func() -> void:
+			_kb_varakozik = akcio
+			_kb_frissit()
+			SFX.play("click"))
+		sor.add_child(g)
+		lista.add_child(sor)
+		_kb_gombok[akcio] = g
+	_kb_frissit()
+
+func _kb_frissit() -> void:
+	for akcio in _kb_gombok:
+		var g: Button = _kb_gombok[akcio]
+		if str(akcio) == _kb_varakozik:
+			g.text = Lang.t("kb_nyomj")
+			g.add_theme_color_override("font_color", Color("e8c96a"))
+		else:
+			g.text = Settings.key_label(Settings.key_of(str(akcio)))
+			g.remove_theme_color_override("font_color")
+
+# A várakozó gomb elkapja a következő billentyűt.
+func _input(event: InputEvent) -> void:
+	if _kb_varakozik == "": return
+	if not (event is InputEventKey) or not event.pressed or event.echo: return
+	var kb := event as InputEventKey
+	get_viewport().set_input_as_handled()
+	if kb.keycode == KEY_ESCAPE:
+		_kb_varakozik = ""
+		_kb_frissit()
+		return
+	if not Settings.set_key(_kb_varakozik, kb.keycode):
+		# Foglalt billentyű (felület vagy kamera): marad a régi.
+		SFX.play("deny")
+	_kb_varakozik = ""
+	_kb_frissit()
 
 func _section(box: VBoxContainer, key: String) -> Label:
 	var l := Label.new()

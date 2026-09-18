@@ -909,6 +909,34 @@ func _test_fog() -> void:
 	fog.tick(0.1)
 	var hq = _player_hq()
 	check("a saját bázis látható", fog.is_visible_at(hq.global_position))
+	# --- NEMZETI JELLEG (15/D) ---
+	# Minden nemzethez négy korszaknyi jegy tartozik, és minden jegynek van
+	# rajza — különben a katona fejéről lemaradna a nemzet jele.
+	var jkat = _first_player_unit("melee")
+	if jkat != null and jkat.sprite.has_method("_head_at"):
+		var jsp = jkat.sprite
+		var jelleg_hiany: Array[String] = []
+		var rajzolt: Array[String] = []
+		for kulcs in Style.NATION_ORDER + Style.PIRATE_ORDER:
+			var sor: Array = jsp.NEMZETI_JELLEG.get(str(kulcs), [])
+			if sor.size() != 4:
+				jelleg_hiany.append(str(kulcs))
+				continue
+			for j in sor:
+				if not (str(j) in rajzolt): rajzolt.append(str(j))
+		check("minden nemzetnek van négy korszaknyi jegye", jelleg_hiany.is_empty(),
+			str(jelleg_hiany))
+		check("a jegyek fajtái megvannak", rajzolt.size() >= 14,
+			"%d féle jegy" % rajzolt.size())
+		# A jegy a FEJRE kerül: a fejet a lapról mérjük.
+		var fh = jsp._head_at(0, 0)
+		check("a fejet a lapról mérjük", fh.z > 1.0, "sugár %.1f" % fh.z)
+		check("a fej a figura felső részén van", fh.y < 0.0, "y %.1f" % fh.y)
+		check("a munkásra és a hajóra nem kerül nemzeti jegy",
+			not ("worker" in jsp.JELLEG_SZEREPEK)
+			and not ("warship" in jsp.JELLEG_SZEREPEK))
+		check("a jegy a gazdája nemzetéből jön", jsp._nemzet == GameState.nation,
+			"%s / %s" % [jsp._nemzet, GameState.nation])
 	# Minden épülettípusnak van saját jellegzetessége (harangtorony,
 	# bányaállvány, oszlopsor…), különben mind egyforma kis házikó volna.
 	var sig_hiany: Array[String] = []
@@ -2136,6 +2164,53 @@ func _test_modules() -> void:
 	check("a fotómódból visszatérve minden a helyén van",
 		not main.photo_mode and main.hud.visible and not main.get_tree().paused)
 
+	# --- BILLENTYŰKIOSZTÁS (26/C) ---
+	var kb_hiany: Array[String] = []
+	var kb_csoportok := {}
+	for a in Settings.KEY_ACTIONS:
+		var akcio := str(a["k"])
+		if Lang.t("kb_" + akcio) == "kb_" + akcio: kb_hiany.append(akcio)
+		kb_csoportok[str(a["csoport"])] = true
+	check("minden billentyű-akciónak van felirata", kb_hiany.is_empty(),
+		str(kb_hiany))
+	check("a billentyűk csoportokba vannak rendezve", kb_csoportok.size() >= 3,
+		str(kb_csoportok.keys()))
+	# Egy csoporton belül nem ütközhetnek az alapértékek.
+	var utkozes: Array[String] = []
+	for cs in kb_csoportok:
+		var latott := {}
+		for a in Settings.KEY_ACTIONS:
+			if str(a["csoport"]) != str(cs): continue
+			var kod := int(a["alap"])
+			if latott.has(kod): utkozes.append("%s: %s" % [cs, str(a["k"])])
+			latott[kod] = true
+	check("egy csoporton belül nincs ütköző alapbillentyű", utkozes.is_empty(),
+		str(utkozes))
+	# A kamera és a felület billentyűit nem lehet elvenni.
+	var tiltott_alap: Array[String] = []
+	for a in Settings.KEY_ACTIONS:
+		if int(a["alap"]) in Settings.KEY_TILTOTT:
+			tiltott_alap.append(str(a["k"]))
+	check("az alapkiosztás nem nyúl a kamera billentyűihez",
+		tiltott_alap.is_empty(), str(tiltott_alap))
+	# Átírás, tiltás, visszaállítás.
+	var ment_keys: Dictionary = Settings.keys.duplicate()
+	var alap_farm := Settings.key_of("ep_farm")
+	check("az alapkiosztás jön a táblából", alap_farm != 0)
+	check("a foglalt billentyűt nem fogadjuk el",
+		not Settings.set_key("ep_farm", KEY_W))
+	check("a tiltás után is a régi marad", Settings.key_of("ep_farm") == alap_farm)
+	check("a billentyű átírható", Settings.set_key("ep_farm", KEY_Z)
+		and Settings.key_of("ep_farm") == KEY_Z)
+	check("a billentyűből megtalálható az akció",
+		"ep_farm" in Settings.actions_of(KEY_Z), str(Settings.actions_of(KEY_Z)))
+	Settings.reset_keys()
+	check("az alaphelyzet visszaállít", Settings.key_of("ep_farm") == alap_farm)
+	Settings.keys = ment_keys
+	check("a gyorsbillentyű-kezelő működik", main.has_method("_hotkey"))
+	# A tétlen munkás keresése nem hasal el üres listán sem.
+	check("a tétlen munkás gomb válaszol", main._jump_to_idle_worker())
+
 	# --- NAPPAL ÉS ÉJSZAKA (17/B) ---
 	var dn = main.day_night
 	check("van nappal-éjszaka ciklus", dn != null)
@@ -2630,6 +2705,39 @@ func weapon_test(age: int = 0) -> void:
 		var szog: float = [0.0, PI * 0.5, PI, -PI * 0.5][int(e[1])]
 		u.face = szog
 		u.sprite.update_anim(szog, 0.0, false, bool(e[2]))
+
+# --- Nemzeti jelleg próba (--jellegtest) ---
+#
+# Soronként egy nemzet, oszloponként egy korszak: egyetlen képen látszik a
+# teljes tábla — kalpag, szárny, morion, csákó, acélsisak. A szimulációt
+# megállítja, hogy a póz maradjon.
+func jelleg_test() -> void:
+	var hq = _player_hq()
+	if hq == null: return
+	var origin: Vector2 = hq.global_position + Vector2(-300, -330)
+	var nemzetek: Array = []
+	nemzetek.append_array(Style.NATION_ORDER)
+	nemzetek.append_array(Style.PIRATE_ORDER)
+	var units: Array = []
+	for n in nemzetek.size():
+		for kor in range(4):
+			var p := origin + Vector2(float(kor) * 64.0, float(n) * 82.0)
+			var u = main.spawn_unit("melee", 0, p, kor)
+			if u == null: continue
+			# A jegy a nemzetből jön; a próbához közvetlenül állítjuk be.
+			u.sprite._nemzet = str(nemzetek[n])
+			units.append(u)
+	main.camera.position = origin + Vector2(96.0, float(nemzetek.size()) * 41.0)
+	main.camera.zoom = Vector2(2.2, 2.2)
+	main.camera.reset_smoothing()
+	main.fog.reveal_all()
+	await _frames(3)
+	GameState.on = false
+	for u in units:
+		if not is_instance_valid(u): continue
+		u.face = PI * 0.5                       # mind szemből
+		u.sprite.update_anim(PI * 0.5, 0.0, false, false)
+	print("[jelleg] %d nemzet x 4 korszak" % nemzetek.size())
 
 # --- Hajópróba (--shiptest) ---
 #

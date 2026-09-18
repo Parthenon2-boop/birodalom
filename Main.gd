@@ -237,6 +237,11 @@ func _ready() -> void:
 		for a in args:
 			if a.begins_with("--age="): kor = clampi(int(a.substr(6)), 0, 3)
 		wt.weapon_test(kor)
+	# Nemzeti jelleg próba:  -- --skip-menu --jellegtest --shot=out.png
+	if "--jellegtest" in args:
+		var jt: Node = (load("res://scripts/dev/SelfTest.gd") as GDScript).new(self)
+		add_child(jt)
+		jt.jelleg_test()
 	# Hajópróba:  godot -- --skip-menu --shiptest --shot=out.png
 	if "--shiptest" in args:
 		var ht: Node = (load("res://scripts/dev/SelfTest.gd") as GDScript).new(self)
@@ -871,19 +876,21 @@ class BuildGhost extends Node2D:
 # --- Bemenet ---
 
 func _unhandled_input(event: InputEvent) -> void:
-	# FOTÓMÓD: F a be- és kikapcsolás, Enter/szóköz a kép mentése, Esc kilép.
+	# GYORSBILLENTYŰK. A kiosztás táblázatból jön és átírható
+	# (Beállítások > Billentyűk; index.html 26/C).
 	if event is InputEventKey and event.pressed and not event.echo:
 		var kb := event as InputEventKey
-		if kb.keycode == KEY_F:
-			toggle_photo()
-			return
 		if photo_mode:
+			# Fotómódban csak a kép mentése és a kilépés él.
 			if kb.keycode == KEY_ENTER or kb.keycode == KEY_KP_ENTER:
 				save_photo()
 				return
-			if kb.keycode == KEY_ESCAPE:
+			if kb.keycode == KEY_ESCAPE \
+					or kb.keycode == Settings.key_of("fotomod"):
 				toggle_photo(false)
 				return
+			return
+		if _hotkey(kb.keycode): return
 	if photo_mode: return            # fotómódban nincs más parancs
 	if event.is_action_pressed("pause"):
 		_toggle_pause()
@@ -926,6 +933,82 @@ func _unhandled_input(event: InputEvent) -> void:
 # világkoordinátában: kinagyított térképen ugyanakkora legyen a jelölő
 # találati sávja, mint kicsinyítve. A névtábla a jelölő ALATT van, ezért
 # lefelé nyújtjuk a sávot (index.html: portHit).
+# --- GYORSBILLENTYŰK  (index.html 26/C) ---
+#
+# A billentyű nem itt van beégetve: a Settings táblájából jön, és a
+# beállításokban átírható. Egy billentyű több akciót is vihet — az építés
+# és a harci állás sosem ütközik, mert más helyzetben érvényes.
+func _hotkey(keycode: int) -> bool:
+	if not GameState.on or GameState.over: return false
+	var tett := false
+	for akcio in Settings.actions_of(keycode):
+		var a := str(akcio)
+		if a.begins_with("ep_"):
+			var tipus := a.substr(3)
+			# Építeni csak munkással lehet: e nélkül a gomb nem szólna.
+			if hud._has_worker(selected_units) and not (tipus in GameState.banned_buildings):
+				set_build_mode(tipus)
+				SFX.play("click")
+				tett = true
+		elif a.begins_with("allas_"):
+			hud._on_stance(a.substr(6))
+			tett = true
+		elif a.begins_with("alakzat_"):
+			send_cmd("form", [a.substr(8)])
+			tett = true
+		elif a.begins_with("toltet_"):
+			send_cmd("ammo", [a.substr(7)])
+			tett = true
+		else:
+			match a:
+				"megall":
+					var ids: Array = []
+					for u in selected_units:
+						if is_instance_valid(u): ids.append(int(u.nid))
+					if not ids.is_empty():
+						send_cmd("stop", [ids])
+						tett = true
+				"korszak":
+					hud._on_era_pressed()
+					tett = true
+				"tetlen":
+					tett = _jump_to_idle_worker()
+				"csatakialtas":
+					for u in selected_units:
+						if is_instance_valid(u) and u.role == "hero" \
+								and u.kialtas_kesz():
+							var db: int = u.kialtas()
+							if db > 0:
+								hud.show_toast(Lang.t("csatakialtas_uzenet") % db, 3.0)
+							tett = true
+							break
+				"fotomod":
+					toggle_photo(true)
+					tett = true
+	return tett
+
+# A következő TÉTLEN munkás: kijelöli, és odaviszi a kamerát. Nagy bázison
+# ez a leggyakoribb mozdulat — enélkül a munkás elfelejtve ácsorog.
+var _tetlen_index: int = 0
+
+func _jump_to_idle_worker() -> bool:
+	var tetlenek: Array = []
+	for u in get_tree().get_nodes_in_group("player_units"):
+		if not is_instance_valid(u) or u.role != "worker": continue
+		if u.auto_gather or u.build_target != null: continue
+		if u.velocity.length() > 4.0: continue
+		tetlenek.append(u)
+	if tetlenek.is_empty():
+		hud.show_toast(Lang.t("nincs_tetlen"), 2.0)
+		return true
+	tetlenek.sort_custom(func(a, b): return int(a.nid) < int(b.nid))
+	_tetlen_index = (_tetlen_index + 1) % tetlenek.size()
+	var w: Node = tetlenek[_tetlen_index]
+	select_only(w)
+	camera.position = w.global_position
+	SFX.play("click")
+	return true
+
 # --- FOTÓMÓD  (index.html 26/B) ---
 #
 # A felület eltűnik, a játék megáll, a kamera szabadon jár, a képet pedig

@@ -154,6 +154,10 @@ func setup(role: String, age: int, owner_id: int) -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_role = role
 	_age = age
+	# A NEMZETI JEGYHEZ tudni kell, ki a gazda és melyik nemzet: a jegy
+	# formája a nemzeté, a színe a félé (lásd _draw_nemzeti_jelleg).
+	_owner_id = owner_id
+	_nemzet = str(GameState.get_side(owner_id).get("nemzet", "hu"))
 	# Az LPC/napóleoni készletből csak egy változat van, ezért az ellenséges
 	# egységeket enyhe színezéssel választjuk el. (A talpgyűrű önmagában
 	# tömegben nehezen olvasható.)
@@ -560,6 +564,67 @@ func _measure_hand(row: int, col: int, side: float) -> Vector2:
 			fallback.x), fallback.y)
 	return Vector2(float(bx) - 32.0, float(by) - 32.0)
 
+# --- A FEJTETŐ helye a kockán belül ---
+#
+# A nemzeti jegy (sisak, kalpag, csákó) a fejre kerül, tehát pontosan
+# tudnunk kell, hol ér véget felül az alak — és ez kockáról kockára
+# változik, mert a járásciklusban bólint a fej. A lapról mérjük meg: a
+# legfelső nem átlátszó képpont a fejtető, a hozzá tartozó sáv közepe
+# pedig a fej középvonala. Kockánként egyszer, utána mindenki ugyanazt
+# használja.
+# A visszaadott érték: x, y = a fej KÖZEPE a kocka közepéhez képest,
+# z = a fej sugara képpontban. A jegy mérete ebből jön, így a lapok
+# méretkülönbsége nem számít: a sisak mindig a fejre való.
+static var _head_cache: Dictionary = {}
+
+func _head_at(row: int, col: int) -> Vector3:
+	var k := "%s|%d|%d" % [_sheet_key, row, col]
+	if _head_cache.has(k): return _head_cache[k]
+	var res := _measure_head(row, col)
+	_head_cache[k] = res
+	return res
+
+func _measure_head(row: int, col: int) -> Vector3:
+	var m: Array = SHEET_METRICS.get(_sheet_key, [TARGET_H, 61.0])
+	var fig: float = float(m[0])
+	var foot: float = float(m[1])
+	var fallback := Vector3(0.0, foot - fig * 0.90 - 32.0, fig * 0.11)
+	var img := _sheet_image(_sheet_key, texture)
+	if img == null: return fallback
+	var ox := col * FW
+	var oy := row * FH
+	if ox + FW > img.get_width() or oy + FH > img.get_height(): return fallback
+	# Felülről lefelé keressük az első nem átlátszó sort: az a fejtető. A
+	# fegyver és a köpeny lejjebb kezdődik, tehát ami legfelül van, az a fej.
+	var also := clampi(int(foot - fig * 0.55), 0, FH - 1)
+	var teto := -1
+	var kozep_x := 0.0
+	for y in range(0, also):
+		var bal := 999
+		var jobb := -999
+		for x in range(FW):
+			if img.get_pixel(ox + x, oy + y).a < 0.5: continue
+			bal = mini(bal, x)
+			jobb = maxi(jobb, x)
+		if jobb < 0: continue
+		teto = y
+		kozep_x = (float(bal + jobb) * 0.5) - 32.0
+		break
+	if teto < 0: return fallback
+	# A fej SZÉLESSÉGE: a fejtető alatti néhány sor közül a legszélesebb —
+	# a koponya legszélesebb pontja. Ebből lesz a sugár.
+	var szeles := 0
+	for y in range(teto, mini(teto + 8, also)):
+		var b2 := 999
+		var j2 := -999
+		for x in range(FW):
+			if img.get_pixel(ox + x, oy + y).a < 0.5: continue
+			b2 = mini(b2, x)
+			j2 = maxi(j2, x)
+		if j2 >= 0: szeles = maxi(szeles, j2 - b2 + 1)
+	var r := maxf(float(szeles) * 0.5, fig * 0.07)
+	return Vector3(kozep_x, float(teto) - 32.0 + r, r)
+
 func _silhouette_x(img: Image, row: int, col: int, side: float,
 		top: int, bot: int, fallback: float) -> float:
 	var ox := col * FW
@@ -610,6 +675,7 @@ func sheet_has_weapon() -> bool:
 func _draw() -> void:
 	if _kind == Kind.HORSE:
 		_draw_rider()
+		_draw_rider_jelleg()
 		return
 	if _kind == Kind.SHIP:
 		match _ship_style:
@@ -617,6 +683,9 @@ func _draw() -> void:
 			"steel": _draw_steel_ship()
 		return
 	if _kind == Kind.NONE: return
+	# A NEMZETI JEGY a fejre kerül — akkor is, ha a laphoz fegyver is
+	# tartozik, tehát a fegyverrajz kihagyása előtt.
+	_draw_gyalog_jelleg()
 	if sheet_has_weapon(): return
 	var kind: String = WEAPON_FOR.get(_role, "")
 	if kind == "": return
@@ -735,6 +804,296 @@ func _draw_rider() -> void:
 	var n := Vector2(-d.y, d.x)
 	_draw_sabre(hand, d, n, 1.0)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+# --- NEMZETI JELLEG  (index.html 15/D) ---
+#
+# Eddig a nemzetek csak SZÍNBEN különböztek: ránézésre minden sereg
+# ugyanúgy nézett ki. Ez a réteg a KÖRVONALAT bontja meg — nem új
+# egységfajtákat vezet be (azzal a játékmenet is változna), hanem ráfest
+# egy nemzeti jegyet a meglévő katonára: sisakforma, tollforgó, kalpag,
+# a lengyel huszár szárnya.
+#
+# Miért így? Mert a sziluett az, amit a játékos a csata zűrzavarában
+# valóban lát. A színt elnyeli az éjszaka, a por és a köd; egy kalpag
+# vagy egy szárnypár viszont messziről is felismerhető.
+#
+# A jegy a FEJ FÖLÉ kerül (a fejtetőt kockánként mérjük), és kizárólag
+# látvány: a szimulációt nem érinti.
+const JELLEG_SZEREPEK := ["melee", "ranged", "spear", "cav", "hero"]
+
+const NEMZETI_JELLEG := {
+	"hu": ["kalpag", "kalpag", "huszarcsako", "sisakM"],      # huszárhagyomány
+	"pl": ["szarny", "szarny", "rogatywka", "sisakM"],        # szárnyas huszár
+	"gb": ["csobor", "tricorn", "medvebor", "brodie"],        # vöröskabátos
+	"es": ["morion", "morion", "csako", "oldalsapka"],        # konkvisztádor
+	"fr": ["csobor", "tricorn", "csako", "adrian"],           # muskétás
+	"de": ["csobor", "szeleskarima", "tuskes", "stahl"],      # porosz tüskés sisak
+	"at": ["csobor", "szeleskarima", "csako", "sisakM"],
+	"ru": ["prilbica", "szeleskarima", "csako", "budjonnij"],
+	"ns": ["kendo", "kendo", "kendo", "kendo"],               # kalózok
+	"bb": ["kendo", "kendo", "kendo", "kendo"],
+	"sb": ["tricorn", "tricorn", "tricorn", "tricorn"],
+}
+
+const ACEL_J := Color(0.55, 0.58, 0.63)
+const ACEL_S := Color(0.35, 0.39, 0.44)
+
+var _owner_id: int = 0
+var _nemzet: String = "hu"
+
+func _jelleg() -> String:
+	var t: Array = NEMZETI_JELLEG.get(_nemzet, [])
+	if t.is_empty(): return ""
+	return str(t[clampi(_age, 0, 3)])
+
+# A jegy kirajzolása a fej fölé. A `col` a csapatszín, az `acc` a kiemelés —
+# ezekkel marad felismerhető, ki kicsoda, miközben a FORMA a nemzeté.
+func _draw_nemzeti_jelleg(fej: Vector2, k: float, hatulrol: bool,
+		oldalt: bool) -> void:
+	if not (_role in JELLEG_SZEREPEK): return
+	var jegy := _jelleg()
+	if jegy == "": return
+	var col := Style.side_color(_owner_id)
+	var acc := Style.side_accent(_owner_id)
+	# Az origó a FEJ KÖZEPE — az eredeti rajzok is ehhez a ponthoz mérnek.
+	var o := fej
+	match jegy:
+		"kalpag":       _j_kalpag(o, k, col, acc)
+		"szarny":       _j_szarny(o, k, hatulrol, oldalt)
+		"morion":       _j_morion(o, k, acc)
+		"csobor":       _j_csobor(o, k, acc, hatulrol)
+		"tricorn":      _j_tricorn(o, k, acc)
+		"csako":        _j_csako(o, k, col, acc, false)
+		"huszarcsako":  _j_csako(o, k, col, acc, true)
+		"rogatywka":    _j_rogatywka(o, k, col)
+		"oldalsapka":   _j_oldalsapka(o, k, col, acc)
+		"medvebor":     _j_medvebor(o, k)
+		"szeleskarima": _j_szeleskarima(o, k, acc)
+		"tuskes":       _j_tuskes(o, k)
+		"prilbica":     _j_prilbica(o, k)
+		"budjonnij":    _j_budjonnij(o, k, col, acc)
+		"brodie":       _j_brodie(o, k)
+		"adrian":       _j_adrian(o, k)
+		"stahl":        _j_stahl(o, k)
+		"sisakM":       _j_sisak_modern(o, k)
+		"kendo":        _j_kendo(o, k, col)
+
+# A gyalogos jegye: a mért fejtető fölé, a kocka szerinti bólintással.
+func _draw_gyalog_jelleg() -> void:
+	if not (_role in JELLEG_SZEREPEK): return
+	if _jelleg() == "": return
+	var row: int = _rows[clampi(_dir, 0, 3)]
+	var h := _head_at(row, _col)
+	var fej := Vector2(h.x, h.y) + _foot
+	# Az eredeti rajzok egy 4,3 képpont sugarú fejhez készültek: ebből jön
+	# a méretarány, bármekkora is a lap.
+	_draw_nemzeti_jelleg(fej, h.z / 4.9, _dir == 3, _dir == 0 or _dir == 2)
+
+# A LOVAS jegye: a nyeregben ülő alak feje a rajzolt kép tetején van.
+func _draw_rider_jelleg() -> void:
+	if _rider_tex == null or not (_role in JELLEG_SZEREPEK): return
+	if _jelleg() == "": return
+	var s := -1.0 if _rows[clampi(_dir, 0, 3)] == 2 else 1.0
+	var bob := 0.0
+	if _phase >= 0 and _phase < WALK_SWING.size():
+		bob = WALK_SWING[_phase].y * 0.6
+	var seat := RIDER_SEAT_Y - 32.0 + _foot.y + bob
+	var h := _rider_src_h * _rider_scale
+	# A lovas feje a rajzolt kép tetején ül; a fej sugara a kép magasságának
+	# nagyjából a tizede.
+	var r := h * 0.085
+	var fej := Vector2(RIDER_SADDLE_DX * s,
+		seat - h * RIDER_HIP_FRAC + h * 0.06 + r)
+	_draw_nemzeti_jelleg(fej, r / 4.9, _dir == 3, _dir == 0 or _dir == 2)
+
+# Segédek: a HTML ív- és ellipszisrajzait apró sokszögekkel adjuk vissza.
+func _ellipszis(c: Vector2, r: Vector2, szin: Color, szog: float = 0.0) -> void:
+	var pts := PackedVector2Array()
+	for i in range(16):
+		var a := TAU * float(i) / 16.0
+		pts.append(c + Vector2(cos(a) * r.x, sin(a) * r.y).rotated(szog))
+	draw_colored_polygon(pts, szin)
+
+# Felső félkör (sisakkupak).
+func _kupak(c: Vector2, r: Vector2, szin: Color) -> void:
+	var pts := PackedVector2Array()
+	pts.append(c + Vector2(-r.x, 0))
+	for i in range(13):
+		var a := PI + PI * float(i) / 12.0
+		pts.append(c + Vector2(cos(a) * r.x, sin(a) * r.y))
+	pts.append(c + Vector2(r.x, 0))
+	draw_colored_polygon(pts, szin)
+
+# MAGYAR KALPAG: prémes kalpag csapatszínű posztóval és tollforgóval.
+func _j_kalpag(o: Vector2, k: float, col: Color, acc: Color) -> void:
+	_ellipszis(o + Vector2(0, -3.2 * k), Vector2(4.4, 3.4) * k,
+		Color(0.23, 0.16, 0.12))
+	_ellipszis(o + Vector2(0, -5.2 * k), Vector2(3.2, 2.2) * k, col.darkened(0.15))
+	draw_line(o + Vector2(1.4, -5.6) * k, o + Vector2(3.6, -10.4) * k, acc, 1.1 * k)
+
+# LENGYEL SZÁRNYAS HUSZÁR: a szárny a hátra van szíjazva, ezért hátulról
+# és oldalról a legfeltűnőbb; szemből keskenyebb, hogy ne takarja az arcot.
+func _j_szarny(o: Vector2, k: float, hatulrol: bool, oldalt: bool) -> void:
+	var sz := 0.55 if (not hatulrol and not oldalt) else 1.0
+	var toll := Color(0.94, 0.91, 0.86, 0.92)
+	for oldal in [-1.0, 1.0]:
+		if oldalt and oldal < 0.0: continue        # oldalról csak a közelebbi
+		var pts := PackedVector2Array([
+			o + Vector2(oldal * 2.6 * sz, 4.4) * k,
+			o + Vector2(oldal * 8.4 * sz, -3.6) * k,
+			o + Vector2(oldal * 5.4 * sz, -11.1) * k,
+			o + Vector2(oldal * 3.6 * sz, -4.1) * k,
+			o + Vector2(oldal * 1.8 * sz, 3.9) * k,
+		])
+		draw_colored_polygon(pts, toll)
+		for i in range(1, 4):
+			var t := float(i) / 4.0
+			draw_line(o + Vector2(oldal * (2.4 + t * 1.2) * sz, 3.4 - t * 5.0) * k,
+				o + Vector2(oldal * (5.6 + t * 1.4) * sz, 0.4 - t * 6.5) * k,
+				Color(0.35, 0.31, 0.27, 0.45), 0.7 * k)
+	_kupak(o + Vector2(0, -1.2 * k), Vector2(4.2, 4.2) * k, ACEL_S)
+
+# SPANYOL MORION: taréjos konkvisztádor-sisak tollal.
+func _j_morion(o: Vector2, k: float, acc: Color) -> void:
+	draw_colored_polygon(PackedVector2Array([
+		o + Vector2(-5.2, -1.6) * k, o + Vector2(-2.6, -7.2) * k,
+		o + Vector2(0, -9.0) * k, o + Vector2(2.6, -7.2) * k,
+		o + Vector2(5.2, -1.6) * k, o + Vector2(0, -3.4) * k,
+	]), ACEL_J)
+	draw_rect(Rect2(o + Vector2(-0.6, -9.2) * k, Vector2(1.2, 6.2) * k), ACEL_S, true)
+	_ellipszis(o + Vector2(-3.4, -7.4) * k, Vector2(1.1, 2.6) * k, acc, -0.5)
+
+# KÖZÉPKORI CSÖBÖRSISAK: szemréssel és kis forgóval.
+func _j_csobor(o: Vector2, k: float, acc: Color, hatulrol: bool) -> void:
+	draw_rect(Rect2(o + Vector2(-4.2, -5.4) * k, Vector2(8.4, 6.6) * k), ACEL_J, true)
+	if not hatulrol:
+		draw_rect(Rect2(o + Vector2(-3.2, -2.6) * k, Vector2(6.4, 1.1) * k),
+			Color(0.16, 0.16, 0.16), true)
+	draw_rect(Rect2(o + Vector2(-0.7, -8.4) * k, Vector2(1.4, 3.2) * k), acc, true)
+
+# HÁROMSZÖGLETŰ KALAP kokárdával.
+func _j_tricorn(o: Vector2, k: float, acc: Color) -> void:
+	draw_colored_polygon(PackedVector2Array([
+		o + Vector2(-6.4, -3.2) * k, o + Vector2(0, -8.4) * k,
+		o + Vector2(6.4, -3.2) * k, o + Vector2(3.0, -1.6) * k,
+		o + Vector2(-3.0, -1.6) * k,
+	]), Color(0.17, 0.15, 0.13))
+	draw_circle(o + Vector2(3.6, -4.4) * k, 1.2 * k, acc)
+
+# CSÁKÓ: 19. századi, ellenzővel és rózsával; a huszárcsákón zsinór és forgó.
+func _j_csako(o: Vector2, k: float, col: Color, acc: Color, huszar: bool) -> void:
+	draw_rect(Rect2(o + Vector2(-3.6, -10.2) * k, Vector2(7.2, 8.0) * k),
+		col.darkened(0.35), true)
+	draw_rect(Rect2(o + Vector2(-4.4, -3.2) * k, Vector2(8.8, 1.5) * k),
+		Color(0.12, 0.10, 0.09), true)
+	if huszar:
+		draw_line(o + Vector2(-3.4, -9.0) * k, o + Vector2(3.4, -5.4) * k, acc, 0.8 * k)
+		draw_line(o + Vector2(3.4, -9.0) * k, o + Vector2(-3.4, -5.4) * k, acc, 0.8 * k)
+		_ellipszis(o + Vector2(0, -13.4) * k, Vector2(1.3, 3.4) * k, acc)
+	else:
+		draw_circle(o + Vector2(0, -8.6) * k, 1.3 * k, acc)
+
+# LENGYEL ROGATYWKA: négyszögletes czapka.
+func _j_rogatywka(o: Vector2, k: float, col: Color) -> void:
+	draw_colored_polygon(PackedVector2Array([
+		o + Vector2(-5.4, -8.4) * k, o + Vector2(5.4, -8.4) * k,
+		o + Vector2(3.8, -2.2) * k, o + Vector2(-3.8, -2.2) * k,
+	]), col.darkened(0.30))
+	draw_colored_polygon(PackedVector2Array([
+		o + Vector2(-5.4, -8.4) * k, o + Vector2(0, -10.2) * k,
+		o + Vector2(5.4, -8.4) * k, o + Vector2(0, -7.0) * k,
+	]), col.darkened(0.12))
+	draw_rect(Rect2(o + Vector2(-4.4, -2.4) * k, Vector2(8.8, 1.4) * k),
+		Color(0.12, 0.10, 0.09), true)
+
+# LAPOS OLDALSAPKA.
+func _j_oldalsapka(o: Vector2, k: float, col: Color, acc: Color) -> void:
+	draw_colored_polygon(PackedVector2Array([
+		o + Vector2(-4.6, -2.2) * k, o + Vector2(-2.4, -6.4) * k,
+		o + Vector2(0, -7.2) * k, o + Vector2(2.4, -6.4) * k,
+		o + Vector2(4.6, -2.2) * k, o + Vector2(0, -4.0) * k,
+	]), col.darkened(0.30))
+	draw_rect(Rect2(o + Vector2(-3.4, -4.6) * k, Vector2(1.6, 1.2) * k), acc, true)
+
+# BRIT GÁRDA MEDVEBŐR KUCSMA.
+func _j_medvebor(o: Vector2, k: float) -> void:
+	_ellipszis(o + Vector2(0, -8.4) * k, Vector2(4.2, 7.4) * k,
+		Color(0.145, 0.13, 0.115))
+	_ellipszis(o + Vector2(-1.4, -9.6) * k, Vector2(1.8, 4.4) * k,
+		Color(1, 1, 1, 0.07), 0.2)
+
+# SZÉLES KARIMÁJÚ, TOLLAS KALAP (harmincéves háború).
+func _j_szeleskarima(o: Vector2, k: float, acc: Color) -> void:
+	_ellipszis(o + Vector2(0, -3.4) * k, Vector2(7.0, 2.1) * k,
+		Color(0.23, 0.19, 0.16))
+	_ellipszis(o + Vector2(0, -6.0) * k, Vector2(3.4, 3.0) * k,
+		Color(0.23, 0.19, 0.16))
+	draw_polyline(PackedVector2Array([
+		o + Vector2(-2.0, -6.4) * k, o + Vector2(-5.6, -9.2) * k,
+		o + Vector2(-9.5, -7.5) * k,
+	]), acc, 1.2 * k)
+
+# PORISZ TÜSKÉS SISAK.
+func _j_tuskes(o: Vector2, k: float) -> void:
+	_kupak(o + Vector2(0, -2.4 * k), Vector2(4.4, 4.4) * k, Color(0.23, 0.20, 0.17))
+	draw_rect(Rect2(o + Vector2(-4.6, -2.6) * k, Vector2(9.2, 1.3) * k),
+		Color(0.23, 0.20, 0.17), true)
+	draw_colored_polygon(PackedVector2Array([
+		o + Vector2(-0.9, -6.4) * k, o + Vector2(0, -11.4) * k,
+		o + Vector2(0.9, -6.4) * k,
+	]), ACEL_J)
+
+# OROSZ CSÚCSOS SISAK.
+func _j_prilbica(o: Vector2, k: float) -> void:
+	draw_colored_polygon(PackedVector2Array([
+		o + Vector2(-4.2, -1.4) * k, o + Vector2(0, -10.6) * k,
+		o + Vector2(4.2, -1.4) * k,
+	]), ACEL_J)
+	draw_rect(Rect2(o + Vector2(-4.4, -2.0) * k, Vector2(8.8, 1.2) * k), ACEL_S, true)
+
+# BUGYONNIJ-SAPKA csillaggal.
+func _j_budjonnij(o: Vector2, k: float, col: Color, acc: Color) -> void:
+	draw_colored_polygon(PackedVector2Array([
+		o + Vector2(-4.0, -1.6) * k, o + Vector2(0, -9.8) * k,
+		o + Vector2(4.0, -1.6) * k,
+	]), col.darkened(0.28))
+	draw_circle(o + Vector2(0, -4.6) * k, 1.5 * k, acc)
+
+# BRIT LAPOS ROHAMSISAK.
+func _j_brodie(o: Vector2, k: float) -> void:
+	_ellipszis(o + Vector2(0, -4.4) * k, Vector2(6.2, 2.4) * k,
+		Color(0.36, 0.39, 0.31))
+	_kupak(o + Vector2(0, -4.4 * k), Vector2(3.8, 3.8) * k, Color(0.36, 0.39, 0.31))
+
+# FRANCIA ADRIAN-SISAK, tarajjal.
+func _j_adrian(o: Vector2, k: float) -> void:
+	var sz := Color(0.42, 0.45, 0.35)
+	_kupak(o + Vector2(0, -3.4 * k), Vector2(4.4, 4.4) * k, sz)
+	draw_rect(Rect2(o + Vector2(-5.0, -3.6) * k, Vector2(10.0, 1.2) * k), sz, true)
+	draw_rect(Rect2(o + Vector2(-0.7, -8.0) * k, Vector2(1.4, 4.6) * k),
+		sz.darkened(0.25), true)
+
+# NÉMET ACÉLSISAK, széles tarkóval.
+func _j_stahl(o: Vector2, k: float) -> void:
+	var sz := Color(0.31, 0.34, 0.28)
+	_kupak(o + Vector2(0, -3.0 * k), Vector2(4.6, 4.6) * k, sz)
+	_ellipszis(o + Vector2(0, -2.4) * k, Vector2(5.6, 2.2) * k, sz)
+
+# EGYSZERŰ MODERN SISAK.
+func _j_sisak_modern(o: Vector2, k: float) -> void:
+	var sz := Color(0.345, 0.37, 0.305)
+	_kupak(o + Vector2(0, -2.8 * k), Vector2(4.4, 4.4) * k, sz)
+	draw_rect(Rect2(o + Vector2(-4.6, -3.0) * k, Vector2(9.2, 1.4) * k), sz, true)
+
+# KALÓZ FEJKENDŐ, hátracsapott csücsökkel.
+func _j_kendo(o: Vector2, k: float, col: Color) -> void:
+	_kupak(o + Vector2(0, -1.6 * k), Vector2(4.3, 4.3) * k, col.darkened(0.10))
+	draw_rect(Rect2(o + Vector2(-4.3, -1.8) * k, Vector2(8.6, 1.6) * k),
+		col.darkened(0.10), true)
+	draw_colored_polygon(PackedVector2Array([
+		o + Vector2(-3.8, -1.4) * k, o + Vector2(-8.2, 2.6) * k,
+		o + Vector2(-3.8, 1.2) * k,
+	]), col.darkened(0.30))
 
 func _c(col: Color, fade: float) -> Color:
 	return Color(col.r, col.g, col.b, col.a * fade)
