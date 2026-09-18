@@ -128,6 +128,9 @@ func _process(_delta: float) -> void:
 		_hud_t = 0.25
 		_update_army()
 		_update_era_button()
+		_update_offer()
+		_fleet_tick()
+		if not _selected.is_empty(): _update_cry_button(_selected)
 	if _selected.size() == 1 and is_instance_valid(_selected[0]):
 		sel_hp.value = _selected[0].hp
 		_update_carry(_selected[0])
@@ -499,6 +502,7 @@ func open_game_menu(on: bool) -> void:
 		get_tree().paused = true
 		menu_note.text = ""
 		_show_settings(false)
+		_refresh_diplomacy()
 	else:
 		get_tree().paused = false
 		GameState.on = _was_running
@@ -506,6 +510,58 @@ func open_game_menu(on: bool) -> void:
 
 func game_menu_open() -> bool:
 	return game_menu.visible
+
+# --- DIPLOMÁCIA a játék menüjében ---
+#
+# Több fél esetén itt lehet szövetséget ajánlani és felmondani. Kettőnél
+# nincs mit tárgyalni, ezért a rész ilyenkor meg sem jelenik.
+var _dipl_box: VBoxContainer = null
+
+func _refresh_diplomacy() -> void:
+	var main := get_tree().get_first_node_in_group("main")
+	var d: Node = main.diplomacy if main != null else null
+	if _dipl_box == null:
+		_dipl_box = VBoxContainer.new()
+		_dipl_box.name = "DiplBox"
+		_dipl_box.add_theme_constant_override("separation", 4)
+		menu_note.get_parent().add_child(_dipl_box)
+	for c in _dipl_box.get_children():
+		_dipl_box.remove_child(c)
+		c.queue_free()
+	_dipl_box.visible = d != null and GameState.oldalak.size() > 2
+	if not _dipl_box.visible: return
+	var cim := Label.new()
+	cim.text = Lang.t("dipl_cim")
+	cim.add_theme_color_override("font_color", Style.GOLD)
+	_dipl_box.add_child(cim)
+	for i in range(GameState.oldalak.size()):
+		if i == GameState.en_id: continue
+		var masik := i
+		var sor := HBoxContainer.new()
+		sor.add_theme_constant_override("separation", 6)
+		var nev := Label.new()
+		nev.text = Style.nation_name(str(GameState.get_side(masik).get("nemzet", "de")))
+		nev.custom_minimum_size = Vector2(150, 0)
+		nev.add_theme_color_override("font_color", Style.side_color(masik))
+		sor.add_child(nev)
+		var allapot := Label.new()
+		allapot.custom_minimum_size = Vector2(90, 0)
+		allapot.text = Lang.t("dipl_szovetseges") if d.allied(GameState.en_id, masik) else ""
+		sor.add_child(allapot)
+		var gomb := Button.new()
+		gomb.custom_minimum_size = Vector2(150, 26)
+		if d.allied(GameState.en_id, masik):
+			gomb.text = Lang.t("dipl_felmond")
+			gomb.pressed.connect(func() -> void:
+				d.denounce(GameState.en_id, masik)
+				_refresh_diplomacy())
+		else:
+			gomb.text = Lang.t("dipl_ajanl")
+			gomb.pressed.connect(func() -> void:
+				d.offer(GameState.en_id, masik)
+				_refresh_diplomacy())
+		sor.add_child(gomb)
+		_dipl_box.add_child(sor)
 
 func _show_settings(on: bool) -> void:
 	menu_panel_ui.visible = not on
@@ -606,6 +662,189 @@ func update_selection(units: Array) -> void:
 	else:
 		sel_title.text = Lang.t("egyseg_tobb") % units.size()
 		sel_hp.visible = false
+	_update_cry_button(units)
+
+# CSATAKIÁLTÁS: a hős kijelölésekor megjelenik egy gomb. Nyolc másodpercig
+# a körülötte állók többet sebeznek és gyorsabban mozognak; kilencven
+# másodpercenként egyszer lehet.
+func _update_cry_button(units: Array) -> void:
+	var hos: Node = null
+	for u in units:
+		if is_instance_valid(u) and u.role == "hero" and int(u.owner_id) == GameState.en_id:
+			hos = u
+			break
+	if hos == null:
+		if _cry_btn != null: _cry_btn.visible = false
+		return
+	if _cry_btn == null:
+		_cry_btn = Button.new()
+		_cry_btn.name = "CryBtn"
+		_cry_btn.custom_minimum_size = Vector2(120, 28)
+		action_btns.add_child(_cry_btn)
+	_cry_btn.visible = true
+	_cry_btn.text = Lang.t("csatakialtas")
+	_cry_btn.disabled = not hos.kialtas_kesz()
+	_cry_btn.tooltip_text = Lang.t("csatakialtas_sugo") if hos.kialtas_kesz() \
+		else Lang.t("csatakialtas_var") % int(ceil(hos.kialtas_t))
+	for c in _cry_btn.pressed.get_connections():
+		_cry_btn.pressed.disconnect(c["callable"])
+	_cry_btn.pressed.connect(func() -> void:
+		var db: int = hos.kialtas()
+		if db > 0:
+			show_toast(Lang.t("csatakialtas_uzenet") % db, 3.0)
+		_update_cry_button(_selected))
+
+var _cry_btn: Button = null
+
+# --- ZSOLDOS-AJÁNLAT (esemény) ---
+#
+# Amikor zsoldosok ajánlkoznak, a képernyő tetején megjelenik egy panel az
+# ajánlattal: hányan, mennyiért, és hogy elfogadod-e. Az ajánlat lejár.
+var _offer_panel : PanelContainer = null
+var _offer_label : Label = null
+
+func _build_offer_panel() -> void:
+	_offer_panel = PanelContainer.new()
+	_offer_panel.name = "OfferPanel"
+	_offer_panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	_offer_panel.position = Vector2(-190, 74)
+	_offer_panel.custom_minimum_size = Vector2(380, 0)
+	_offer_panel.visible = false
+	add_child(_offer_panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	_offer_panel.add_child(box)
+	_offer_label = Label.new()
+	_offer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_offer_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_offer_label)
+	var sor := HBoxContainer.new()
+	sor.alignment = BoxContainer.ALIGNMENT_CENTER
+	sor.add_theme_constant_override("separation", 8)
+	box.add_child(sor)
+	var igen := Button.new()
+	igen.text = Lang.t("ev_elfogad")
+	igen.custom_minimum_size = Vector2(150, 30)
+	igen.pressed.connect(func() -> void:
+		var m := get_tree().get_first_node_in_group("main")
+		if m != null and m.events != null: m.events.accept_offer()
+		_update_offer())
+	sor.add_child(igen)
+	var nem := Button.new()
+	nem.text = Lang.t("ev_elutasit")
+	nem.custom_minimum_size = Vector2(150, 30)
+	nem.pressed.connect(func() -> void:
+		var m := get_tree().get_first_node_in_group("main")
+		if m != null and m.events != null: m.events.decline_offer()
+		_update_offer())
+	sor.add_child(nem)
+
+func _update_offer() -> void:
+	if _offer_panel == null: _build_offer_panel()
+	var m := get_tree().get_first_node_in_group("main")
+	if m == null or m.events == null:
+		_offer_panel.visible = false
+		return
+	var o: Dictionary = m.events.offer
+	_offer_panel.visible = not o.is_empty()
+	if o.is_empty(): return
+	var hatra := int(ceil(m.events.AJANLAT_LEJAR - (GameState.t - float(o["t"]))))
+	_offer_label.text = "%s  (%d s)" % [
+		Lang.t("ev_zsoldos") % [int(o["db"]), int(o["ar"])], maxi(hatra, 0)]
+
+# --- FLOTTASÁV  (index.html: fleetBar) ---
+#
+# A kalózvilágban a hajóid a mindened, de a stratégiai nézetben aprók és
+# szétszórtak. Ez a sáv mindegyiket felsorolja — osztály, sérülés, hány fő
+# van a fedélzeten —, és kattintásra odaviszi a kamerát.
+#
+# Csak akkor épül újra, ha VÁLTOZOTT valami: különben a kattintás elveszne
+# a folyamatos újraépítésben (ugyanaz a buktató, mint a kikötőmenünél).
+var _fleet_box: VBoxContainer = null
+var _fleet_sig: String = ""
+
+const HAJO_NEV := {
+	"transport": "pm_hajo_transport", "warship": "pm_hajo_warship",
+	"galleon": "pm_hajo_galleon", "fisher": "u_fisher",
+}
+
+func _build_fleet_bar() -> void:
+	var panel := PanelContainer.new()
+	panel.name = "FleetBar"
+	panel.position = Vector2(12, 132)
+	panel.custom_minimum_size = Vector2(150, 0)
+	panel.mouse_filter = Control.MOUSE_FILTER_PASS
+	add_child(panel)
+	_fleet_box = VBoxContainer.new()
+	_fleet_box.add_theme_constant_override("separation", 4)
+	panel.add_child(_fleet_box)
+	panel.visible = false
+
+func _fleet_tick() -> void:
+	if not GameState.pirate: return
+	if _fleet_box == null: _build_fleet_bar()
+	var panel := _fleet_box.get_parent() as Control
+	var hajok: Array = []
+	for u in get_tree().get_nodes_in_group("units"):
+		if is_instance_valid(u) and int(u.owner_id) == GameState.en_id and u.naval:
+			hajok.append(u)
+	panel.visible = not hajok.is_empty() and GameState.on and not game_menu_open()
+	if not panel.visible: return
+	var sig := ""
+	for u in hajok:
+		sig += "%d:%d:%d|" % [int(u.nid), int(u.hp), u.cargo.size()]
+	if sig == _fleet_sig: return
+	_fleet_sig = sig
+	for c in _fleet_box.get_children():
+		_fleet_box.remove_child(c)
+		c.queue_free()
+	for h in hajok:
+		_fleet_box.add_child(_fleet_row(h))
+
+func _fleet_row(u: Node) -> Control:
+	var sor := Button.new()
+	sor.custom_minimum_size = Vector2(134, 24)
+	sor.focus_mode = Control.FOCUS_NONE
+	sor.flat = true
+	sor.pressed.connect(func() -> void: _fleet_jump(u))
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	sor.add_child(box)
+	var nev := Label.new()
+	nev.text = Lang.t(str(HAJO_NEV.get(str(u.role), "u_" + str(u.role))))
+	nev.add_theme_font_size_override("font_size", 11)
+	nev.custom_minimum_size = Vector2(52, 0)
+	box.add_child(nev)
+	var arany: float = clampf(float(u.hp) / maxf(float(u.max_hp), 1.0), 0.0, 1.0)
+	var sav := ProgressBar.new()
+	sav.custom_minimum_size = Vector2(34, 6)
+	sav.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	sav.show_percentage = false
+	sav.max_value = 1.0
+	sav.value = arany
+	var kitolt := StyleBoxFlat.new()
+	# zöld -> sárga -> vörös, ahogy fogy az élet
+	kitolt.bg_color = Color("6fae52") if arany >= 0.7 \
+		else (Color("c98b3a") if arany >= 0.35 else Color("c04a3a"))
+	sav.add_theme_stylebox_override("fill", kitolt)
+	box.add_child(sav)
+	var fo := Label.new()
+	fo.text = "%d %s" % [u.cargo.size(), Lang.t("pm_fo")]
+	fo.add_theme_font_size_override("font_size", 10)
+	fo.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	fo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.add_child(fo)
+	return sor
+
+func _fleet_jump(u: Node) -> void:
+	if not is_instance_valid(u): return
+	var main := get_tree().get_first_node_in_group("main")
+	if main == null: return
+	main.select_only(u)
+	main.camera.position = u.global_position
+	SFX.play("click")
 
 # Egyetlen munkás kijelölésekor a panelen is látszik a rakománya.
 func _update_carry(u: Node) -> void:

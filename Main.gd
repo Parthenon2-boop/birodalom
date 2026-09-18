@@ -58,8 +58,18 @@ var _net_sides     : Array       = []
 var replay         : Node        = null
 # A karibi városok és az ostrom (csak kalózvilágban).
 var cities         : Node2D      = null
+# A városra kattintva kinyíló kikötőmenü (scripts/ui/PortMenu.gd).
+var port_menu      : Control     = null
 # A piac árfolyama (scripts/systems/Market.gd).
 var market         : Node        = null
+# Újranövekedés, ellátás, kereskedelmi útvonal (scripts/systems/Economy.gd).
+var economy        : Node        = null
+# Időjárás: eső, hó, köd, tengeri vihar (scripts/systems/Weather.gd).
+var weather        : Node        = null
+# Sorsolt események: kereskedőhajó, roncs, zsoldosok, pestis.
+var events         : Node        = null
+# Diplomácia: szövetség és felmondás több fél között.
+var diplomacy      : Node        = null
 var _nid_seq       : int         = 0
 var _forced_seed   : int         = 0
 
@@ -240,6 +250,8 @@ func _ready() -> void:
 			hud._show_settings(true)
 	# Terhelésmérés:  -- --stress=300  (ennyi extra katona kerül a pályára)
 	for arg in args:
+		if arg == "--portmenu" or arg.begins_with("--portmenu="):
+			_open_nearest_port(arg.substr(11) if arg.length() > 11 else "")
 		if arg.begins_with("--stress="):
 			var n := clampi(int(arg.substr(9)), 0, 2000)
 			var felek := maxi(GameState.oldalak.size(), 2)
@@ -265,6 +277,28 @@ func _ready() -> void:
 	for arg in dev_args():
 		if arg.begins_with("--shot="):
 			_capture_after(arg.substr(7))
+
+# A kikötőmenü ellenőrzése képernyőképpel:
+#   -- --skip-menu --pirate --portmenu=build --shot=...
+# A saját fővárosodhoz legközelebbi várost nyitja meg, és a kamerát is
+# odaviszi, hogy a legyező a képen legyen.
+func _open_nearest_port(mit: String) -> void:
+	if port_menu == null or cities == null: return
+	var hq: Vector2 = _hq_pos[clampi(GameState.en_id, 0, _hq_pos.size() - 1)]
+	var best := ""
+	var bd := 1e12
+	for k in cities.varosok:
+		var d: float = cities.city_pos(str(k)).distance_to(hq)
+		if d < bd:
+			bd = d
+			best = str(k)
+	if best == "": return
+	camera.position = cities.city_pos(best)
+	camera.reset_smoothing()
+	port_menu.open(best)
+	if mit != "": port_menu.pick(mit)
+	print("[kikotomenu] %s (%s)" % [cities.city_name(best),
+		"sajat" if cities.owner_of(best) == GameState.en_id else "idegen"])
 
 # Néhány képkocka után menti a viewport tartalmát, majd kilép.
 func _capture_after(path: String) -> void:
@@ -350,12 +384,30 @@ func _start_world() -> void:
 	# adja hozzá a jogot; az árfolyamot ez a csomópont vezeti.
 	market = (load("res://scripts/systems/Market.gd") as GDScript).new()
 	add_child(market)
+	# GAZDASÁG: újranövekedés, ellátás (a sereg eszik) és kereskedelmi
+	# útvonal a kikötőből.
+	economy = (load("res://scripts/systems/Economy.gd") as GDScript).new(self)
+	add_child(economy)
+	# IDŐJÁRÁS: a szárazföldi idő és a tenger állapota.
+	weather = (load("res://scripts/systems/Weather.gd") as GDScript).new(self)
+	add_child(weather)
+	# ESEMÉNYEK: néhány percenként történik valami a térképen.
+	events = (load("res://scripts/systems/Events.gd") as GDScript).new(self)
+	add_child(events)
+	# DIPLOMÁCIA: szövetségek a felek között (a GameState.hostile ezt kérdezi).
+	diplomacy = (load("res://scripts/systems/Diplomacy.gd") as GDScript).new(self)
+	add_child(diplomacy)
+	GameState.diplomacy = diplomacy
 	# A KARIB-TENGER VÁROSAI — csak a kalózvilágban. A kikötők lakossággal,
 	# tornyokkal és fallal állnak; ágyúval lehet őket megtörni, katonával
 	# elfoglalni (scripts/systems/Cities.gd).
 	if GameState.pirate:
 		cities = (load("res://scripts/systems/Cities.gd") as GDScript).new(self)
 		$WorldRoot/BuildingLayer.add_child(cities)
+		# A városra kattintva ez a legyező nyílik ki: építés és toborzás.
+		port_menu = (load("res://scripts/ui/PortMenu.gd") as GDScript).new()
+		port_menu.main = self
+		$UILayer.add_child(port_menu)
 	# VISSZAJÁTSZÁS. Lejátszásnál a világ ugyanabból a magból készül, a
 	# bábukat viszont nem mi teremtjük: a felvett pillanatképek rakják ki
 	# őket (ugyanúgy, ahogy a hálózati társnál). Egyjátékos játszmában
@@ -744,6 +796,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				if _build_mode != "":
 					_try_place_building(get_global_mouse_position())
 					return
+				# A kalózvilágban a városjelölő kattintható: rajta nyílik a
+				# kikötőmenü. Máshová kattintva becsukódik.
+				if _port_click(get_global_mouse_position()): return
 				_sel_start    = get_global_mouse_position()
 				_sel_screen   = mb.position
 				_sel_dragging = true
@@ -754,6 +809,25 @@ func _unhandled_input(event: InputEvent) -> void:
 				sel_rect_ui.visible = false
 		elif mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			_issue_order(get_global_mouse_position())
+
+# Kattintás egy városjelölőre. A célpontot a KÉPERNYŐN mérjük, nem
+# világkoordinátában: kinagyított térképen ugyanakkora legyen a jelölő
+# találati sávja, mint kicsinyítve. A névtábla a jelölő ALATT van, ezért
+# lefelé nyújtjuk a sávot (index.html: portHit).
+func _port_click(wp: Vector2) -> bool:
+	if port_menu == null or cities == null: return false
+	var z: float = maxf(camera.zoom.x, 0.05)
+	# A névtábla a jelölő FÖLÖTT van (lásd Cities._draw), ezért felfelé
+	# nyújtjuk a találati sávot.
+	var kulcs: String = cities.city_at(wp + Vector2(0.0, 22.0 / z), 64.0 / z)
+	if kulcs == "":
+		if port_menu.is_open():
+			port_menu.close()
+			return true
+		return false
+	_clear_selection()
+	port_menu.open(kulcs)
+	return true
 
 # --- PARANCSOK ---
 #
@@ -781,6 +855,8 @@ func _local_cmd(kind: String, args: Array) -> void:
 		"upg":    do_research(int(args[0]), me)
 		"board":  do_board(args[0], int(args[1]), me)
 		"unload": do_unload(args[0], args[1], me)
+		"pbuild": do_port_build(str(args[0]), str(args[1]), me)
+		"ptrain": do_port_train(str(args[0]), str(args[1]), me)
 
 # Az azonosítók hálózaton is átvihetők, ezért minden parancs nid-ekkel
 # dolgozik, nem csomópont-hivatkozásokkal.
@@ -891,6 +967,91 @@ func do_train(building_id: int, role: String, owner: int) -> void:
 	if b == null or int(b.owner_id) != owner: return
 	if not (role in b.trainable()): return
 	b.enqueue_unit(role)
+
+# --- KIKÖTŐMENÜ (kalózvilág, index.html 29/D) ---
+#
+# A saját karibi városodból építhetsz és toborozhatsz anélkül, hogy
+# odaküldenél egy munkást: a város NÉPE húzza fel az épületet, a hajót
+# pedig a kikötő állítja ki. Idegen városban ez nem megy — Nassauból nem
+# lehet Santiagót igazgatni.
+#
+# A városban építhető épületek sorrendje: elöl a termelés, mert a
+# városban az számít. Fal, kaszárnya, kikötő és repülőtér ide nem való.
+const PORT_BUILDS := ["farm", "goldmine", "sugar", "house", "market",
+	"tower", "hospital", "academy", "smith"]
+# A kalózvárosban CSAK hajót lehet toborozni — gyalogost nem.
+const PORT_SHIPS := ["transport", "warship", "galleon"]
+
+func _port_ok(kulcs: String, owner: int) -> bool:
+	if cities == null or not is_instance_valid(cities): return false
+	if not cities.varosok.has(kulcs): return false
+	return cities.owner_of(kulcs) == owner
+
+func _port_deny(owner: int, kulcs_szoveg: String) -> void:
+	if owner != GameState.en_id: return
+	hud.show_toast(Lang.t(kulcs_szoveg), 2.5)
+	SFX.play("deny")
+
+func do_port_build(kulcs: String, tipus: String, owner: int) -> void:
+	if not (tipus in PORT_BUILDS): return
+	if not _port_ok(kulcs, owner):
+		_port_deny(owner, "pm_nem_epithetsz"); return
+	var cost := build_cost(owner, tipus)
+	if not GameState.can_pay(owner, cost):
+		_port_deny(owner, "pm_nincs_anyag"); return
+	# Helyet a város körül keresünk, kifelé haladó gyűrűkben.
+	var p: Vector2 = cities.city_pos(kulcs)
+	var hely := Vector2.ZERO
+	var megvan := false
+	var r := 70.0
+	while r <= 320.0 and not megvan:
+		for i in range(20):
+			var a := float(i) * TAU / 20.0
+			var q := p + Vector2(cos(a), sin(a)) * r
+			if not can_place(tipus, q): continue
+			hely = q
+			megvan = true
+			break
+		r += 26.0
+	if not megvan:
+		_port_deny(owner, "pm_nincs_hely"); return
+	if not GameState.pay(owner, cost): return
+	var b := spawn_building(tipus, owner, hely, false)
+	b.maga_epul = true               # a város népe húzza fel
+	if owner == GameState.en_id:
+		Achievements.bump("builds")
+		SFX.play("build")
+		hud.show_toast(Lang.t("pm_epul") % [hud.build_name(tipus),
+			cities.city_name(kulcs)], 3.0)
+
+func do_port_train(kulcs: String, role: String, owner: int) -> void:
+	if not (role in PORT_SHIPS): return
+	if not _port_ok(kulcs, owner):
+		_port_deny(owner, "pm_nem_epithetsz"); return
+	# Ahol a legrövidebb a sor, ott áll ki a hajó. Elsőbbsége a VÁROS
+	# kikötőinek van; ha ott nincs, bárhol jó a birodalomban.
+	var b := _shortest_yard(role, owner, cities.city_buildings(kulcs, owner))
+	if b == null:
+		b = _shortest_yard(role, owner,
+			get_tree().get_nodes_in_group("buildings"))
+	if b == null:
+		_port_deny(owner, "pm_nincs_kikoto"); return
+	if not GameState.can_pay(owner, Building.train_cost(owner, role)):
+		_port_deny(owner, "pm_nincs_anyag"); return
+	b.enqueue_unit(role)
+	if owner == GameState.en_id: SFX.play("click")
+
+func _shortest_yard(role: String, owner: int, jeloltek: Array) -> Node:
+	var best: Node = null
+	var bq := 99
+	for b in jeloltek:
+		if not is_instance_valid(b) or int(b.owner_id) != owner: continue
+		if not b.is_ready() or not (role in b.trainable()): continue
+		var q: int = b.train_queue.size()
+		if q < bq:
+			bq = q
+			best = b
+	return best
 
 func do_rally(building_id: int, pos: Vector2, node_id: int,
 			  foe_id: int, owner: int) -> void:
@@ -1060,6 +1221,14 @@ func _finish_sel(end_pos: Vector2) -> void:
 			n.set_selected(true)
 			hud.select_resource(n)
 			return
+	hud.update_selection(selected_units)
+
+# Egyetlen egység kijelölése kívülről (a flottasáv kattintása).
+func select_only(u: Node) -> void:
+	if not is_instance_valid(u): return
+	_clear_selection()
+	selected_units.append(u)
+	if u.has_method("set_selected"): u.set_selected(true)
 	hud.update_selection(selected_units)
 
 func _clear_selection() -> void:

@@ -213,4 +213,6 @@ func _run_cmd(owner: int, kind: String, args: Array) -> void:
 		"rally":  main.do_rally(int(args[0]), args[1], int(args[2]),
 					int(args[3]), owner)
 		"era":    main.do_era(owner)
+		"pbuild": main.do_port_build(str(args[0]), str(args[1]), owner)
+		"ptrain": main.do_port_train(str(args[0]), str(args[1]), owner)
 		"upg":    main.do_research(int(args[0]), owner)

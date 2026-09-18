@@ -223,6 +223,10 @@ var team         : int     = 0
 # Építkezés: 0..1. A játék elején letett bázisok készen állnak.
 var prog         : float   = 1.0
 var build_time   : float   = 12.0
+# A kikötőmenüből rendelt épületet a város NÉPE húzza fel: nem kell hozzá
+# odaküldeni munkást (index.html: b.remote). Enélkül a kalózvilágban sosem
+# készülne el semmi, hiszen ott nincs munkásod.
+var maga_epul    : bool    = false
 var _selected    : bool    = false
 # Gyülekezőpont: a frissen kiképzett egységek ide indulnak. Ha a játékos
 # nyersanyagra vagy ellenségre tette, a parancs is átszáll az új egységre.
@@ -297,6 +301,7 @@ func _process(delta: float) -> void:
 		# Az épület magától NEM nő ki a földből: annyival halad, ahány
 		# munkás dolgozik rajta. Több munkás gyorsabban végez.
 		var builders := _count_builders()
+		if maga_epul: builders = maxi(builders, 1)
 		if builders > 0:
 			prog = minf(1.0, prog + delta * float(builders)
 				* Upgrades.build_mul(owner_id) / maxf(build_time, 0.1))

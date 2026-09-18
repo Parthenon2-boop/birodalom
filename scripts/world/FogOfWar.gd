@@ -35,7 +35,8 @@ func tick(_delta: float) -> void:
 	_clear_visible()
 	for u in get_tree().get_nodes_in_group("player_units"):
 		if not is_instance_valid(u): continue
-		var r: float = u.vision_r if "vision_r" in u else 120.0
+		# Az időjárás a felderítést is szűkíti (eső, köd, vihar).
+		var r: float = u.sight() if u.has_method("sight") else 120.0
 		reveal_circle(u.global_position, r)
 	for b in get_tree().get_nodes_in_group("buildings"):
 		if not is_instance_valid(b): continue

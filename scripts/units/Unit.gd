@@ -444,6 +444,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if not GameState.on: return
 	_fired = maxf(0.0, _fired - delta)
+	_tick_buffs(delta)
 	_think(delta)
 	_move(delta)
 	# A gyógyulásjel felszálló mozgásához képkockánként újra kell rajzolni.
@@ -506,9 +507,89 @@ func _move(delta: float) -> void:
 		var dir  := (next - global_position).normalized()
 		if dir != Vector2.ZERO:
 			face = dir.angle()
-		velocity = dir * spd
-		walk += delta * spd * 0.09
+		# AZ IDŐJÁRÁS a menetre is hat: a hó és a felázott föld lassít, a
+		# szélcsend a vitorlát ejti össze (scripts/systems/Weather.gd).
+		var v := spd * _weather_speed()
+		velocity = dir * v
+		walk += delta * v * 0.09
 	move_and_slide()
+
+# Az időjárás sebesség-szorzója. A Weather csomópont a Main alatt ül; ha
+# nincs (pl. oktatómód előtti pillanat), az idő nem számít.
+func _weather_speed() -> float:
+	var w := _weather()
+	var m: float = w.speed_mul(naval) if w != null else 1.0
+	# A csatakiáltás gyorsít, a sérült vitorla lassít.
+	return m * kialtas_speed_mul() * (sail_mul() if naval else 1.0)
+
+# --- CSATAKIÁLTÁS (index.html 9/E) ---
+#
+# A HŐS kiálthat: a körülötte állók nyolc másodpercig többet sebeznek és
+# gyorsabban mozognak, aki pedig futott, megáll. A hatás a kiáltás
+# PILLANATÁBAN közel állókra érvényes — aki később fut oda, lemaradt róla.
+const KIALTAS_HATOTAV := 240.0
+const KIALTAS_HOSSZ := 8.0
+const KIALTAS_VARAKOZAS := 90.0
+const KIALTAS_SEBZES := 0.35
+const KIALTAS_SEBESSEG := 0.25
+
+var kialtas_el: float = 0.0       # eddig tart rajta a hatás
+var kialtas_t: float = 0.0        # a hős újratöltése
+
+# A VITORLA sérülése (0..1): a találat rongálja, és kb. fél perc alatt
+# javítják ki. Amíg sérült, a hajó lassabb.
+var sail_dmg: float = 0.0
+
+func kialtas_kesz() -> bool:
+	return role == "hero" and kialtas_t <= 0.0
+
+# A hős kiált: a közelben állók megkapják a hatást.
+func kialtas() -> int:
+	if not kialtas_kesz(): return 0
+	kialtas_t = KIALTAS_VARAKOZAS
+	kialtas_el = KIALTAS_HOSSZ
+	var db := 0
+	for u in get_tree().get_nodes_in_group("units"):
+		if not is_instance_valid(u) or int(u.owner_id) != owner_id: continue
+		if u.role == "worker": continue
+		if u.global_position.distance_to(global_position) > KIALTAS_HATOTAV: continue
+		u.kialtas_el = KIALTAS_HOSSZ
+		db += 1
+	SFX.play("attack", -2.0)
+	return db
+
+func kialtas_dmg_mul() -> float:
+	return 1.0 + KIALTAS_SEBZES if kialtas_el > 0.0 else 1.0
+
+func kialtas_speed_mul() -> float:
+	return 1.0 + KIALTAS_SEBESSEG if kialtas_el > 0.0 else 1.0
+
+# A sérült vitorla lassít; a legénység menet közben javítja.
+func sail_mul() -> float:
+	return maxf(0.35, 1.0 - sail_dmg * 0.6) if sail_dmg > 0.0 else 1.0
+
+func _tick_buffs(delta: float) -> void:
+	if kialtas_t > 0.0: kialtas_t = maxf(0.0, kialtas_t - delta)
+	if kialtas_el > 0.0: kialtas_el = maxf(0.0, kialtas_el - delta)
+	if sail_dmg > 0.0: sail_dmg = maxf(0.0, sail_dmg - delta * 0.035)
+
+# A csomópontot egyszer keressük meg, és minden egység közösen használja —
+# képkockánként több száz keresés fölösleges volna.
+static var _weather_cache: Node = null
+
+func _weather() -> Node:
+	if _weather_cache != null and is_instance_valid(_weather_cache):
+		return _weather_cache
+	var m := get_tree().get_first_node_in_group("main")
+	_weather_cache = m.weather if m != null and is_instance_valid(m) else null
+	return _weather_cache
+
+# A LÁTÓTÁV az időjárással romlik: esőben, ködben és viharban kevesebbet
+# látni. A felderítés és a köd is ezt használja, nem a nyers vision_r-t.
+func sight() -> float:
+	var w := _weather()
+	if w == null: return vision_r
+	return vision_r * (w.sea_sight_mul() if naval else w.sight_mul())
 
 # A repülő nem az úthálózaton megy: egyenesen húz a cél felé, és nem
 # ütközik. A `nav.target_position`-t célként ugyanúgy használjuk, mint a
@@ -582,7 +663,7 @@ func _think(_delta: float) -> void:
 		_scan_t -= _delta
 		if _scan_t <= 0.0:
 			_scan_t = SCAN_PERIOD
-			var e := Combat.find_enemy(self, vision_r)
+			var e := Combat.find_enemy(self, sight())
 			if e != null: start_attacking(e)
 
 # AZ ŐRTORONY LEPLEZI LE A KÉMET. Amíg nincs ellenséges torony a közelben,
@@ -915,6 +996,8 @@ func _on_attack() -> void:
 	SFX.play(Combat.sound_for(role, age), -6.0)
 	var amount := dmg * Combat.damage_mult(role, _target_kind(target))
 	if inspired(): amount *= 1.0 + Combat.AURA_DAMAGE
+	# A csatakiáltás hatása alatt nagyobbat üt a csapat.
+	amount *= kialtas_dmg_mul()
 	if role in PROJECTILE_ROLES:
 		var main := get_tree().get_first_node_in_group("main")
 		if main and main.has_method("spawn_projectile"):
@@ -943,6 +1026,9 @@ func take_damage(amount: float) -> void:
 	# bírnak ki.
 	var ved := armor + (Combat.AURA_ARMOR if inspired() else 0.0)
 	hp -= maxf(Upgrades.MIN_DAMAGE, amount - ved)
+	# A hajó VITORLÁJA is sérül a találattól: amíg a legénység ki nem
+	# javítja, lassabban jár (index.html: sailDmg).
+	if naval: sail_dmg = minf(1.0, sail_dmg + 0.05)
 	_hit_at = GameState.t
 	queue_redraw()
 	if hp <= 0.0:
@@ -957,6 +1043,11 @@ func take_damage(amount: float) -> void:
 			GameState.kills += 1
 			Achievements.bump("kills")
 			GameState.add_fame(6.0 if naval else 1.2)
+			# A SEMLEGES KERESKEDŐHAJÓ rakománya azé, aki elsüllyesztette.
+			if get_meta("merchant", false):
+				var fo: Node = get_tree().get_first_node_in_group("main")
+				if fo != null and fo.events != null:
+					fo.events.merchant_loot(self, GameState.en_id)
 		queue_free()
 
 func heal(amount: float) -> void:

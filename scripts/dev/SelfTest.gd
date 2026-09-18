@@ -1513,6 +1513,116 @@ func _test_pirate() -> void:
 					float(GameState.get_res(0).get("gold", 0.0)) > arany0)
 				if is_instance_valid(katona): katona.queue_free()
 
+			# --- KIKÖTŐMENÜ: építés és toborzás a saját városból ---
+			var pm = main.port_menu
+			check("van kikötőmenü a kalózvilágban", pm != null)
+			if pm != null and sajat != "":
+				pm.open(sajat)
+				await _frames(2)
+				var gombok := 0
+				for g in pm.get_children():
+					if g is Button: gombok += 1
+				check("a saját város menüje három parancsot kínál", gombok == 3,
+					"%d gomb" % gombok)
+				pm.pick("build")
+				await _frames(2)
+				var epit := 0
+				for g in pm.get_children():
+					if g is Button: epit += 1
+				check("az építés-legyezőben ott vannak az épületek", epit >= 5,
+					"%d gomb" % epit)
+				# Idegen városban nincs parancs, csak a bezárás.
+				var ideg := ""
+				for v in c.KIKOTOK:
+					if c.owner_of(str(v["kulcs"])) != 0: ideg = str(v["kulcs"])
+				if ideg != "":
+					pm.open(ideg)
+					await _frames(2)
+					var ig := 0
+					for g in pm.get_children():
+						if g is Button: ig += 1
+					check("idegen város menüjében csak a bezárás van", ig == 1,
+						"%d gomb" % ig)
+				pm.close()
+				# ÉPÍTÉS: a városból rendelt épület munkás nélkül is felépül.
+				var db0 := main.get_tree().get_nodes_in_group("buildings").size()
+				GameState.get_res(0)["wood"] = 4000.0
+				GameState.get_res(0)["stone"] = 4000.0
+				GameState.get_res(0)["gold"] = 4000.0
+				var fa0: float = float(GameState.get_res(0)["wood"])
+				main.do_port_build(sajat, "farm", 0)
+				await _frames(2)
+				var ujep: Node = null
+				for b in main.get_tree().get_nodes_in_group("buildings"):
+					if b.tipus == "farm" and int(b.owner_id) == 0: ujep = b
+				check("a városból rendelt épület felkerül a pályára",
+					main.get_tree().get_nodes_in_group("buildings").size() > db0
+					and ujep != null)
+				check("az építés fizetésbe kerül",
+					float(GameState.get_res(0)["wood"]) < fa0,
+					"%.0f fa" % float(GameState.get_res(0)["wood"]))
+				if ujep != null:
+					check("a város népe magától felhúzza", bool(ujep.maga_epul))
+					var p0: float = float(ujep.prog)
+					await _frames(30)
+					check("munkás nélkül is halad az építkezés",
+						float(ujep.prog) > p0,
+						"%.2f -> %.2f" % [p0, float(ujep.prog)])
+					check("a városhoz tartozó épületek közé kerül",
+						ujep in c.city_buildings(sajat, 0))
+					ujep.queue_free()
+				# Idegen városba nem építhetünk.
+				if ideg != "":
+					var db1 := main.get_tree().get_nodes_in_group("buildings").size()
+					main.do_port_build(ideg, "farm", 0)
+					await _frames(2)
+					# Nem NŐHET a számuk. (Csökkenhet: az előbb takarítottuk el
+					# a próbaépületet, és a queue_free csak a képkocka végén hat.)
+					check("idegen városba nem építhetünk",
+						main.get_tree().get_nodes_in_group("buildings").size() <= db1)
+				# TOBORZÁS: a hajó a város kikötőjében áll ki.
+				var kikoto = main.spawn_building("harbor", 0,
+					main.find_land_near(c.city_pos(sajat) + Vector2(40, 0),
+						40.0, true), true)
+				await _frames(2)
+				if kikoto != null and kikoto.is_ready():
+					main.do_port_train(sajat, "warship", 0)
+					check("a városból rendelt hajó sorba áll",
+						kikoto.train_queue.size() > 0,
+						"%d a sorban" % kikoto.train_queue.size())
+					main.do_port_train(sajat, "melee", 0)
+					check("a városból gyalogost nem lehet toborozni",
+						kikoto.train_queue.size() == 1)
+					kikoto.queue_free()
+
+			# --- FLOTTASÁV: minden hajód egy sorban ---
+			var hajok := 0
+			for u in main.get_tree().get_nodes_in_group("units"):
+				if is_instance_valid(u) and int(u.owner_id) == 0 and u.naval:
+					hajok += 1
+			main.hud._fleet_tick()
+			await _frames(2)
+			var fb := main.hud.get_node_or_null("FleetBar") as Control
+			check("van flottasáv a kalózvilágban", fb != null)
+			if fb != null:
+				check("a flottasáv annyi sort mutat, ahány hajód van",
+					main.hud._fleet_box.get_child_count() == hajok,
+					"%d sor / %d hajó" % [main.hud._fleet_box.get_child_count(), hajok])
+				check("hajó nélkül elrejtőzik a flottasáv",
+					fb.visible == (hajok > 0))
+			# LŐTÁVGYŰRŰ: csak akkor rajzoljuk, ha van a közelben hajód.
+			var tavol := Vector2(GameState.WORLD_W * 0.5, GameState.WORLD_H * 0.5)
+			var van_hajo := false
+			for u in main.get_tree().get_nodes_in_group("units"):
+				if is_instance_valid(u) and int(u.owner_id) == 0 and u.naval:
+					van_hajo = true
+					check("a hajó mellett látszik a lőtávgyűrű",
+						c._ship_near(u.global_position))
+					break
+			if van_hajo:
+				check("távoli városnál nincs lőtávgyűrű",
+					not c._ship_near(tavol + Vector2(9999, 9999)))
+
 	# --- PIAC: csere aranyért, mozgó árfolyammal ---
 	var pi = main.market
 	check("van piac-rendszer", pi != null)

@@ -183,8 +183,14 @@ func team_of(owner_id: int) -> int:
 	var s := get_side(owner_id)
 	return int(s.get("csapat", owner_id)) if not s.is_empty() else owner_id
 
+# A DIPLOMÁCIA felülírja a csapatszámot: a menet közben kötött szövetség
+# ugyanúgy véd, mint a közös csapat (scripts/systems/Diplomacy.gd).
+var diplomacy: Node = null
+
 func hostile(a: int, b: int) -> bool:
 	if a == b: return false
+	if diplomacy != null and is_instance_valid(diplomacy) and diplomacy.allied(a, b):
+		return false
 	return team_of(a) != team_of(b)
 
 func allied(a: int, b: int) -> bool:

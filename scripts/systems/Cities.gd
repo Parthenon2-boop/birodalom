@@ -110,6 +110,31 @@ func _init_cities() -> void:
 func city_pos(kulcs: String) -> Vector2:
 	return _pos.get(kulcs, Vector2.ZERO)
 
+# Melyik városra kattintottak? ("" = egyikre sem)
+func city_at(p: Vector2, tav: float = 70.0) -> String:
+	var best := ""
+	var bd := tav
+	for kulcs in _pos:
+		var d: float = (_pos[kulcs] as Vector2).distance_to(p)
+		if d < bd:
+			bd = d
+			best = str(kulcs)
+	return best
+
+func city_name(kulcs: String) -> String:
+	return _name_of(kulcs)
+
+# A városhoz tartozó SAJÁT épületek — ezek termelnek neki, és ezekben lehet
+# toborozni (index.html: portBuilds).
+func city_buildings(kulcs: String, owner_id: int) -> Array:
+	var out: Array = []
+	var p := city_pos(kulcs)
+	for b in get_tree().get_nodes_in_group("buildings"):
+		if not is_instance_valid(b) or int(b.owner_id) != owner_id: continue
+		if b.global_position.distance_to(p) > VAROS_SUGAR: continue
+		out.append(b)
+	return out
+
 func _nearest_key(p: Vector2, max_d: float) -> String:
 	var best := ""
 	var bd := max_d
@@ -341,3 +366,28 @@ func _draw() -> void:
 		draw_string(font, p + Vector2(-w2 * 0.5, -18), also,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 10,
 			Color("f0d98a") if _open(kulcs) else Color("9c8d72"))
+		# LŐTÁVGYŰRŰ: az idegen város tornyainak hatósugara. Csak akkor
+		# rajzoljuk, ha van a közelben hajód — különben tele lenne a térkép.
+		# A belső kör a TIÉD: onnan tudod lőni a várost. A külső, halványabb
+		# a városé: azon belül kezd rád tüzelni a part.
+		if gazda != GameState.en_id and tornyok > 0 and _ship_near(p):
+			_dashed_circle(p, VAROS_TAV, Color(0.82, 0.47, 0.35, 0.30))
+			_dashed_circle(p, OSTROM_TAV, Color(0.81, 0.29, 0.23, 0.42))
+
+func _ship_near(p: Vector2) -> bool:
+	var d := OSTROM_TAV * 2.1
+	for u in get_tree().get_nodes_in_group("units"):
+		if not is_instance_valid(u) or int(u.owner_id) != GameState.en_id: continue
+		if not u.naval: continue
+		if u.global_position.distance_to(p) < d: return true
+	return false
+
+# Szaggatott kör: a Godot vonalrajzolója nem tud szaggatni, ezért rövid
+# íveket húzunk. A minta lassan körbefordul, hogy a gyűrű "éljen".
+func _dashed_circle(kozep: Vector2, r: float, szin: Color) -> void:
+	var db := 26
+	var lepes := TAU / float(db)
+	var forgas := fmod(GameState.t * 0.25, lepes)
+	for i in range(db):
+		var a0 := forgas + float(i) * lepes
+		draw_arc(kozep, r, a0, a0 + lepes * 0.55, 6, szin, 2.0, true)
