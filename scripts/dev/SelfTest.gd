@@ -909,6 +909,39 @@ func _test_fog() -> void:
 	fog.tick(0.1)
 	var hq = _player_hq()
 	check("a saját bázis látható", fog.is_visible_at(hq.global_position))
+	# Minden épülettípusnak van saját jellegzetessége (harangtorony,
+	# bányaállvány, oszlopsor…), különben mind egyforma kis házikó volna.
+	var sig_hiany: Array[String] = []
+	var epitett: Array = []
+	for t in ["temple", "goldmine", "market", "hospital", "smith", "academy",
+			"barracks", "stable", "harbor", "tower", "house"]:
+		var b2 = main.spawn_building(str(t), 0,
+			main.find_land_near(hq.global_position + Vector2(-700, -700), 90.0), true)
+		if b2 == null:
+			sig_hiany.append(str(t))
+			continue
+		epitett.append(b2)
+		b2.queue_redraw()
+	# Egy képkocka: ha egy jellegzetesség rajza elhasalna, itt dőlne el.
+	await _frames(2)
+	check("minden épülettípus kirajzolódik a jegyével", sig_hiany.is_empty(),
+		str(sig_hiany))
+	for b3 in epitett:
+		if is_instance_valid(b3): b3.queue_free()
+	# A lakóház három arca: a változatot az azonosító sorsolja, tehát egy
+	# utcányi házból többféle áll.
+	var arcok := {}
+	var proba = main.spawn_building("house", 0,
+		main.find_land_near(hq.global_position + Vector2(-700, -700), 60.0), true)
+	if proba != null:
+		for i in range(30):
+			proba.nid = i + 1
+			arcok[proba._valtozat()] = true
+		check("a lakóháznak több arca van", arcok.size() >= 2,
+			"%d változat" % arcok.size())
+		check("a változat a 0..2 tartományban marad",
+			arcok.keys().all(func(v): return int(v) >= 0 and int(v) <= 2))
+		proba.queue_free()
 	# A pálya nagy része legyen még sötét. (Egy fix sarokpont ingatag: a
 	# kezdőhelyeket a víz miatt néha messzire tolja a keresés.)
 	var felderitve := 0
@@ -2681,6 +2714,13 @@ func showcase() -> void:
 		break
 	main.camera.position = origin + Vector2(300, 150)
 	main.camera.reset_smoothing()
+	# `--showcase --tisztakep`: a felület nélküli, álló kép — így az
+	# épületek sziluettjét semmi nem takarja.
+	if "--tisztakep" in Main.dev_args():
+		main.toggle_photo(true)
+		main.camera.process_mode = Node.PROCESS_MODE_PAUSABLE
+		main.camera.position = origin + Vector2(300, 150)
+		main.camera.reset_smoothing()
 
 # --- Segédek ---
 
