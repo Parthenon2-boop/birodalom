@@ -648,10 +648,15 @@ func _tick_objective(delta: float) -> void:
 		hud.show_game_over(false)
 
 func spawn_projectile(from: Vector2, to_node: Node2D, damage: float,
-					  owner_id: int) -> Node:
+					  owner_id: int, lovo: Node = null,
+					  toltet: String = "") -> Node:
 	var p := PROJECTILE_SCENE.instantiate()
 	unit_layer.add_child(p)
 	p.setup(from, to_node, damage, owner_id)
+	# Ki lőtte? Ebből lesz a veterán fokozat, ha a lövedék öl.
+	p.shooter = lovo
+	# Milyen töltet? A láncos a vitorlát tépi, a kartács a legénységet.
+	p.toltet = toltet
 	return p
 
 # --- Építés a HUD BuildPanel-ról ---
@@ -857,6 +862,8 @@ func _local_cmd(kind: String, args: Array) -> void:
 		"unload": do_unload(args[0], args[1], me)
 		"pbuild": do_port_build(str(args[0]), str(args[1]), me)
 		"ptrain": do_port_train(str(args[0]), str(args[1]), me)
+		"stance": do_stance(args[0], str(args[1]), me)
+		"form":   do_formation(str(args[0]), me)
 
 # Az azonosítók hálózaton is átvihetők, ezért minden parancs nid-ekkel
 # dolgozik, nem csomópont-hivatkozásokkal.
@@ -1052,6 +1059,37 @@ func _shortest_yard(role: String, owner: int, jeloltek: Array) -> Node:
 			bq = q
 			best = b
 	return best
+
+# --- HARCI ÁLLÁS ÉS ALAKZAT  (index.html 8/B) ---
+
+func do_stance(ids: Array, allas: String, owner: int) -> void:
+	if not (allas in Unit.STANCES): return
+	var n := 0
+	for u in _own_units(ids, owner):
+		if u.role == "worker": continue
+		u.stance = allas
+		# "Tartsd a vonalat": a helyén marad, az eddigi parancsot elengedi.
+		if allas == Unit.STANCE_HOLD and u.has_method("stop"): u.stop()
+		n += 1
+	if owner == GameState.en_id and n > 0:
+		hud.show_toast(Lang.t("uz_allas") % [n, Lang.t("allas_" + allas)], 3.0)
+		SFX.play("click")
+
+func do_formation(alakzat: String, owner: int) -> void:
+	if not (alakzat in Unit.FORMATIONS): return
+	var side := GameState.get_side(owner)
+	if side.is_empty(): return
+	side["formation"] = alakzat
+	# Az alakzat a MÁR PÁLYÁN LÉVŐ katonákra is hat: újraszámoljuk a
+	# sebzést és a páncélt (a sebességet és a lőtávot menet közben nézi).
+	for u in get_tree().get_nodes_in_group("units"):
+		if is_instance_valid(u) and int(u.owner_id) == owner:
+			u.refresh_stats()
+	if owner == GameState.en_id:
+		hud.show_toast("%s: %s — %s" % [Lang.t("alakzat"),
+			Lang.t("alakzat_" + alakzat), Lang.t("alakzat_%s_al" % alakzat)], 4.0)
+		SFX.play("click")
+		hud.update_selection(selected_units)
 
 func do_rally(building_id: int, pos: Vector2, node_id: int,
 			  foe_id: int, owner: int) -> void:

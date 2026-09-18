@@ -532,7 +532,9 @@ func _draw_rally(strong: bool) -> void:
 
 # --- Sebzés ---
 
-func take_damage(amount: float) -> void:
+# A `tamado` az egységeknél a veteránsághoz kell; az épület nem gyűjt
+# fokozatot, de a hívás alakja legyen ugyanaz.
+func take_damage(amount: float, _tamado: Node = null) -> void:
 	hp -= amount
 	queue_redraw()
 	if hp <= 0:

@@ -167,6 +167,11 @@ func add_oldal(tipus: String, helyi: bool, nemzet: String,
 		"wave": 0,
 		"waveT": 115.0,
 		"rate": 1.0,
+		# Az alakzat félenként él: a gazdájáé számít, nem a helyi játékosé
+		# (vonal / ék / négyszög — lásd Unit.form_mul).
+		"formation": "line",
+		# A hajóhad töltete: golyó / láncos / kartács (index.html 09/G).
+		"toltet": "golyo",
 	}
 	oldalak.append(o)
 	return o

@@ -656,6 +656,10 @@ func update_selection(units: Array) -> void:
 		var u = units[0]
 		var r: String = u.role if "role" in u else "?"
 		sel_title.text = unit_name(r)
+		# A VETERÁN fokozat a név mellé kerül: "Kardos — veterán (4 ölés)".
+		if "vet" in u and int(u.vet) > 0:
+			sel_title.text += " — %s (%d)" % [
+				Lang.t(Unit.VET_KULCS[int(u.vet)]), int(u.kills)]
 		sel_hp.max_value = u.max_hp
 		sel_hp.value = u.hp
 		_update_carry(u)
@@ -663,6 +667,79 @@ func update_selection(units: Array) -> void:
 		sel_title.text = Lang.t("egyseg_tobb") % units.size()
 		sel_hp.visible = false
 	_update_cry_button(units)
+	_update_tactics(units)
+
+# --- HARCI ÁLLÁS ÉS ALAKZAT  (index.html 8/B) ---
+#
+# Két sor a parancsgombok alatt: fent az ÁLLÁS (csak a kijelölt egységekre),
+# lent az ALAKZAT (az egész seregre). A kiválasztott gomb ki van emelve.
+var _stance_row: HBoxContainer = null
+var _form_row: HBoxContainer = null
+var _stance_btns := {}
+var _form_btns := {}
+
+func _build_tactics() -> void:
+	var szulo := action_btns.get_parent()
+	_stance_row = HBoxContainer.new()
+	_stance_row.name = "StanceRow"
+	_stance_row.add_theme_constant_override("separation", 4)
+	szulo.add_child(_stance_row)
+	for a in ["aggro", "hold", "flee"]:
+		var allas: String = a
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(84, 24)
+		b.add_theme_font_size_override("font_size", 11)
+		b.pressed.connect(func() -> void: _on_stance(allas))
+		_stance_row.add_child(b)
+		_stance_btns[allas] = b
+	_form_row = HBoxContainer.new()
+	_form_row.name = "FormRow"
+	_form_row.add_theme_constant_override("separation", 4)
+	szulo.add_child(_form_row)
+	for f in Unit.FORMATIONS:
+		var alak: String = f
+		var b2 := Button.new()
+		b2.custom_minimum_size = Vector2(84, 24)
+		b2.add_theme_font_size_override("font_size", 11)
+		b2.pressed.connect(func() -> void: _send("form", [alak]))
+		_form_row.add_child(b2)
+		_form_btns[alak] = b2
+
+func _on_stance(allas: String) -> void:
+	var ids: Array = []
+	for u in _selected:
+		if is_instance_valid(u) and u.role != "worker": ids.append(int(u.nid))
+	if ids.is_empty(): return
+	_send("stance", [ids, allas])
+
+func _update_tactics(units: Array) -> void:
+	if _stance_row == null: _build_tactics()
+	# Munkásokra nincs értelme: az ő kijelölésüknél nem is látszik.
+	var harcos := false
+	for u in units:
+		if is_instance_valid(u) and u.role != "worker" and int(u.owner_id) == GameState.en_id:
+			harcos = true
+			break
+	_stance_row.visible = harcos
+	_form_row.visible = harcos
+	if not harcos: return
+	# Melyik állás van a kijelölésen? (Ha vegyes, egyik sincs kiemelve.)
+	var kozos := ""
+	for u in units:
+		if not is_instance_valid(u) or u.role == "worker": continue
+		if kozos == "": kozos = str(u.stance)
+		elif kozos != str(u.stance): kozos = "?"
+	for a in _stance_btns:
+		var b: Button = _stance_btns[a]
+		b.text = Lang.t("allas_" + str(a))
+		b.tooltip_text = Lang.t("allas_%s_al" % str(a))
+		b.flat = str(a) != kozos
+	var most := Unit.formation_of(GameState.en_id)
+	for f in _form_btns:
+		var b3: Button = _form_btns[f]
+		b3.text = Lang.t("alakzat_" + str(f))
+		b3.tooltip_text = Lang.t("alakzat_%s_al" % str(f))
+		b3.flat = str(f) != most
 
 # CSATAKIÁLTÁS: a hős kijelölésekor megjelenik egy gomb. Nyolc másodpercig
 # a körülötte állók többet sebeznek és gyorsabban mozognak; kilencven

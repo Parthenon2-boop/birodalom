@@ -39,7 +39,7 @@ const GAMES := [
 	{
 		"key": "heptarchia",
 		"name": "HEPTARCHIA",
-		"sub": "Angolszász nagystratégia,  871-től",
+		"sub": "Angolszász nagystratégia,  790-től",
 		"owner": "Parthenon2-boop",
 		"repo": "heptarchia",
 		"branch": "main",
@@ -52,7 +52,7 @@ const GAMES := [
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 4
+const LAUNCHER_BUILD := 5
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -85,6 +85,14 @@ var home_launcher_asset := {}
 var launcher_update := 0             # az elérhető újabb indító-változat (0 = nincs)
 var _home_check_running := false
 
+# MINDKÉT JÁTÉK ELÉRHETŐ VÁLTOZATA — hogy a fülön mindig lássad, hol tart a
+# másik játék is, ne csak az, amelyiket épp nézed. Induláskor a legutóbb
+# látott számot mutatjuk (a beállításfájlból), és a háttérben frissítjük.
+# A telepítettet is itt tartjuk számon, hogy a fülön kiderüljön, van-e újabb.
+var latest_ver := {}                 # játékkulcs -> a GitHubon lévő változat
+var _sweep_sor: Array = []           # a még lekérdezendő játékok kulcsai
+var http_info: HTTPRequest           # a fülek verzióihoz (a letöltéstől külön)
+
 var http: HTTPRequest
 var _ui: Control                     # a bőrváltáskor újraépülő felület
 var _import_thread: Thread
@@ -114,9 +122,25 @@ func _ready() -> void:
 	http = HTTPRequest.new()
 	http.timeout = 60.0
 	add_child(http)
+	http_info = HTTPRequest.new()
+	http_info.timeout = 30.0
+	add_child(http_info)
 	_apply_net_settings()
 	_refresh_labels()
+	_show_notes(str(game()["key"]))   # a legutóbb látott leírás azonnal
 	check_latest()
+	_sweep_versions()             # mindkét játék változata a fülre
+	# Ellenőrzéshez:  ParthLauncher -- --shot=<utvonal.png>
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--shot="): _capture_after(a.substr(7))
+
+func _capture_after(path: String) -> void:
+	for _i in range(180):
+		await get_tree().process_frame
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(path)
+	print("képernyőkép:", path)
+	get_tree().quit()
 	# Az indító a saját frissítését a játéktól függetlenül nézi meg, hogy
 	# akkor is naprakész legyen, ha épp a másik játék fülén állunk.
 	_check_home_launcher()
@@ -139,6 +163,13 @@ func game() -> Dictionary:
 # ── Beállítások ───────────────────────────────────────────────
 
 func _load_common() -> void:
+	# A legutóbb LÁTOTT változatok: így a fülön rögtön ott a szám, még mielőtt
+	# a GitHub válaszolna (és akkor is, ha épp nincs hálózat).
+	latest_ver.clear()
+	for g in GAMES:
+		var k := str(g["key"])
+		var v := str(cfg.get_value("latest", k, ""))
+		if v != "": latest_ver[k] = v
 	auto_update = bool(cfg.get_value("state", "auto_update", true))
 	auto_play = bool(cfg.get_value("state", "auto_play", false))
 	insecure_tls = bool(cfg.get_value("net", "insecure_tls", false))
@@ -191,6 +222,8 @@ func _save_cfg() -> void:
 	cfg.set_value("state", "auto_play", auto_play)
 	cfg.set_value("net", "proxy", proxy_text())
 	cfg.set_value("net", "insecure_tls", insecure_tls)
+	for k in latest_ver:
+		cfg.set_value("latest", str(k), str(latest_ver[k]))
 	cfg.save(CFG_PATH)
 
 # ── Hálózati beállítások (proxy, tanúsítvány) ─────────────────
@@ -342,8 +375,10 @@ func _build_ui() -> void:
 	for i in GAMES.size():
 		var idx := i
 		var b := _button(tabs, str(GAMES[i]["name"]), func(): _switch_game(idx))
-		b.custom_minimum_size = Vector2(0, 46)
-		b.add_theme_font_size_override("font_size", 20)
+		# Két sor fér rá: a játék neve, alatta a változat — ezért magasabb és
+		# valamivel kisebb betűs, mint egy sima gomb.
+		b.custom_minimum_size = Vector2(0, 58)
+		b.add_theme_font_size_override("font_size", 17)
 		b.size_flags_horizontal = SIZE_EXPAND_FILL
 		game_btns.append(b)
 
@@ -437,6 +472,7 @@ func _switch_game(idx: int) -> void:
 	_progress(0, "")
 	_status("")
 	_refresh_labels()
+	_show_notes(str(game()["key"]))   # a másik játék leírása azonnal látszik
 	check_latest()
 
 func _divider() -> Control:
@@ -577,6 +613,23 @@ func _refresh_labels() -> void:
 		b.flat = (i != game_idx)
 		b.add_theme_color_override("font_color",
 			S.GOLD_LIGHT if i == game_idx else S.TEXT)
+		# A fülön MINDIG ott a szám: mi van fent a GitHubon, és — ha más —
+		# mi van telepítve. Így a másik játékról is látszik, van-e újabb.
+		var k := str(GAMES[i]["key"])
+		var fent := str(latest_ver.get(k, ""))
+		var itt := _installed_of(k)
+		var also := ""
+		if fent == "" and itt == "":
+			also = "változat: ?"
+		elif fent == "" :
+			also = "telepítve: %s" % itt
+		elif itt == "" :
+			also = "%s (nincs telepítve)" % fent
+		elif itt == fent:
+			also = "%s – naprakész" % fent
+		else:
+			also = "%s → %s" % [itt, fent]
+		b.text = "%s\n%s" % [str(GAMES[i]["name"]), also]
 	# Csak a változatokat mutatjuk – sem a tároló, sem a letöltési cím nem látszik
 	lbl_installed.text = "%s – telepített változat: %s" % [str(g["name"]).capitalize(),
 		installed_version if installed_version != "" else "még nincs telepítve"]
@@ -619,11 +672,67 @@ func check_latest() -> void:
 	busy = true
 	remote = {}
 	_refresh_labels()
-	_status("Kapcsolódás a GitHubhoz…")
+	_status("Frissítés keresése…")
 	_progress(0, "")
 	_request("%s/repos/%s/%s/releases/latest" % [API, repo_owner, repo], _on_release_checked)
 	# A gombnyomásra az indító a saját változatát is újranézi.
 	_check_home_launcher()
+
+# ── Mindkét játék változata (a füleken) ───────────────────────
+#
+# Egyetlen könnyű kérdés játékonként: mi a legfrissebb kiadás címkéje.
+# Külön HTTPRequest végzi, hogy ne akassza meg a letöltést, és sorban
+# halad, mert egy csomópont egyszerre egy kérést tud.
+func _sweep_versions() -> void:
+	_sweep_sor.clear()
+	for g in GAMES:
+		_sweep_sor.append(str(g["key"]))
+	_sweep_next()
+
+func _sweep_next() -> void:
+	if _sweep_sor.is_empty(): return
+	var key := str(_sweep_sor.pop_front())
+	var g := _game_by_key(key)
+	if g.is_empty():
+		_sweep_next()
+		return
+	var rr := _repo_of(g)
+	for c in http_info.request_completed.get_connections():
+		http_info.request_completed.disconnect(c["callable"])
+	http_info.request_completed.connect(
+		func(result: int, code: int, _h: PackedStringArray, body: PackedByteArray) -> void:
+			_on_version_answer(key, result, code, body),
+		CONNECT_ONE_SHOT)
+	var err := http_info.request("%s/repos/%s/%s/releases/latest" % [API, rr[0], rr[1]],
+		HEADERS)
+	if err != OK: _sweep_next()
+
+func _on_version_answer(key: String, result: int, code: int,
+		body: PackedByteArray) -> void:
+	if result == HTTPRequest.RESULT_SUCCESS and code == 200:
+		var data = JSON.parse_string(body.get_string_from_utf8())
+		if typeof(data) == TYPE_DICTIONARY:
+			var v := str(data.get("tag_name", ""))
+			if v != "":
+				latest_ver[key] = v
+				cfg.set_value("latest", key, v)
+				# A leírást is eltesszük: így a MÁSIK játék fülén is rögtön
+				# ott van, mit hoz az ő legfrissebb változata.
+				_remember_notes(key, v, str(data.get("published_at", "")).substr(0, 10),
+					str(data.get("body", "")).strip_edges())
+				_refresh_labels()
+				if key == str(game()["key"]) and remote.is_empty(): _show_notes(key)
+	_sweep_next()
+
+func _game_by_key(key: String) -> Dictionary:
+	for g in GAMES:
+		if str(g["key"]) == key: return g
+	return {}
+
+# Egy játék telepített változata (akkor is, ha épp nem az van kiválasztva).
+func _installed_of(key: String) -> String:
+	if key == str(game()["key"]): return installed_version
+	return str(cfg.get_value("state:" + key, "version", ""))
 
 func _request(url: String, handler: Callable, to_file: String = "") -> void:
 	for c in http.request_completed.get_connections():
@@ -639,7 +748,7 @@ func _request(url: String, handler: Callable, to_file: String = "") -> void:
 func _on_release_checked(result: int, code: int, _h: PackedStringArray, body: PackedByteArray) -> void:
 	if result != HTTPRequest.RESULT_SUCCESS:
 		# Sok iskolai hálózat épp az api.github.com címet tiltja: próbáljuk a github.com-ot
-		_status("Az api.github.com nem érhető el (%s) – megpróbálom a github.com-ot…" % _result_text(result))
+		_status("A frissítési szolgáltatás nem válaszol (%s) – másik úton próbálom…" % _result_text(result))
 		_check_via_atom()
 		return
 	if code == 200:
@@ -647,6 +756,7 @@ func _on_release_checked(result: int, code: int, _h: PackedStringArray, body: Pa
 		if typeof(data) == TYPE_DICTIONARY:
 			var asset := _pick_asset(data.get("assets", []))
 			if not asset.is_empty():
+				latest_ver[str(game()["key"])] = str(data.get("tag_name", "?"))
 				remote = {"mode": "release", "version": str(data.get("tag_name", "?")),
 					"url": str(asset.get("browser_download_url", "")), "size": int(asset.get("size", 0)),
 					"notes": str(data.get("body", "")), "date": str(data.get("published_at", ""))}
@@ -705,29 +815,27 @@ func _on_commit_checked(result: int, code: int, _h: PackedStringArray, body: Pac
 	busy = false
 	if code == 409:
 		# a GitHub ezt adja, ha a tároló még üres (nincs benne feltöltés)
-		_status("A tároló még üres: töltsd fel a játékot (git push), és indíts újra!", S.RED)
+		_status("Ehhez a játékhoz még nincs kiadott változat.", S.RED)
 		_refresh_labels()
 		return
 	if code == 404:
-		# Ez a leggyakoribb eset az első napokban: a tároló még nincs meg
-		# (vagy privát). Megmondjuk, MELYIKET keresi, és mit kell tenni.
-		_status("Ez a tároló még nincs meg a GitHubon:  %s/%s\nHozd létre (Public), és töltsd fel a játékot — utána ez a gomb már működni fog."
-			% [repo_owner, repo], S.RED)
-		txt_notes.text = "[b]Mi a teendő?[/b]\n\n"\
-			+ "1. github.com → New repository → név: [b]%s[/b], Public, üresen.\n" % repo\
-			+ "2. A játék mappájában futtasd a „Feltoltes GitHubra.bat” fájlt.\n"\
-			+ "3. Kész .exe-hez: [code]git tag v1.0[/code] és [code]git push origin v1.0[/code] —\n"\
-			+ "   a GitHub elkészíti a csomagokat, és ez az indító letölti őket.\n\n"\
-			+ "Addig is: a másik játék füle működik."
+		# A játék még nem érhető el a frissítési szolgáltatásban. A felület
+		# SEMMILYEN belső részletet nem mutat (címek, fióknevek): a játékosra
+		# ezek nem tartoznak.
+		_status("Ez a játék még nem érhető el. Próbáld később, vagy nézd meg a másik fület.", S.RED)
+		txt_notes.text = "[b]Ez a játék most nem érhető el.[/b]\n\n"\
+			+ "Vagy még nincs kiadott változata, vagy a hálózat nem engedi a "\
+			+ "letöltést. A másik játék füle addig is működik.\n\n"\
+			+ "Szűrt hálózaton segíthet a Beállítások → Hálózati vizsgálat."
 		_refresh_labels()
 		return
 	if code != 200:
-		_status("Nem találom a tárolót vagy az ágat (HTTP %d)." % code, S.RED)
+		_status("A frissítés most nem érhető el (HTTP %d)." % code, S.RED)
 		_refresh_labels()
 		return
 	var data = JSON.parse_string(body.get_string_from_utf8())
 	if typeof(data) != TYPE_DICTIONARY:
-		_status("Váratlan válasz a GitHubtól.", S.RED)
+		_status("Váratlan válasz a frissítési szolgáltatástól.", S.RED)
 		_refresh_labels()
 		return
 	var sha := str(data.get("sha", "")).substr(0, 7)
@@ -745,7 +853,7 @@ func _check_via_atom() -> void:
 func _on_atom_checked(result: int, code: int, _h: PackedStringArray, body: PackedByteArray) -> void:
 	busy = false
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
-		_status("A GitHub nem érhető el a hálózatról (%s, HTTP %d). Nyomd meg a „Hálózati vizsgálat” gombot!"
+		_status("A frissítés nem érhető el erről a hálózatról (%s, HTTP %d). Nyomd meg a „Hálózati vizsgálat” gombot!"
 			% [_result_text(result), code], S.RED)
 		_refresh_labels()
 		return
@@ -753,7 +861,7 @@ func _on_atom_checked(result: int, code: int, _h: PackedStringArray, body: Packe
 	var marker := "Grit::Commit/"
 	var idx := text.find(marker)
 	if idx < 0:
-		_status("Nem sikerült kiolvasni a változat azonosítóját a GitHubról.", S.RED)
+		_status("Nem sikerült kiolvasni a változat azonosítóját.", S.RED)
 		_refresh_labels()
 		return
 	var sha := text.substr(idx + marker.length(), 40)
@@ -780,9 +888,8 @@ func _after_check() -> void:
 	var v: String = str(remote["version"])
 	var date := str(remote.get("date", "")).substr(0, 10)
 	var notes := str(remote.get("notes", "")).strip_edges()
-	var head := "[b]%s %s[/b]" % [str(game()["name"]).capitalize(), v] \
-		+ ("   (%s)" % date if date != "" else "")
-	txt_notes.text = "%s\n\n%s" % [head, notes if notes != "" else "(nincs leírás)"]
+	_remember_notes(str(game()["key"]), v, date, notes)
+	_show_notes(str(game()["key"]))
 	var up_to_date: bool = v == installed_version
 	if up_to_date and _game_installed():
 		_status("A játék készen áll.", S.GREEN)
@@ -801,6 +908,39 @@ func _after_check() -> void:
 	# magától letölti az újat (ha a felhasználó nem kapcsolta ki)
 	if auto_update and _needs_download():
 		start_update()
+
+# ── „Mi van a mostani változatban?” ───────────────────────────
+#
+# A leírásmezőben MINDIG ott áll, mit hoz a legfrissebb változat — akkor is,
+# ha épp most indult a program, ha a másik játék fülén állunk, és akkor is,
+# ha nincs hálózat: a legutóbb látott szöveget eltesszük a beállításfájlba.
+func _remember_notes(key: String, v: String, date: String, notes: String) -> void:
+	cfg.set_value("notes:" + key, "version", v)
+	cfg.set_value("notes:" + key, "date", date)
+	cfg.set_value("notes:" + key, "text", notes)
+	cfg.save(CFG_PATH)
+
+func _show_notes(key: String) -> void:
+	if txt_notes == null: return
+	var g := _game_by_key(key)
+	var v := str(cfg.get_value("notes:" + key, "version", str(latest_ver.get(key, ""))))
+	var date := str(cfg.get_value("notes:" + key, "date", ""))
+	var notes := str(cfg.get_value("notes:" + key, "text", "")).strip_edges()
+	var nev := str(g.get("name", key)).capitalize()
+	if v == "":
+		txt_notes.text = "[b]%s[/b]\n\nA változat adatait még töltöm…" % nev
+		return
+	var fej := "[b]%s %s[/b]%s" % [nev, v, ("   (%s)" % date) if date != "" else ""]
+	var itt := _installed_of(key)
+	var allapot := ""
+	if itt == "":
+		allapot = "Még nincs telepítve."
+	elif itt == v:
+		allapot = "Ez a változat van telepítve."
+	else:
+		allapot = "Telepítve: %s — ez a frissítés újabb." % itt
+	txt_notes.text = "%s\n[i]%s[/i]\n\n%s" % [fej, allapot,
+		notes if notes != "" else "(ehhez a változathoz nincs leírás)"]
 
 # ── Az indító önfrissítése ────────────────────────────────────
 #
@@ -1003,18 +1143,20 @@ func run_diagnostics() -> void:
 	lines.append("Proxy: %s" % (proxy_text() if proxy_text() != "" else "nincs beállítva"))
 	lines.append("Tanúsítvány-ellenőrzés: %s" % ("KIKAPCSOLVA" if insecure_tls else "bekapcsolva"))
 	lines.append("")
+	# A vizsgálat NEM írja ki a címeket és a fiókneveket — csak azt, hogy az
+	# egyes útvonalak működnek-e. A hibakeresésnek ennyi elég.
 	var targets := [
-		["api.github.com", "https://api.github.com/rate_limit", HTTPClient.METHOD_GET],
-		["github.com", "https://github.com/%s/%s/commits/%s.atom" % [repo_owner, repo, branch], HTTPClient.METHOD_GET],
-		["codeload.github.com", "https://codeload.github.com/%s/%s/zip/refs/heads/%s" % [repo_owner, repo, branch], HTTPClient.METHOD_HEAD],
-		["raw.githubusercontent.com", "https://raw.githubusercontent.com/%s/%s/%s/README.md" % [repo_owner, repo, branch], HTTPClient.METHOD_HEAD]
+		["1. kapcsolat", "%s/rate_limit" % API, HTTPClient.METHOD_GET],
+		["2. kapcsolat", "https://github.com/%s/%s/commits/%s.atom" % [repo_owner, repo, branch], HTTPClient.METHOD_GET],
+		["3. letöltés", "https://codeload.github.com/%s/%s/zip/refs/heads/%s" % [repo_owner, repo, branch], HTTPClient.METHOD_HEAD],
+		["4. adatlap", "https://raw.githubusercontent.com/%s/%s/%s/README.md" % [repo_owner, repo, branch], HTTPClient.METHOD_HEAD]
 	]
 	for t in targets:
 		var res := await _probe(t[1], t[2])
 		lines.append("%-26s %s" % [t[0], res])
 		txt_notes.text = "\n".join(lines)
 	lines.append("")
-	lines.append("Ha mind hibás: a hálózat tiltja a GitHubot, vagy proxy kell (Beállítások).")
+	lines.append("Ha mind hibás: a hálózat tiltja a frissítést, vagy proxy kell (Beállítások).")
 	lines.append("Ha „tanúsítvány-hiba” látszik: kapcsold be a Beállításokban az iskolai hálózat módot.")
 	txt_notes.text = "\n".join(lines)
 	busy = false

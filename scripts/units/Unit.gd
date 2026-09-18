@@ -86,6 +86,63 @@ const ROLE_ORDER := ["worker", "melee", "ranged", "spear", "cav", "priest",
 	"spy", "ram", "hero", "siege", "medic", "fisher", "warship", "galleon",
 	"transport", "fighter", "bomber"]
 
+# --- VETERÁNSÁG ÉS HARCI ÁLLÁS  (index.html 8/B) ---
+#
+# VETERÁNSÁG
+#   Minden egység gyűjti az öléseit: három után veterán, hat után elit.
+#   Fokozatonként +10% sebzés és +10% életerő. Egy megélt csapat többet ér,
+#   mint egy friss — érdemes vigyázni rájuk.
+#
+# HARCI ÁLLÁS (egységenként)
+#   Támadó      — magától célt fog és üldözi
+#   Tartsd      — nem mozdul, csak arra lő, ami hatótávba ér
+#   Visszavonul — ha az életereje 40% alá esik, elhátrál a harcból
+const VET_KILLS := [0, 3, 6]
+const VET_BONUS := 0.10
+const VET_KULCS := ["vet_ujonc", "vet_veteran", "vet_elit"]
+
+var kills   : int   = 0
+var vet     : int   = 0
+var _vet_at : float = -99.0
+
+const STANCE_AGGRO := "aggro"
+const STANCE_HOLD  := "hold"
+const STANCE_FLEE  := "flee"
+const STANCES := [STANCE_AGGRO, STANCE_HOLD, STANCE_FLEE]
+
+var stance: String = STANCE_AGGRO
+# Meddig fut a megtört morálú egység (lásd _moral_tick, index.html 9/E).
+var _moral_futas_ig: float = -99.0
+
+# --- ALAKZATOK  (index.html 8/B) ---
+#
+# Nem csak a felállás más: mindegyik ad valamit, és elvesz valamit.
+#   VONAL    — széles tűzvonal: a lövészek 10%-kal messzebbre lőnek
+#   ÉK       — roham: 12%-kal gyorsabb és 12%-kal nagyobbat üt
+#   NÉGYSZÖG — tömör védelem: +2 páncél, de 15%-kal lassabb menet
+#
+# Az alakzat FÉLENKÉNT él (a gazdáé számít, nem a helyi játékosé),
+# különben hálózaton más erővel harcolna ugyanaz a katona a két gépen.
+const FORMATIONS := ["line", "wedge", "square"]
+const FORM_ARMOR := 2.0
+
+static func formation_of(owner_id: int) -> String:
+	var f := str(GameState.get_side(owner_id).get("formation", "line"))
+	return f if f in FORMATIONS else "line"
+
+# Az alakzat szorzói. A terep és a hős aurája ezekre rakódik rá.
+func form_mul(mit: String) -> float:
+	if naval or air or role == "worker": return 1.0
+	match formation_of(owner_id):
+		"line":   return 1.10 if mit == "range" and role == "ranged" else 1.0
+		"wedge":  return 1.12 if mit == "dmg" or mit == "speed" else 1.0
+		"square": return 0.85 if mit == "speed" else 1.0
+	return 1.0
+
+func form_armor() -> float:
+	if naval or air or role == "worker": return 0.0
+	return FORM_ARMOR if formation_of(owner_id) == "square" else 0.0
+
 # Hálózati azonosító: a házigazda osztja, a csatlakozó ebből ismeri fel,
 # melyik bábut kell mozgatnia.
 var nid: int = 0
@@ -312,6 +369,25 @@ func _draw() -> void:
 	_draw_hp_bar()
 	_draw_carry()
 	_draw_heal_fx()
+	_draw_vet()
+
+# VETERÁN JELZÉS: egy-két apró arany ék a talpvonalnál. Épp csak annyi,
+# hogy egy pillantásra látszódjon, melyik csapat megélt már valamit —
+# és előléptetéskor felvillan egy gyűrű.
+func _draw_vet() -> void:
+	if vet <= 0: return
+	var arany := Color("e8c96a")
+	var y := -_head_y() * 0.0 + 3.4 * (radius / 9.2) + 3.0
+	for i in range(vet):
+		var x := -3.0 + float(i) * 6.0
+		draw_polyline([Vector2(x - 2.4, y + 2.2), Vector2(x, y - 0.6),
+			Vector2(x + 2.4, y + 2.2)], arany, 1.4, true)
+	var kor := GameState.t - _vet_at
+	if kor >= 0.0 and kor < 0.9:
+		var a := 1.0 - kor / 0.9
+		_ellipse(Vector2(0, 3.4 * (radius / 9.2)),
+			Vector2(radius + 4.0 + kor * 14.0, (radius + 4.0 + kor * 14.0) * 0.45),
+			Color(arany.r, arany.g, arany.b, a * 0.8), false, 2.0)
 
 # A KIJELÖLT munkás feje fölött látszik, mennyi nyersanyag van nála és
 # miből: egy színes pötty (fa / kő / arany / élelem) és a "meglévő / teli
@@ -423,6 +499,72 @@ func _apply_stats() -> void:
 	dmg    *= Upgrades.damage_mul(owner_id)
 	max_hp *= Upgrades.hp_mul(owner_id)
 	armor   = Upgrades.armor_of(owner_id)
+	# A VETERÁN nagyobbat üt és többet bír (fokozatonként +10%).
+	var vm := 1.0 + float(vet) * VET_BONUS
+	dmg    *= vm
+	max_hp *= vm
+	# Az ALAKZAT az egész félre hat: az ék üt nagyobbat, a négyszög véd.
+	dmg   *= form_mul("dmg")
+	armor += form_armor()
+
+# --- Előléptetés ---
+#
+# Egy ölés jóváírása annak, aki elejtette. Az előléptetés a sebesülés
+# ARÁNYÁT megtartja (nem gyógyít teljesen), de egy kis erőt ad hozzá.
+func credit_kill() -> void:
+	kills += 1
+	promote()
+
+func vet_rank() -> int:
+	if kills >= VET_KILLS[2]: return 2
+	if kills >= VET_KILLS[1]: return 1
+	return 0
+
+func promote() -> bool:
+	var uj := vet_rank()
+	if uj == vet: return false
+	var arany := clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
+	vet = uj
+	_apply_stats()
+	hp = clampf(max_hp * (arany + 0.08), 1.0, max_hp)
+	_vet_at = GameState.t
+	queue_redraw()
+	if owner_id == GameState.en_id:
+		SFX.play("age", -10.0)
+		var fo := get_tree().get_first_node_in_group("main")
+		if fo != null and fo.hud != null:
+			fo.hud.show_toast("%s %s: %s" % [Lang.t("u_" + role),
+				Lang.t("eloleptetve"), Lang.t(VET_KULCS[vet])], 3.0)
+	return true
+
+# Meneküljön-e? A Visszavonulás állásban megsérülve, vagy ha a morál
+# megtört (lásd _moral_tick).
+func should_flee() -> bool:
+	if role == "worker" or naval or air: return false
+	if GameState.t < _moral_futas_ig: return true
+	return stance == STANCE_FLEE and hp < max_hp * 0.4
+
+# A menekülés iránya: el a legközelebbi ellenségtől, ha nincs, a bázis felé.
+func _flee_move() -> void:
+	target = null
+	if not atk_timer.is_stopped(): atk_timer.stop()
+	var e := Combat.find_enemy(self, 320.0)
+	var cel: Vector2
+	if e != null:
+		cel = global_position + (global_position - e.global_position)
+	else:
+		var hq := _own_hq()
+		if hq == null: return
+		cel = hq.global_position
+	_set_nav_target(Vector2(
+		clampf(cel.x, 40.0, float(GameState.WORLD_W) - 40.0),
+		clampf(cel.y, 40.0, float(GameState.WORLD_H) - 40.0)))
+
+func _own_hq() -> Node2D:
+	for b in get_tree().get_nodes_in_group("buildings"):
+		if is_instance_valid(b) and int(b.owner_id) == owner_id and b.tipus == "hq":
+			return b
+	return null
 
 # Minden olyan érték újraszámolása, amit a gazda fejlesztései befolyásolnak.
 # A friss fokozat a MÁR PÁLYÁN LÉVŐ katonákra is vonatkozik; az életerőt
@@ -509,7 +651,7 @@ func _move(delta: float) -> void:
 			face = dir.angle()
 		# AZ IDŐJÁRÁS a menetre is hat: a hó és a felázott föld lassít, a
 		# szélcsend a vitorlát ejti össze (scripts/systems/Weather.gd).
-		var v := spd * _weather_speed()
+		var v := spd * _weather_speed() * form_mul("speed")
 		velocity = dir * v
 		walk += delta * v * 0.09
 	move_and_slide()
@@ -635,9 +777,19 @@ func _think(_delta: float) -> void:
 	if Combat.can_heal(role):
 		_healer_tick(_delta)
 		return
+	# HARCI ÁLLÁS: aki visszavonul (vagy akinek megtört a morálja), kilép a
+	# harcból, és csak akkor fordul vissza, ha összeszedte magát.
+	if should_flee():
+		_flee_move()
+		return
 	if target != null:
 		var d := global_position.distance_to(target.global_position)
 		if d > _effective_range(target):
+			# "Tartsd a vonalat": nem üldözünk, elengedjük a célt.
+			if stance == STANCE_HOLD:
+				target = null
+				if not atk_timer.is_stopped(): atk_timer.stop()
+				return
 			_set_nav_target(target.global_position)
 			if not atk_timer.is_stopped(): atk_timer.stop()
 		else:
@@ -663,7 +815,10 @@ func _think(_delta: float) -> void:
 		_scan_t -= _delta
 		if _scan_t <= 0.0:
 			_scan_t = SCAN_PERIOD
-			var e := Combat.find_enemy(self, sight())
+			# "Tartsd a vonalat" állásban csak arra lövünk, ami hatótávba ér.
+			var kereses: float = sight() if stance != STANCE_HOLD \
+				else atk_range * form_mul("range") + radius + 18.0
+			var e := Combat.find_enemy(self, kereses)
 			if e != null: start_attacking(e)
 
 # AZ ŐRTORONY LEPLEZI LE A KÉMET. Amíg nincs ellenséges torony a közelben,
@@ -1001,9 +1156,10 @@ func _on_attack() -> void:
 	if role in PROJECTILE_ROLES:
 		var main := get_tree().get_first_node_in_group("main")
 		if main and main.has_method("spawn_projectile"):
-			main.spawn_projectile(global_position + Vector2(0, -12), target, amount, owner_id)
+			main.spawn_projectile(global_position + Vector2(0, -12), target,
+				amount, owner_id, self)
 			return
-	target.take_damage(amount)
+	target.take_damage(amount, self)
 
 func _target_kind(t: Node) -> String:
 	if t is Building: return "building"
@@ -1017,9 +1173,12 @@ func _effective_range(t: Node2D) -> float:
 		tr = t.hit_radius()
 	elif "radius" in t:
 		tr = float(t.radius)
-	return atk_range + radius + tr
+	# A VONAL alakzatban a lövész messzebbre lő.
+	return atk_range * form_mul("range") + radius + tr
 
-func take_damage(amount: float) -> void:
+# A `tamado` azért kell, hogy az ölést jóvá lehessen írni: abból lesz a
+# veterán fokozat (index.html: creditKill).
+func take_damage(amount: float, tamado: Node = null) -> void:
 	# A páncél levon a találatból, de sosem nyeli el egészen: enélkül a
 	# késői páncél ellen a korai gyalogos ártalmatlan lenne, és a játszma
 	# menthetetlenül elakadna. A hős közelében állók egy kicsivel többet
@@ -1032,6 +1191,10 @@ func take_damage(amount: float) -> void:
 	_hit_at = GameState.t
 	queue_redraw()
 	if hp <= 0.0:
+		# Az ölés azé, aki elejtette — ebből gyűlik a veteránság.
+		if tamado != null and is_instance_valid(tamado) and tamado is Unit \
+				and int(tamado.owner_id) != owner_id:
+			tamado.credit_kill()
 		# A hajóval együtt a rakománya is odavész.
 		if not cargo.is_empty():
 			for u in cargo:
