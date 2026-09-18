@@ -229,7 +229,9 @@ func _test_world() -> void:
 	# A parti tenger a pálya egyik szélén fut végig (3400 x ~200 képpont),
 	# ezért fél millió képpont fölött van, és a víz TÚLNYOMÓ része egyetlen
 	# összefüggő felület — ez a két feltétel számít a hajózáshoz.
-	check("a legnagyobb vízfelület elég nagy a hajóknak", pixel >= 500000,
+	# A rövidebb (2400 képpontos) oldalra eső tenger is elég: 2400 x ~230
+	# képpont fél millió körül van.
+	check("a legnagyobb vízfelület elég nagy a hajóknak", pixel >= 450000,
 		"%d cella (~%.2f millió képpont), a víz %.0f%%-a" % [
 			legnagyobb, float(pixel) / 1e6, arany])
 	check("a víz java egyetlen összefüggő tenger", arany >= 50.0,
@@ -1327,6 +1329,29 @@ func _test_hud() -> void:
 		menu._host_port != null and menu._join_port != null)
 	check("a csatlakozás mezője a házigazda címét kéri",
 		menu._mp_code != null and menu._mp_code.placeholder_text.contains("."))
+
+	# --- A CSATA-SZOBA: világválasztó és táj (az eredeti szobaMod/szobaMap) ---
+	menu.show_screen("battle")
+	check("a szobában választható a világ (birodalmak / kalózok)",
+		menu._battle_mode_row != null)
+	check("a szobában választható a táj", menu._battle_map != null)
+	menu._sel_battle_world(true)
+	var kaloz_nemzetek := Style.order_for(true)
+	var jo_nemzet := true
+	for d in menu._battle_sides:
+		if not (str(d["nemzet"]) in kaloz_nemzetek): jo_nemzet = false
+	check("kalózvilágra váltva mindenki kalózfrakciót kap", jo_nemzet,
+		str(menu._battle_sides))
+	check("a kalózvilágban nincs tájválasztás a szobában sem",
+		not menu._battle_map_row.visible)
+	menu._sel_battle_world(false)
+	check("visszaváltva megint a birodalmak listája jön",
+		str(menu._battle_sides[0]["nemzet"]) in Style.order_for(false))
+
+	# --- VISSZAJÁTSZÁS képernyő ---
+	menu.show_screen("replay")
+	check("van visszajátszás-képernyő a menüben", menu._replay_box != null
+		and menu._replay_box.visible)
 	menu.show_screen("home")
 
 	# --- A zászlók körül nincs fehér keret ---
@@ -1440,6 +1465,59 @@ func _test_pirate() -> void:
 		Building.BUILD_STATS["sugar"].has("rum"))
 	check("a cukornád csak a kalózvilágban építhető",
 		bool(Building.BUILD_STATS["sugar"].get("pirateOnly", false)))
+
+	# --- A KARIB-TENGER VÁROSAI ÉS AZ OSTROM ---
+	if GameState.pirate:
+		var c = main.cities
+		check("a kalózvilágban ott vannak a kikötővárosok", c != null)
+		if c != null:
+			check("tizennégy város van a térképen", c.varosok.size() == 14,
+				"%d" % c.varosok.size())
+			# Minden városnak van helye a pályán belül és lakossága.
+			var rossz_v: Array[String] = []
+			for v in c.KIKOTOK:
+				var k := str(v["kulcs"])
+				var p: Vector2 = c.city_pos(k)
+				if p.x <= 0.0 or p.y <= 0.0 or p.x >= GameState.WORLD_W \
+						or p.y >= GameState.WORLD_H:
+					rossz_v.append(k + ":hely")
+				if float((c.varosok[k] as Dictionary)["lakos"]) <= 0.0:
+					rossz_v.append(k + ":lakos")
+			check("minden városnak van helye és lakossága", rossz_v.is_empty(),
+				str(rossz_v))
+			# A bázis melletti város a miénk.
+			var sajat := ""
+			for v in c.KIKOTOK:
+				if c.owner_of(str(v["kulcs"])) == 0: sajat = str(v["kulcs"])
+			check("a bázisunk városa hozzánk tartozik", sajat != "", sajat)
+			# OSTROM: tornyok nélkül, kiürült lakossággal a város nyitva áll,
+			# és a partra tett katona elfoglalja.
+			var cel := ""
+			for v in c.KIKOTOK:
+				if c.owner_of(str(v["kulcs"])) != 0: cel = str(v["kulcs"])
+			if cel != "":
+				var a: Dictionary = c.varosok[cel]
+				a["torony"] = 0
+				a["lakos"] = 5.0
+				a["helyorseg"] = true          # a helyőrség már kiállt és elesett
+				check("torony nélkül, kiürülve a város nyitva áll", c._open(cel))
+				var arany0: float = float(GameState.get_res(0).get("gold", 0.0))
+				var p2: Vector2 = c.city_pos(cel)
+				var hely: Vector2 = main.find_land_near(p2 + Vector2(60, 0), 30.0)
+				var katona = main.spawn_unit("melee", 0, hely, GameState.get_age())
+				await _frames(3)
+				c._landing(cel, a, p2, c.owner_of(cel))
+				check("a partra tett katona elfoglalja a nyitott várost",
+					int(a["gazda"]) == 0, "gazda %d" % int(a["gazda"]))
+				check("az elfoglalás zsákmányt hoz",
+					float(GameState.get_res(0).get("gold", 0.0)) > arany0)
+				if is_instance_valid(katona): katona.queue_free()
+
+	# --- VISSZAJÁTSZÁS: a játszmáról felvétel készül ---
+	check("a játszmát felveszi a visszajátszó",
+		main.replay != null and bool(main.replay.recording))
+	check("a felvétel a pillanatképeket gyűjti",
+		main.replay != null and main.replay.HZ >= 4.0)
 	# Hírnév: rendes játszmában nem mozdul.
 	var was_pirate: bool = GameState.pirate
 	GameState.pirate = false

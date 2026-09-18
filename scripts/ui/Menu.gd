@@ -130,6 +130,8 @@ func _build_screens() -> void:
 	_single_title = _title_of(_single_box, Lang.t("egyjatekos"), 26)
 	_mbtn(_single_box, "uj_jatek", func() -> void: show_screen("setup"))
 	_load_btn = _mbtn(_single_box, "korabbi_betoltes", _on_continue)
+	# Visszajátszás — ahogy az eredeti Egy játékos paneljén is ott van.
+	_mbtn(_single_box, "visszajatszas_nyit", func() -> void: show_screen("replay"))
 	_single_note = _note(_single_box, "")
 	_single_box.add_child(HSeparator.new())
 	_mbtn(_single_box, "vissza", func() -> void: show_screen("home"))
@@ -140,6 +142,7 @@ func _build_screens() -> void:
 	_mbtn(_settings_box, "vissza", func() -> void: show_screen("home"))
 
 	_build_battle_screen(center)
+	_build_replay_screen(center)
 	_build_ach_screen(center)
 	_build_mp_screen(center)
 	_build_lobby_screen(center)
@@ -167,12 +170,36 @@ var _battle_box   : VBoxContainer = null
 var _battle_list  : VBoxContainer = null
 var _battle_add   : Button = null
 var _battle_sides : Array[Dictionary] = []
+# A szoba a KALÓZVILÁGBAN is játszható (az eredeti szobaMod kapcsolója).
+var battle_pirate : bool = false
+var _battle_mode_row : HBoxContainer = null
+var _battle_map      : OptionButton = null
+var _battle_map_row  : HBoxContainer = null
+
+# Világváltás a szobában: a nemzetek a másik világban nem léteznek, ezért
+# mindenki új, érvényes nemzetet kap (ugyanígy csinálja az eredeti is).
+func _sel_battle_world(pirate: bool) -> void:
+	if battle_pirate == pirate: return
+	battle_pirate = pirate
+	var lista := Style.order_for(pirate)
+	for i in _battle_sides.size():
+		_battle_sides[i]["nemzet"] = str(lista[i % lista.size()])
+	# A kalózvilág térképe rögzített (Karib-tenger), ott nincs tájválasztás.
+	if _battle_map_row != null: _battle_map_row.visible = not pirate
+	_refresh_battle_list()
+	SFX.play("click")
 
 func _build_battle_screen(center: CenterContainer) -> void:
 	_battle_box = _new_screen(center)
 	_battle_box.custom_minimum_size = Vector2(560, 0)
 	_battle_title = _title_of(_battle_box, Lang.t("csata_tobb_fel"), 26)
 	_battle_help = _note(_battle_box, Lang.t("csata_sugo"))
+	# VILÁG: birodalmak vagy kalózok. Az eredetiben ez a szoba tetején álló
+	# kapcsoló (szobaMod) — a kalózvilág nem csak egyjátékosban játszható.
+	_battle_mode_row = _pick_row(_battle_box, "szoba_vilag",
+		["mod_csata", "mod_kaloz"],
+		func(i: int) -> void: _sel_battle_world(i == 1),
+		func() -> int: return 1 if battle_pirate else 0)
 	_battle_list = VBoxContainer.new()
 	_battle_list.add_theme_constant_override("separation", 4)
 	_battle_box.add_child(_battle_list)
@@ -184,6 +211,23 @@ func _build_battle_screen(center: CenterContainer) -> void:
 	_battle_era_row = _pick_row(_battle_box, "valassz_korszakot",
 		["kor_nev_0", "kor_nev_1", "kor_nev_2", "kor_nev_3"],
 		func(i: int) -> void: _sel_era(i), func() -> int: return chosen_era)
+	# TÁJ — ahogy az eredeti szobájában is választható (szobaMap).
+	var taj_sor := HBoxContainer.new()
+	taj_sor.add_theme_constant_override("separation", 10)
+	var tl := Label.new()
+	tl.text = Lang.t("valassz_tajat")
+	tl.custom_minimum_size = Vector2(150, 0)
+	taj_sor.add_child(tl)
+	_battle_map = OptionButton.new()
+	_battle_map.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for key in WorldGen.choosable():
+		_battle_map.add_item(Lang.t("taj_%s" % str(key)))
+	_battle_map.item_selected.connect(func(i: int) -> void:
+		var lista := WorldGen.choosable()
+		_sel_map(str(lista[clampi(i, 0, lista.size() - 1)])))
+	taj_sor.add_child(_battle_map)
+	_battle_box.add_child(taj_sor)
+	_battle_map_row = taj_sor
 	_battle_box.add_child(HSeparator.new())
 	_mbtn(_battle_box, "kezdes", _on_battle_start)
 	_mbtn(_battle_box, "vissza", func() -> void: show_screen("home"))
@@ -221,9 +265,10 @@ func _mark_row(row: HBoxContainer, idx: int) -> void:
 		_mark(row.get_child(i) as Button, i == idx)
 
 func _reset_battle_sides() -> void:
+	var lista := Style.order_for(battle_pirate)
 	_battle_sides = [
-		{"tipus": "ember", "nemzet": "hu", "csapat": 0},
-		{"tipus": "bot",   "nemzet": "de", "csapat": 1},
+		{"tipus": "ember", "nemzet": str(lista[0]), "csapat": 0},
+		{"tipus": "bot",   "nemzet": str(lista[1 % lista.size()]), "csapat": 1},
 	]
 	_refresh_battle_list()
 
@@ -232,7 +277,7 @@ func _add_bot() -> void:
 	var used: Array = []
 	for d in _battle_sides: used.append(str(d["nemzet"]))
 	var free := "de"
-	for k in Style.order_for(false):
+	for k in Style.order_for(battle_pirate):
 		if not (str(k) in used):
 			free = str(k)
 			break
@@ -245,7 +290,7 @@ func _refresh_battle_list() -> void:
 	for c in _battle_list.get_children():
 		_battle_list.remove_child(c)
 		c.queue_free()
-	var lista := Style.order_for(false)
+	var lista := Style.order_for(battle_pirate)
 	for i in _battle_sides.size():
 		var idx := i
 		var d: Dictionary = _battle_sides[i]
@@ -291,8 +336,74 @@ func _refresh_battle_list() -> void:
 
 func _on_battle_start() -> void:
 	Campaign.stop()
-	GameState.new_battle(_battle_sides, chosen_era, false, 0, 0, chosen_map)
+	GameState.new_battle(_battle_sides, chosen_era, battle_pirate, 0, 0, chosen_map)
 	GameState.diff = chosen_diff
+	get_tree().change_scene_to_file("res://scenes/Main.tscn")
+
+# --- VISSZAJÁTSZÁS ---
+#
+# Az egyjátékos játszmákról felvétel készül (scripts/systems/Replay.gd);
+# ez a képernyő listázza őket, és visszanézhetővé teszi. A listában a
+# felvétel dátuma, a táj/világ és a hossza áll.
+const ReplayScript = preload("res://scripts/systems/Replay.gd")
+
+var _replay_box  : VBoxContainer = null
+var _replay_list : VBoxContainer = null
+var _replay_title: Label = null
+var _replay_note : Label = null
+
+func _build_replay_screen(center: CenterContainer) -> void:
+	_replay_box = _new_screen(center)
+	_replay_box.custom_minimum_size = Vector2(560, 0)
+	_replay_title = _title_of(_replay_box, Lang.t("visszajatszas_nyit"), 26)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(540, 300)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_replay_list = VBoxContainer.new()
+	_replay_list.add_theme_constant_override("separation", 6)
+	_replay_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_replay_list)
+	_replay_box.add_child(scroll)
+	_replay_note = _note(_replay_box, "")
+	_replay_box.add_child(HSeparator.new())
+	_mbtn(_replay_box, "vissza", func() -> void: show_screen("single"))
+
+func _refresh_replay_list() -> void:
+	if _replay_list == null: return
+	for c in _replay_list.get_children():
+		_replay_list.remove_child(c)
+		c.queue_free()
+	var fajlok := ReplayScript.list_files()
+	_replay_note.text = "" if not fajlok.is_empty() else Lang.t("nincs_visszajatszas")
+	for path in fajlok:
+		var m: Dictionary = ReplayScript.peek(str(path))
+		if m.is_empty(): continue
+		var vilag := Lang.t("mod_kaloz") if bool(m.get("kaloz", false)) \
+			else Lang.t("taj_%s" % str(m.get("taj", "mezo")))
+		var felek := int((m.get("oldalak", []) as Array).size())
+		var b := Button.new()
+		b.text = "%s   ·   %s   ·   %d %s" % [str(m.get("datum", "?")), vilag,
+			felek, Lang.t("fel")]
+		b.custom_minimum_size = Vector2(0, 34)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.pressed.connect(func() -> void:
+			SFX.play("click")
+			_start_replay(str(path), m))
+		_replay_list.add_child(b)
+
+# A felvétel visszanézése: a világ ugyanabból a magból készül, a bábukat
+# viszont a felvett pillanatképek rakják ki (mint a hálózati társnál).
+func _start_replay(path: String, m: Dictionary) -> void:
+	Campaign.stop()
+	var sides: Array = m.get("oldalak", [])
+	if sides.is_empty():
+		sides = [{"tipus": "ember", "nemzet": "hu", "csapat": 0},
+			{"tipus": "bot", "nemzet": "de", "csapat": 1}]
+	GameState.new_battle(sides, int(m.get("kor", 0)), bool(m.get("kaloz", false)),
+		int(m.get("en_id", 0)), int(m.get("mag", 0)), str(m.get("taj", "mezo")))
+	GameState.diff = int(m.get("diff", 1))
+	GameState.net_client = true          # semmit nem szimulálunk helyben
+	GameState.replay_path = path
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 # --- Többjátékos: helyi csata vagy hálózat ---
@@ -456,6 +567,7 @@ var _lobby_ready : CheckButton = null
 var _lobby_age_row : HBoxContainer = null
 var _lobby_map     : OptionButton = null
 var _lobby_map_row : HBoxContainer = null
+var _lobby_mode_row : HBoxContainer = null
 
 func _build_lobby_screen(center: CenterContainer) -> void:
 	_lobby_box = _new_screen(center)
@@ -475,11 +587,19 @@ func _build_lobby_screen(center: CenterContainer) -> void:
 	_lobby_list.add_theme_constant_override("separation", 4)
 	_lobby_box.add_child(_lobby_list)
 	_lobby_box.add_child(HSeparator.new())
+	# VILÁG: a hálózati szoba is indulhat a kalózvilágban (az eredeti
+	# szobájában is ott a Birodalmak / Kalózok kapcsoló).
+	_lobby_mode_row = _pick_row(_lobby_box, "szoba_vilag",
+		["mod_csata", "mod_kaloz"],
+		func(i: int) -> void:
+			_sel_battle_world(i == 1)
+			Net.set_match_setup(chosen_era, chosen_diff, battle_pirate, chosen_map),
+		func() -> int: return 1 if battle_pirate else 0)
 	_lobby_age_row = _pick_row(_lobby_box, "valassz_korszakot",
 		["kor_nev_0", "kor_nev_1", "kor_nev_2", "kor_nev_3"],
 		func(i: int) -> void:
 			_sel_era(i)
-			Net.set_match_setup(i, chosen_diff, false, chosen_map),
+			Net.set_match_setup(i, chosen_diff, battle_pirate, chosen_map),
 		func() -> int: return chosen_era)
 	# A TÁJ is a házigazdáé — mindenki ugyanazon a térképen játszik.
 	var taj_sor := HBoxContainer.new()
@@ -495,7 +615,7 @@ func _build_lobby_screen(center: CenterContainer) -> void:
 	_lobby_map.item_selected.connect(func(i: int) -> void:
 		var lista := WorldGen.choosable()
 		_sel_map(str(lista[clampi(i, 0, lista.size() - 1)]))
-		Net.set_match_setup(chosen_era, chosen_diff, false, chosen_map))
+		Net.set_match_setup(chosen_era, chosen_diff, battle_pirate, chosen_map))
 	taj_sor.add_child(_lobby_map)
 	_lobby_box.add_child(taj_sor)
 	_lobby_map_row = taj_sor
@@ -560,12 +680,22 @@ func _refresh_lobby() -> void:
 	_lobby_start.disabled = not Net.all_ready()
 	_lobby_start.tooltip_text = "" if Net.all_ready() else Lang.t("net_varj_keszre")
 	_lobby_age_row.visible = Net.is_host()
-	# A táj a házigazdáé; a többiek csak látják, mit választott.
+	# A világ (birodalmak / kalózok) és a táj a házigazdáé; a többiek csak
+	# látják, mit választott.
+	if _lobby_mode_row != null:
+		_lobby_mode_row.visible = Net.is_host()
+		if not Net.is_host():
+			battle_pirate = bool(Net.setup.get("pirate", false))
+	var kaloz_e: bool = bool(Net.setup.get("pirate", battle_pirate))
+	if _lobby_map_row != null:
+		_lobby_map_row.visible = not kaloz_e
 	if _lobby_map != null:
 		var lista := WorldGen.choosable()
 		var idx := lista.find(str(Net.setup.get("map", chosen_map)))
 		if idx >= 0: _lobby_map.select(idx)
 		_lobby_map.disabled = not Net.is_host()
+	# A korszak a kalózvilágban rögzített (vitorlások kora).
+	_lobby_age_row.visible = Net.is_host() and not kaloz_e
 	var enyem_p: Dictionary = Net.players.get(Net.my_id, {})
 	_lobby_ready.set_pressed_no_signal(bool(enyem_p.get("kesz", false)))
 	_lobby_ready.disabled = enyem_p.is_empty()
@@ -865,6 +995,9 @@ func show_screen(name: String) -> void:
 	_ach_box.visible      = name == "ach"
 	_mp_box.visible       = name == "mp"
 	_lobby_box.visible    = name == "lobby"
+	if _replay_box != null: _replay_box.visible = name == "replay"
+	if name == "replay":
+		_refresh_replay_list()
 	if name == "single":
 		var van := SaveManager.has_save()
 		_load_btn.disabled = not van

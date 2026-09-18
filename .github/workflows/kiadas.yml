@@ -62,22 +62,35 @@ jobs:
       - name: A közös indító exportálása (Windows)
         run: |
           mkdir -p build/launcher
-          godot --headless --path launcher --export-release "Windows Desktop" "$PWD/build/launcher/Jatekindito.exe"
+          godot --headless --path launcher --export-release "Windows Desktop" "$PWD/build/launcher/ParthLauncher.exe"
           ls -la build/launcher
 
       - name: Exportálás macOS-re (a Godot a .app csomagot zip-ként készíti el)
         run: |
           mkdir -p build/macos
           godot --headless --path . --export-release "macOS" "$PWD/build/macos/Birodalom-macos.zip"
-          godot --headless --path launcher --export-release "macOS" "$PWD/build/macos/Jatekindito-macos.zip"
+          godot --headless --path launcher --export-release "macOS" "$PWD/build/macos/ParthLauncher-macos.zip"
           ls -la build/macos
+
+      - name: Windows telepítő az indítóhoz (NSIS)
+        run: |
+          set -e
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq nsis
+          VER="${{ github.event.inputs.verzio || github.ref_name }}"
+          VER="${VER#v}"
+          makensis -DVERZIO="$VER" \
+                   -DFORRAS="$PWD/build/launcher/ParthLauncher.exe" \
+                   -DKIMENET="$PWD/ParthLauncher-Setup.exe" \
+                   launcher/installer/parthlauncher.nsi
+          ls -la ParthLauncher-Setup.exe
 
       - name: Csomagolás
         run: |
           cd build/windows && zip -r ../../Birodalom-windows.zip . && cd ../..
-          cd build/launcher && zip -r ../../Jatekindito-windows.zip . && cd ../..
+          cd build/launcher && zip -r ../../ParthLauncher-windows.zip . && cd ../..
           cp build/macos/Birodalom-macos.zip .
-          cp build/macos/Jatekindito-macos.zip .
+          cp build/macos/ParthLauncher-macos.zip .
           ls -la *.zip
 
       - name: Kiadás közzététele
@@ -89,19 +102,23 @@ jobs:
             Kész, telepítést nem igénylő változat Windowsra és macOS-re.
 
             **Windows**
-            - **Birodalom-windows.zip** – maga a játék (Birodalom.exe). Godot nem kell hozzá.
-            - **Jatekindito-windows.zip** – a KÖZÖS indító/frissítő: Birodalom és Heptarchia egyben.
+            - **ParthLauncher-Setup.exe** – RENDES TELEPÍTŐ az indítóhoz: Start menü és asztali
+              parancsikon, eltávolító, rendszergazdai jog nélkül. Ez az ajánlott út — az indító
+              utána magától letölti és frissíti mindkét játékot.
+            - **Birodalom-windows.zip** – maga a játék (Birodalom.exe), telepítés nélkül.
+            - **ParthLauncher-windows.zip** – a közös indító telepítő nélkül (hordozható).
 
             **macOS** (Intel és Apple Silicon, univerzális)
             - **Birodalom-macos.zip** – a játék (Birodalom.app).
-            - **Jatekindito-macos.zip** – a közös indító/frissítő.
+            - **ParthLauncher-macos.zip** – a közös indító/frissítő.
 
             Macen az első indításnál: jobb klikk az alkalmazáson → **Megnyitás** (az alkalmazás
             nincs aláírva, ezért a rendszer rákérdez). Az indító a letöltött játékkal ezt magától elintézi.
 
             Az indító magától a rendszerednek megfelelő csomagot tölti le.
           files: |
+            ParthLauncher-Setup.exe
             Birodalom-windows.zip
-            Jatekindito-windows.zip
+            ParthLauncher-windows.zip
             Birodalom-macos.zip
-            Jatekindito-macos.zip
+            ParthLauncher-macos.zip

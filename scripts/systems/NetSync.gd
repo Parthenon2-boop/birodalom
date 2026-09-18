@@ -48,9 +48,12 @@ func _process(delta: float) -> void:
 
 # --- Pillanatkép (házigazda -> mindenki) ---
 
-func _broadcast() -> void:
+# A pillanatkép két számtömbje. Statikus, mert a VISSZAJÁTSZÁS felvétele
+# is ezt használja (scripts/systems/Replay.gd) — így a hálózati és a
+# felvett pillanatkép mindig ugyanaz a formátum.
+static func snapshot_units(tree: SceneTree) -> PackedFloat32Array:
 	var u := PackedFloat32Array()
-	for n in get_tree().get_nodes_in_group("units"):
+	for n in tree.get_nodes_in_group("units"):
 		if not is_instance_valid(n): continue
 		u.append(float(n.nid))
 		u.append(float(n.owner_id))
@@ -64,8 +67,11 @@ func _broadcast() -> void:
 		if n.velocity.length() > 2.0: f += 100.0
 		if n._fired > 0.0: f += 1000.0
 		u.append(f)
+	return u
+
+static func snapshot_builds(tree: SceneTree) -> PackedFloat32Array:
 	var b := PackedFloat32Array()
-	for n in get_tree().get_nodes_in_group("buildings"):
+	for n in tree.get_nodes_in_group("buildings"):
 		if not is_instance_valid(n): continue
 		b.append(float(n.nid))
 		b.append(float(n.owner_id))
@@ -75,6 +81,11 @@ func _broadcast() -> void:
 		b.append(n.global_position.y)
 		b.append(n.hp)
 		b.append(n.prog)
+	return b
+
+func _broadcast() -> void:
+	var u := snapshot_units(get_tree())
+	var b := snapshot_builds(get_tree())
 	# Az oldalak készlete és korszaka — ebből él a HUD a csatlakozónál.
 	var sides: Array = []
 	for s in GameState.oldalak:

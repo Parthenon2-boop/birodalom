@@ -1,4 +1,4 @@
-Játékindító  —  Birodalom és Heptarchia egy programban
+ParthLauncher  —  Birodalom és Heptarchia egy programban
 ======================================================
 
 Önálló Godot-projekt (nem része a játéknak). Két játékot kezel: fent a két gombbal
@@ -12,7 +12,7 @@ Indítás fejlesztéshez:
   Godot_v4.7.2-stable_win64.exe --path launcher
 
 Beállítások a programban (Beállítások gomb), mentve ide:
-  %APPDATA%\Godot\app_userdata\Játékindító\jatekindito.cfg
+  %APPDATA%\Godot\app_userdata\ParthLauncher\ParthLauncher.cfg
   - a KIVÁLASZTOTT játék telepítési mappája (az indító csak az általa létrehozott
     mappát üríti; ezt a <jatek>_launcher.marker fájl jelzi)
   - Godot .exe útvonala (csak forrás módhoz)
@@ -44,4 +44,4 @@ Ha az indítón változtatsz, MINDKETTŐT növeld:
   launcher/VERSION.txt
 
 Exportálás Windowsra (export sablonok kellenek hozzá):
-  godot --headless --path launcher --export-release "Windows Desktop" build/launcher/Jatekindito.exe
+  godot --headless --path launcher --export-release "Windows Desktop" build/launcher/ParthLauncher.exe

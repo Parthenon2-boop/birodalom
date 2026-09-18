@@ -1,11 +1,11 @@
-; Játékindító – önálló Godot-projekt (a Birodalom mellett, ugyanabban a tárolóban).
+; ParthLauncher – önálló Godot-projekt (a Birodalom mellett, ugyanabban a tárolóban).
 ; EGY indító KÉT játékhoz: Birodalom és Heptarchia.
 
 config_version=5
 
 [application]
 
-config/name="Játékindító"
+config/name="ParthLauncher"
 config/description="Birodalom és Heptarchia: mindig a legfrissebb változatot tölti le a GitHubról."
 run/main_scene="res://main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")

@@ -153,7 +153,7 @@ func _gen_water() -> Array:
 	# hat cella — enélkül a gálya nem tudna megfordulni a parti sávban.
 	var depth_html := 0.0
 	if sea > 0.0:
-		depth_html = maxf(6.0, float(4 + srange_int(0, 3)) * sea)
+		depth_html = maxf(7.0, float(4 + srange_int(0, 3)) * sea)
 	var depth_c := depth_html * (HTML_CELL / float(cell))
 	if sea > 0.0:
 		var hossz: int = W if side < 2 else H

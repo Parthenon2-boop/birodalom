@@ -1,6 +1,6 @@
 extends Control
 
-# JÁTÉKINDÍTÓ  —  Birodalom és Heptarchia egy programban
+# ParthLauncher  —  Birodalom és Heptarchia egy programban
 #
 # Mindkét játékot a GitHubról szedi, mindig a legfrissebb változatot, majd elindítja.
 # A két játék KÜLÖN tárolóból jön, külön mappába telepszik, és külön változatszáma van;
@@ -12,7 +12,7 @@ extends Control
 #   „source”   – ha nincs kiadás: a megadott ág legfrissebb állapotát tölti le (forrás),
 #                és a helyben telepített Godot szerkesztővel indítja.
 #
-# Beállítások: user://jatekindito.cfg (mappák, proxy; a tárolók be vannak égetve).
+# Beállítások: user://ParthLauncher.cfg (mappák, proxy; a tárolók be vannak égetve).
 
 const S := preload("res://scripts/style.gd")
 const Backdrop := preload("res://scripts/backdrop.gd")
@@ -52,14 +52,14 @@ const GAMES := [
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 3
+const LAUNCHER_BUILD := 4
 const VERSION_FILE := "launcher/VERSION.txt"
 
-const CFG_PATH := "user://jatekindito.cfg"
+const CFG_PATH := "user://ParthLauncher.cfg"
 const LAUNCHER_ZIP_TMP := "user://indito_update.zip"
 const LAUNCHER_STAGE := "user://uj_indito"       # ide csomagoljuk ki az új indítót
 const API := "https://api.github.com"
-const HEADERS := ["User-Agent: Jatekindito", "Accept: application/vnd.github+json"]
+const HEADERS := ["User-Agent: ParthLauncher", "Accept: application/vnd.github+json"]
 
 var cfg := ConfigFile.new()
 var game_idx: int = 0                # melyik játék van kiválasztva
@@ -330,9 +330,9 @@ func _build_ui() -> void:
 		runes.add_theme_color_override("font_color", Color(S.BORDER, 0.9))
 		runes.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(runes)
-		box.add_child(S.make_title("Játékindító", 34, S.RED))
+		box.add_child(S.make_title("ParthLauncher", 34, S.RED))
 	else:
-		box.add_child(S.make_title("JÁTÉKINDÍTÓ", 34, S.GOLD_LIGHT))
+		box.add_child(S.make_title("ParthLauncher", 34, S.GOLD_LIGHT))
 
 	# A két játék: fent két gomb, a kiválasztott ki van emelve.
 	var tabs := HBoxContainer.new()
@@ -919,7 +919,7 @@ func _swap_launcher(stage: String) -> String:
 	if _is_mac():
 		var idx := target.find(".app/")
 		if idx < 0: return "Nem találom az indító csomagját."
-		target = target.substr(0, idx + 4)                      # …/Jatekindito.app
+		target = target.substr(0, idx + 4)                      # …/ParthLauncher.app
 		var new_app := _find_any_app(stage)
 		if new_app == "": return "A letöltött csomagban nincs indító."
 		var sh := ProjectSettings.globalize_path("user://frissites.sh")
@@ -1139,7 +1139,7 @@ func _install(zip_path: String) -> String:
 	var err := _extract_zip(zip_path, install_dir)
 	if err != "": return err
 	var m := FileAccess.open(install_dir.path_join(marker), FileAccess.WRITE)
-	if m: m.store_string("Játékindító – ezt a mappát az indító kezeli.\n")
+	if m: m.store_string("ParthLauncher – ezt a mappát az indító kezeli.\n")
 	DirAccess.remove_absolute(zip_path)
 	return ""
 

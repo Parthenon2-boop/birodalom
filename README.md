@@ -23,7 +23,7 @@ hadjárat, kalózvilág és hálózati többjátékos mód. Magyar, angol és n�
 
 ## Mac (MacBook) – első indítás
 
-A kiadásban a `Jatekindito-macos.zip` (és a `Birodalom-macos.zip`) univerzális
+A kiadásban a `ParthLauncher-macos.zip` (és a `Birodalom-macos.zip`) univerzális
 (Intel + Apple Silicon) csomag, ad-hoc aláírással. Mivel nincs Apple fejlesztői tanúsítvány,
 a macOS az első indításkor tiltakozhat:
 
@@ -32,7 +32,7 @@ a macOS az első indításkor tiltakozhat:
 3. Ha „sérült, a Lomtárba kellene helyezni” üzenet jön, a letöltési karantént kell levenni.
    Terminál (Alkalmazások → Segédprogramok → Terminál):
    ```
-   xattr -dr com.apple.quarantine "/Applications/Jatekindito.app"
+   xattr -dr com.apple.quarantine "/Applications/ParthLauncher.app"
    xattr -dr com.apple.quarantine "/Applications/Birodalom.app"
    ```
 4. Újabb macOS-en (Sequoia) a 2. lépés helyett: **Rendszerbeállítások → Adatvédelem és biztonság**,

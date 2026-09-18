@@ -40,6 +40,11 @@ var net_client: bool = false
 # megmondhatják a magukét. A leírásuk a WorldGen.MAPS táblában áll.
 var map_type: String = "mezo"
 
+# === VISSZAJÁTSZÁS ===
+# Ha ki van töltve, a Main nem játszmát indít, hanem lejátssza ezt a
+# felvételt (user://replays/*.brep). A menü tölti ki indítás előtt.
+var replay_path: String = ""
+
 # === Küldetésmérők (a hadjárat céljaihoz) ===
 # `earned`: mennyit termelt ki ÖSSZESEN a játékos — nem a raktárkészlet,
 # hanem a bevétel, különben a költekezés visszavenné a haladást.
@@ -101,6 +106,7 @@ func new_game(nation_key: String, chosen_age: int,
 	fame = 0.0
 	tutorial = false
 	net_client = false
+	replay_path = ""
 	on = true
 	over = false
 	winner = -1

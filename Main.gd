@@ -54,6 +54,10 @@ var _obj_accum     : float       = 0.0
 var _tutorial      : Tutorial    = null
 var net_sync       : Node        = null
 var _net_sides     : Array       = []
+# A visszajátszás felvevője/lejátszója (scripts/systems/Replay.gd).
+var replay         : Node        = null
+# A karibi városok és az ostrom (csak kalózvilágban).
+var cities         : Node2D      = null
 var _nid_seq       : int         = 0
 var _forced_seed   : int         = 0
 
@@ -130,6 +134,17 @@ func _ready() -> void:
 	# A projekt főjelenete a Main.tscn; ha még nem indult játék, a főmenü
 	# jelenik meg fölötte, és az indítja újra ezt a jelenetet.
 	# Fejlesztői indulás menü nélkül:  godot -- --skip-menu
+	# Visszajátszás fejlesztői indítása:  -- --replay        (a legfrissebb)
+	#                                     -- --replay=<fájl>
+	if not GameState.on:
+		for a in dev_args():
+			if a == "--replay" or a.begins_with("--replay="):
+				var utvonal := a.substr(9) if a.length() > 9 else ""
+				if utvonal == "":
+					var lista: Array = (load("res://scripts/systems/Replay.gd")
+						as GDScript).list_files()
+					if not lista.is_empty(): utvonal = str(lista[0])
+				if utvonal != "" and _setup_replay(utvonal): break
 	if not GameState.on and "--skip-menu" in dev_args():
 		# `--pirate`: kalózvilág. `--campaign=hu:2`: hadjárat, adott
 		# nemzet adott küldetésével (a sorszám 1-től).
@@ -329,6 +344,28 @@ func _start_world() -> void:
 		net_sync = (load("res://scripts/systems/NetSync.gd") as GDScript).new(self)
 		add_child(net_sync)
 		net_sync.set_peer_sides(_net_sides)
+	# A KARIB-TENGER VÁROSAI — csak a kalózvilágban. A kikötők lakossággal,
+	# tornyokkal és fallal állnak; ágyúval lehet őket megtörni, katonával
+	# elfoglalni (scripts/systems/Cities.gd).
+	if GameState.pirate:
+		cities = (load("res://scripts/systems/Cities.gd") as GDScript).new(self)
+		$WorldRoot/BuildingLayer.add_child(cities)
+	# VISSZAJÁTSZÁS. Lejátszásnál a világ ugyanabból a magból készül, a
+	# bábukat viszont nem mi teremtjük: a felvett pillanatképek rakják ki
+	# őket (ugyanúgy, ahogy a hálózati társnál). Egyjátékos játszmában
+	# viszont FELVESZÜNK, hogy utólag vissza lehessen nézni.
+	replay = (load("res://scripts/systems/Replay.gd") as GDScript).new()
+	replay.name = "Replay"
+	add_child(replay)
+	if GameState.replay_path != "":
+		if replay.start_playback(GameState.replay_path, self):
+			hud.show_toast(Lang.t("visszajatszas"), 5.0)
+			replay.playback_finished.connect(func() -> void:
+				hud.show_toast(Lang.t("visszajatszas_vege"), 6.0))
+		else:
+			hud.show_toast(Lang.t("visszajatszas_hibas"), 4.0)
+	elif not Net.active() and not GameState.net_client:
+		replay.start_recording()
 	camera.position = _hq_pos[clampi(GameState.en_id, 0, _hq_pos.size() - 1)]
 	if GameState.tutorial:
 		_tutorial = Tutorial.new(self)
@@ -339,6 +376,22 @@ func _start_world() -> void:
 
 # Minden gépi oldal saját BotAI csomópontot kap. A jelenetben egy van; a
 # többit itt hozzuk létre ugyanabból a szkriptből.
+# A felvétel fejléce alapján ugyanúgy állítjuk be a játszmát, mint a menü.
+func _setup_replay(path: String) -> bool:
+	var rs := load("res://scripts/systems/Replay.gd") as GDScript
+	var m: Dictionary = rs.peek(path)
+	if m.is_empty(): return false
+	var sides: Array = m.get("oldalak", [])
+	if sides.is_empty(): return false
+	Campaign.stop()
+	GameState.new_battle(sides, int(m.get("kor", 0)), bool(m.get("kaloz", false)),
+		int(m.get("en_id", 0)), int(m.get("mag", 0)), str(m.get("taj", "mezo")))
+	GameState.diff = int(m.get("diff", 1))
+	GameState.net_client = true
+	GameState.replay_path = path
+	print("[replay] lejátszás: ", path, "  (", m.get("datum", "?"), ")")
+	return true
+
 func _start_bots() -> void:
 	bot_ai.start(1)
 	for i in range(2, GameState.oldalak.size()):
@@ -441,6 +494,11 @@ func _process(delta: float) -> void:
 			if gyozott:
 				Achievements.bump("wins")
 				if GameState.pirate: Achievements.bump("pirate_wins")
+			# A VISSZAJÁTSZÁS lezárása: a játszma végén mentjük a felvételt.
+			if replay != null and is_instance_valid(replay) and replay.recording:
+				var utvonal: String = replay.stop_recording()
+				if utvonal != "":
+					hud.show_toast(Lang.t("visszajatszas_mentve"), 4.0)
 			hud.show_game_over(gyozott)
 		return
 	if not GameState.on: return
