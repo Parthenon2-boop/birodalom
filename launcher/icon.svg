@@ -1,7 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="14" fill="#1b2434"/>
-  <path d="M64 18 L104 32 V66 C104 90 86 104 64 112 C42 104 24 90 24 66 V32 Z"
-        fill="#c8102e" stroke="#d2a852" stroke-width="4" stroke-linejoin="round"/>
-  <path d="M40 54 L52 42 L64 54 L76 42 L88 54 V70 H40 Z" fill="#d2a852"/>
-  <rect x="40" y="74" width="48" height="8" rx="2" fill="#d2a852"/>
+  <!-- JÁTÉKINDÍTÓ IKON — kódexbeli iniciálé.
+       Pergamen alap, arany keret, vörös mező, rajta a nagy P betű aranyból,
+       körülötte fehér filigrán indák és aranygömbök, ahogy a krónikák
+       díszes kezdőbetűin. -->
+
+  <!-- pergamen lap -->
+  <rect width="128" height="128" rx="10" fill="#e6d8b8"/>
+  <rect x="2" y="2" width="124" height="124" rx="9" fill="none" stroke="#9c8d72" stroke-width="1.5"/>
+
+  <!-- arany keret -->
+  <rect x="6" y="6" width="116" height="116" rx="7" fill="none" stroke="#c9a227" stroke-width="4"/>
+
+  <!-- vörös mező, sötét szegéllyel -->
+  <rect x="13" y="13" width="102" height="102" rx="4" fill="#7c1620"/>
+  <rect x="13" y="13" width="102" height="102" rx="4" fill="none" stroke="#4a0d14" stroke-width="1.5"/>
+
+  <!-- filigrán indák a mező sarkaiban -->
+  <g stroke="#e6d8b8" stroke-width="1.8" fill="none" opacity="0.5" stroke-linecap="round">
+    <path d="M20 32 C 26 22, 38 19, 46 22"/>
+    <path d="M20 32 C 28 34, 33 30, 34 24"/>
+    <path d="M108 96 C 102 106, 90 109, 82 106"/>
+    <path d="M108 96 C 100 94, 95 98, 94 104"/>
+    <path d="M108 32 C 102 23, 96 21, 90 23"/>
+    <path d="M20 96 C 26 105, 32 107, 38 105"/>
+  </g>
+  <g fill="#c9a227" opacity="0.85">
+    <circle cx="19" cy="19" r="3"/>
+    <circle cx="109" cy="19" r="3"/>
+    <circle cx="19" cy="109" r="3"/>
+    <circle cx="109" cy="109" r="3"/>
+  </g>
+
+  <!-- A NAGY P. Vastag szár talpas kiszélesedéssel, fölötte tömör hasáb;
+       a betűlyuk evenodd kivágással készül. A csoport kissé kisebbre veszi
+       és középre állítja a betűt, hogy a keretben szellősen álljon. -->
+  <g transform="translate(4.2, 1.5) scale(0.93)">
+  <path fill="#c9a227" stroke="#4a3410" stroke-width="2.5" stroke-linejoin="round"
+        fill-rule="evenodd"
+        d="M34 28
+           h38 c17 0 27 10 27 23 0 15 -12 23 -30 23 h-15 v22
+           h9 c3 0 5 2 5 4 0 2 -2 4 -5 4 h-32 c-3 0 -5 -2 -5 -4 0 -2 2 -4 5 -4 h9
+           v-60 h-6 c-3 0 -5 -2 -5 -4 0 -2 2 -4 5 -4 z
+           M54 40 v22 h14 c10 0 15 -4 15 -11 0 -7 -5 -11 -15 -11 z"/>
+
+  <!-- fénypont a száron: a fémesség jelzése -->
+  <path d="M40 34 h6 v54 h-6 z" fill="#f0d98a" opacity="0.55"/>
+  <!-- levélke az iniciálé szárából, ahogy a kódexekben -->
+  <path d="M34 92 C 22 93, 17 86, 18 78 C 27 78, 33 83, 34 92 Z"
+        fill="#3f6b30" stroke="#24401d" stroke-width="1.2"/>
+  </g>
 </svg>
