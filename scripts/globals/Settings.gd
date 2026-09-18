@@ -27,6 +27,8 @@ var detail : int = 1
 # Jár-e az idő (eső, hó, köd, tengeri vihar). A látvány és a szimuláció is
 # ezen múlik; gyenge gépen vagy zavaró látványnál kikapcsolható.
 var weather_on : bool = true
+# Nappal-éjszaka ciklus (index.html 17/B). Kikapcsolva örök délelőtt van.
+var day_night  : bool = true
 
 signal changed
 
@@ -149,7 +151,7 @@ func save_options() -> void:
 		"music_vol": music_vol, "sfx_vol": sfx_vol,
 		"fullscreen": fullscreen, "vsync": vsync, "fps_limit": fps_limit,
 		"detail": detail, "relay": relay_address,
-		"weather": weather_on,
+		"weather": weather_on, "day_night": day_night,
 		"player_name": player_name, "net_port": net_port,
 		"last_address": last_address,
 	}, "\t"))
@@ -171,6 +173,7 @@ func load_options() -> void:
 	fps_limit  = int(d.get("fps_limit", fps_limit))
 	detail     = clampi(int(d.get("detail", detail)), 0, 2)
 	weather_on = bool(d.get("weather", weather_on))
+	day_night  = bool(d.get("day_night", day_night))
 	relay_address = str(d.get("relay", relay_address))
 	player_name  = str(d.get("player_name", player_name))
 	net_port     = clampi(int(d.get("net_port", net_port)), 1024, 65535)

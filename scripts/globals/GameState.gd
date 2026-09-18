@@ -221,6 +221,29 @@ func new_battle(sides: Array, chosen_age: int,
 		add_oldal(str(d.get("tipus", "bot")), i == me,
 			str(d.get("nemzet", "de")), int(d.get("csapat", i)), start_age)
 
+# --- KIESÉS  (index.html 23/B) ---
+#
+# Egy fél akkor él még, ha van fővárosa, kaszárnyája VAGY munkása: amíg
+# bármelyik megvan, van miből újraépítenie. Ugyanezt a mércét használja a
+# ponttábla és a vereség is, hogy ne mondhasson kétfélét.
+func side_alive(tree: SceneTree, i: int) -> bool:
+	for b in tree.get_nodes_in_group("buildings"):
+		if not is_instance_valid(b) or int(b.owner_id) != i: continue
+		if b.tipus == "hq" or b.tipus == "barracks": return true
+	for u in tree.get_nodes_in_group("units"):
+		if is_instance_valid(u) and int(u.owner_id) == i and u.role == "worker":
+			return true
+	return false
+
+# A kiesetteket megjegyezzük: a ponttábla ebből tudja, kit húzzon át, és
+# a kihirdetés is egyszer fut le félenként.
+func mark_out(i: int) -> void:
+	var s := get_side(i)
+	if not s.is_empty(): s["kiesett"] = true
+
+func is_out(i: int) -> bool:
+	return bool(get_side(i).get("kiesett", false))
+
 # Hány csapatnak van még fővárosa. Ebből dől el, vége van-e a játszmának.
 func teams_with_hq(tree: SceneTree) -> Array:
 	var out: Array = []

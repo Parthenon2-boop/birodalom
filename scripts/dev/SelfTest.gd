@@ -1940,6 +1940,63 @@ func _test_modules() -> void:
 	GameState.oldalak.assign(mentett)
 	check("az oldalak visszaálltak", GameState.oldalak.size() == mentett.size())
 
+	# --- PONTTÁBLA ÉS KIESÉS (23/B) ---
+	var pt = main.scoreboard
+	check("van ponttábla", pt != null)
+	if pt != null:
+		pt._sig = ""
+		pt._frissit()
+		await _frames(2)
+		# Két félnél nem látszik: ott csak zavarna.
+		check("két félnél a ponttábla rejtve marad",
+			pt.visible == (GameState.oldalak.size() > 2),
+			"%d fél" % GameState.oldalak.size())
+		check("a tábla összecsukható", pt.has_method("_frissit") and "zart" in pt)
+	# A KIESÉS mércéje: se fővárosa, se kaszárnyája, se munkása.
+	check("a játékos még él", GameState.side_alive(main.get_tree(), 0))
+	var ures := GameState.oldalak.size()          # ilyen indexű fél nincs
+	check("a nem létező fél nem él", not GameState.side_alive(main.get_tree(), ures))
+	check("alapból senki nincs kiesve", not GameState.is_out(0))
+
+	# --- NAPPAL ÉS ÉJSZAKA (17/B) ---
+	var dn = main.day_night
+	check("van nappal-éjszaka ciklus", dn != null)
+	if dn != null:
+		var ment_t := GameState.t
+		var ment_kapcs := Settings.day_night
+		Settings.day_night = true
+		var hossz: float = dn.NAP_HOSSZ
+		# Dél: világos van, teljes látótávval.
+		GameState.t = fmod(0.3 * hossz - hossz * 0.18 + hossz, hossz)
+		check("délben nincs sötét", is_equal_approx(dn.night(), 0.0),
+			"%.2f" % dn.night())
+		check("délben teljes a látótáv", is_equal_approx(dn.sight_mul(), 1.0))
+		check("délben nappal van", dn.napszak() == "nappal")
+		# Éjfél: teljes sötét, feleződő látótáv.
+		GameState.t = fmod(0.8 * hossz - hossz * 0.18 + hossz, hossz)
+		check("éjfélkor teljes a sötét", dn.night() > 0.99, "%.2f" % dn.night())
+		check("éjjel feleződik a látótáv", dn.sight_mul() < 0.6,
+			"%.2f" % dn.sight_mul())
+		check("éjjel éjszaka van", dn.napszak() == "ejszaka")
+		# Alkony: átmenet, se nem teljes nappal, se nem teljes éjjel.
+		GameState.t = fmod(0.59 * hossz - hossz * 0.18 + hossz, hossz)
+		var alk: float = dn.night()
+		check("alkonyatkor átmenet van", alk > 0.0 and alk < 1.0, "%.2f" % alk)
+		# A világ színe sötétebb éjjel, mint nappal.
+		GameState.t = fmod(0.8 * hossz - hossz * 0.18 + hossz, hossz)
+		dn._process(0.1)
+		var ejszin: Color = dn._modulate.color
+		GameState.t = fmod(0.3 * hossz - hossz * 0.18 + hossz, hossz)
+		dn._process(0.1)
+		check("éjjel sötétebb a világ", ejszin.v < dn._modulate.color.v,
+			"%.2f < %.2f" % [ejszin.v, dn._modulate.color.v])
+		# Kikapcsolva örök délelőtt van.
+		Settings.day_night = false
+		check("kikapcsolva nincs éjszaka", is_equal_approx(dn.night(), 0.0)
+			and is_equal_approx(dn.sight_mul(), 1.0))
+		Settings.day_night = ment_kapcs
+		GameState.t = ment_t
+
 	# --- Teljesítmények ---
 	var ment_stat: Dictionary = Achievements.stats.duplicate()
 	var ment_unl: Array = Achievements.unlocked.duplicate()

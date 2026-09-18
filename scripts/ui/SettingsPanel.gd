@@ -26,6 +26,17 @@ func _ready() -> void:
 	_check(box, "beall_vsync", Settings.vsync,
 		func(v: bool) -> void: Settings.set_vsync(v))
 	_fps_row(box)
+	# A VILÁG két ideje: az időjárás (eső, hó, köd, tengeri vihar) és a
+	# nappal-éjszaka ciklus. Mindkettő a látványt ÉS a szimulációt érinti
+	# (tempó, látótáv), ezért kapcsolható — gyenge gépen vagy ha zavar.
+	_check(box, "beall_idojaras", Settings.weather_on,
+		func(v: bool) -> void:
+			Settings.weather_on = v
+			Settings.save_options())
+	_check(box, "beall_nappal_ejszaka", Settings.day_night,
+		func(v: bool) -> void:
+			Settings.day_night = v
+			Settings.save_options())
 
 	box.add_child(HSeparator.new())
 	_section(box, "beall_hang")

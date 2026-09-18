@@ -853,9 +853,24 @@ func _weather() -> Node:
 # A LÁTÓTÁV az időjárással romlik: esőben, ködben és viharban kevesebbet
 # látni. A felderítés és a köd is ezt használja, nem a nyers vision_r-t.
 func sight() -> float:
+	var r := vision_r
 	var w := _weather()
-	if w == null: return vision_r
-	return vision_r * (w.sea_sight_mul() if naval else w.sight_mul())
+	if w != null:
+		r *= w.sea_sight_mul() if naval else w.sight_mul()
+	# ÉJJEL a fele: ezért van értelme az éjszakai rajtaütésnek.
+	var d := _daynight()
+	if d != null: r *= d.sight_mul()
+	return r
+
+# A nap-éjszaka csomópontot is egyszer keressük meg, mint az időjárást.
+static var _daynight_cache: Node = null
+
+func _daynight() -> Node:
+	if _daynight_cache != null and is_instance_valid(_daynight_cache):
+		return _daynight_cache
+	var m := get_tree().get_first_node_in_group("main")
+	_daynight_cache = m.day_night if m != null and is_instance_valid(m) else null
+	return _daynight_cache
 
 # A repülő nem az úthálózaton megy: egyenesen húz a cél felé, és nem
 # ütközik. A `nav.target_position`-t célként ugyanúgy használjuk, mint a

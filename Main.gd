@@ -70,6 +70,10 @@ var weather        : Node        = null
 var events         : Node        = null
 # Diplomácia: szövetség és felmondás több fél között.
 var diplomacy      : Node        = null
+# Ponttábla: több félnél ki él még (scripts/ui/Scoreboard.gd).
+var scoreboard     : Control     = null
+# Nappal-éjszaka ciklus (scripts/systems/DayNight.gd).
+var day_night      : Node2D      = null
 var _nid_seq       : int         = 0
 var _forced_seed   : int         = 0
 
@@ -250,6 +254,13 @@ func _ready() -> void:
 			hud._show_settings(true)
 	# Terhelésmérés:  -- --stress=300  (ennyi extra katona kerül a pályára)
 	for arg in args:
+		# Napszak ellenőrzéshez:  -- --tod=0.8   (0 = hajnal előtt, 0.8 = éjfél)
+		if arg.begins_with("--tod="):
+			var cel := clampf(float(arg.substr(6)), 0.0, 0.999)
+			var hossz: float = day_night.NAP_HOSSZ
+			GameState.t = fmod(cel * hossz - hossz * 0.18 + hossz, hossz)
+			print("[napszak] %.2f — %s" % [day_night.time_of_day(),
+				day_night.napszak()])
 		if arg == "--portmenu" or arg.begins_with("--portmenu="):
 			_open_nearest_port(arg.substr(11) if arg.length() > 11 else "")
 		if arg.begins_with("--stress="):
@@ -391,6 +402,11 @@ func _start_world() -> void:
 	# IDŐJÁRÁS: a szárazföldi idő és a tenger állapota.
 	weather = (load("res://scripts/systems/Weather.gd") as GDScript).new(self)
 	add_child(weather)
+	# NAPPAL–ÉJSZAKA: a világ órája hat perc alatt fordul egyet. A sötétség
+	# a VILÁG rétegére kerül (a felület nem sötétedik el vele).
+	day_night = (load("res://scripts/systems/DayNight.gd") as GDScript).new()
+	day_night.main = self
+	$WorldRoot.add_child(day_night)
 	# ESEMÉNYEK: néhány percenként történik valami a térképen.
 	events = (load("res://scripts/systems/Events.gd") as GDScript).new(self)
 	add_child(events)
@@ -398,6 +414,10 @@ func _start_world() -> void:
 	diplomacy = (load("res://scripts/systems/Diplomacy.gd") as GDScript).new(self)
 	add_child(diplomacy)
 	GameState.diplomacy = diplomacy
+	# PONTTÁBLA: kettőnél több félnél ki él még, ki esett ki, ki a társ.
+	scoreboard = (load("res://scripts/ui/Scoreboard.gd") as GDScript).new()
+	scoreboard.main = self
+	$UILayer.add_child(scoreboard)
 	# A KARIB-TENGER VÁROSAI — csak a kalózvilágban. A kikötők lakossággal,
 	# tornyokkal és fallal állnak; ágyúval lehet őket megtörni, katonával
 	# elfoglalni (scripts/systems/Cities.gd).
