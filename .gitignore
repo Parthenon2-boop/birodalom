@@ -12,9 +12,3 @@ build/
 # Ideiglenes
 *.tmp
 
-# IDEIGLENES: a GitHub csak "workflow" jogosultságú bejelentkezéssel engedi
-# felküldeni a munkafolyamatot. Amíg a bejelentkezés nem kapja meg ezt a jogot,
-# a kiadás-munkafolyamat nem kerül fel; a fájl a gépen megvan.
-# Ha megvan a jog: töröld ezt a két sort, majd
-#   git add -f .github/workflows/kiadas.yml && git commit -m "Kiadas-munkafolyamat" && git push
-.github/workflows/
