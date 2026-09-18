@@ -702,6 +702,7 @@ func select_building(b: Node) -> void:
 	# A kovácsműhely és az akadémia nemcsak (vagy egyáltalán nem) képez,
 	# hanem KUTAT: ugyanide kerülnek a fejlesztés-gombok.
 	_add_research_buttons(b.tipus)
+	_add_market_buttons(b)
 	# A gyülekezőpont csak ott értelmes, ahol tényleg képeznek egységet.
 	rally_row.visible = not roles.is_empty()
 	rally_hint.visible = not roles.is_empty()
@@ -746,6 +747,58 @@ func _on_train_pressed(role: String) -> void:
 # A gomb felirata a rövid név és a fokozat: "Fegyver 1/3". Ami már kifutott
 # vagy a korszak miatt még nem elérhető, az kikapcsolva marad — így látszik,
 # hogy LÉTEZIK, csak nem most.
+# A PIAC: nyersanyagcsere aranyért, mozgó árfolyammal (index.html 7/B).
+# Minden sor egy nyersanyag: balra az eladás, jobbra a vétel, a gombokon
+# a PILLANATNYI árral. Eladásnál kevesebbet kapsz, mint amennyiért
+# megvennéd — ez a piac haszna.
+func _add_market_buttons(b: Node) -> void:
+	if b == null or b.tipus != "market": return
+	if int(b.owner_id) != GameState.en_id: return
+	var main := get_tree().get_first_node_in_group("main")
+	if main == null or main.market == null: return
+	var m = main.market
+	var fejlec := Label.new()
+	fejlec.text = Lang.t("piac_cim")
+	fejlec.add_theme_color_override("font_color", Style.GOLD)
+	train_btns.add_child(fejlec)
+	for res in m.RES:
+		var r := str(res)
+		# A kalózvilágban a kő helyett rummal kereskedünk.
+		if GameState.pirate and r == "stone": r = "rum"
+		var sor := HBoxContainer.new()
+		sor.add_theme_constant_override("separation", 4)
+		var nev := Label.new()
+		nev.text = Lang.t(RES_KEY.get(r, r))
+		nev.custom_minimum_size = Vector2(70, 0)
+		sor.add_child(nev)
+		var elad := Button.new()
+		elad.text = "%s %d ⇒ %d" % [Lang.t("piac_elad"), int(m.UNIT),
+			m.sell_price(GameState.en_id, str(res))]
+		elad.tooltip_text = Lang.t("piac_elad_sugo")
+		elad.custom_minimum_size = Vector2(120, 26)
+		elad.pressed.connect(func() -> void:
+			var ar: int = m.sell(GameState.en_id, str(res))
+			if ar <= 0:
+				show_toast(Lang.t("piac_nincs_eleg"), 2.0)
+				return
+			SFX.play("click")
+			select_building(_bld))
+		sor.add_child(elad)
+		var vesz := Button.new()
+		vesz.text = "%s %d ⇐ %d" % [Lang.t("piac_vesz"), int(m.UNIT),
+			m.buy_price(GameState.en_id, str(res))]
+		vesz.tooltip_text = Lang.t("piac_vesz_sugo")
+		vesz.custom_minimum_size = Vector2(120, 26)
+		vesz.pressed.connect(func() -> void:
+			var ar: int = m.buy(GameState.en_id, str(res))
+			if ar <= 0:
+				show_toast(Lang.t("piac_nincs_arany"), 2.0)
+				return
+			SFX.play("click")
+			select_building(_bld))
+		sor.add_child(vesz)
+		train_btns.add_child(sor)
+
 func _add_research_buttons(tipus: String) -> void:
 	var me := GameState.en_id
 	for key in Upgrades.list_for(tipus):

@@ -1513,6 +1513,35 @@ func _test_pirate() -> void:
 					float(GameState.get_res(0).get("gold", 0.0)) > arany0)
 				if is_instance_valid(katona): katona.queue_free()
 
+	# --- PIAC: csere aranyért, mozgó árfolyammal ---
+	var pi = main.market
+	check("van piac-rendszer", pi != null)
+	if pi != null:
+		check("eladni csak piaccal lehet", pi.sell(0, "wood") == 0)
+		var piac = main.spawn_building("market", 0,
+			main.find_land_near(_player_hq().global_position + Vector2(0, 200), 60.0), true)
+		await _frames(2)
+		check("a piac felépült", piac != null and piac.is_ready())
+		GameState.get_res(0)["wood"] = 500.0
+		var arany0: float = float(GameState.get_res(0).get("gold", 0.0))
+		var kapott: int = pi.sell(0, "wood")
+		check("eladáskor aranyat kapunk", kapott > 0, "%d arany" % kapott)
+		check("az eladott nyersanyag lekerül a készletről",
+			is_equal_approx(float(GameState.get_res(0)["wood"]), 400.0),
+			"%.0f fa" % float(GameState.get_res(0)["wood"]))
+		check("az arany nő", float(GameState.get_res(0)["gold"]) > arany0)
+		check("eladás után esik a fa ára", pi.price_of(0, "wood") < 1.0,
+			"%.3f" % pi.price_of(0, "wood"))
+		var vetel_ar: int = pi.buy_price(0, "food")
+		check("a vétel drágább, mint az eladás", vetel_ar > pi.sell_price(0, "food"),
+			"%d / %d" % [vetel_ar, pi.sell_price(0, "food")])
+		GameState.get_res(0)["gold"] = 50000.0
+		var fizetett: int = pi.buy(0, "food")
+		check("vételkor megkapjuk a nyersanyagot", fizetett > 0)
+		check("vétel után nő az élelem ára", pi.price_of(0, "food") > 1.0,
+			"%.3f" % pi.price_of(0, "food"))
+		if is_instance_valid(piac): piac.queue_free()
+
 	# --- VISSZAJÁTSZÁS: a játszmáról felvétel készül ---
 	check("a játszmát felveszi a visszajátszó",
 		main.replay != null and bool(main.replay.recording))

@@ -58,6 +58,8 @@ var _net_sides     : Array       = []
 var replay         : Node        = null
 # A karibi városok és az ostrom (csak kalózvilágban).
 var cities         : Node2D      = null
+# A piac árfolyama (scripts/systems/Market.gd).
+var market         : Node        = null
 var _nid_seq       : int         = 0
 var _forced_seed   : int         = 0
 
@@ -344,6 +346,10 @@ func _start_world() -> void:
 		net_sync = (load("res://scripts/systems/NetSync.gd") as GDScript).new(self)
 		add_child(net_sync)
 		net_sync.set_peer_sides(_net_sides)
+	# PIAC: nyersanyagcsere aranyért, mozgó árfolyammal. A piac épület
+	# adja hozzá a jogot; az árfolyamot ez a csomópont vezeti.
+	market = (load("res://scripts/systems/Market.gd") as GDScript).new()
+	add_child(market)
 	# A KARIB-TENGER VÁROSAI — csak a kalózvilágban. A kikötők lakossággal,
 	# tornyokkal és fallal állnak; ágyúval lehet őket megtörni, katonával
 	# elfoglalni (scripts/systems/Cities.gd).
