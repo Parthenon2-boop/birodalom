@@ -108,7 +108,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 15
+const LAUNCHER_BUILD := 16
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1001,7 +1001,8 @@ func _redeem_license() -> void:
 		return
 	dlc_busy = true
 	lic_status.text = "Ellenőrzés…"
-	var body := "product_id=%s&license_key=%s&increment_uses_count=false" % [pid.uri_encode(), key.uri_encode()]
+	# a beváltás számít: a Gumroad számolja, hányszor használták a kulcsot (egy kulcs csak egyszer váltható be)
+	var body := "product_id=%s&license_key=%s&increment_uses_count=true" % [pid.uri_encode(), key.uri_encode()]
 	for c in http_dlc.request_completed.get_connections():
 		http_dlc.request_completed.disconnect(c["callable"])
 	http_dlc.request_completed.connect(_on_license_checked.bind(key), CONNECT_ONE_SHOT)
@@ -1029,6 +1030,10 @@ func _on_license_checked(result: int, code: int, _h: PackedStringArray, body: Pa
 	# de az nem valódi eladás – ezt nem fogadjuk el (teszteléshez a 100%-os kedvezménykód való)
 	if bool(purchase.get("test", false)):
 		lic_status.text = "Ez egy próbavásárlás kulcsa (fizetés nélkül, az eladó fiókjából), ezért nem váltható be."
+		return
+	# egy licenckulcs csak egyszer használható: ha ez már nem az első beváltás, elutasítjuk
+	if int(data.get("uses", 1)) > 1:
+		lic_status.text = "Ezt a kulcsot már beváltották. Egy licenckulcs csak egyszer használható – ha a tiéd, és új gépre telepítesz, írj nekünk."
 		return
 	cfg.set_value("dlc:" + str(lic_dlc["key"]), "license", key)
 	cfg.save(CFG_PATH)
