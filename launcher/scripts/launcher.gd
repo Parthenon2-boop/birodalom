@@ -120,7 +120,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 18
+const LAUNCHER_BUILD := 19
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1017,11 +1017,7 @@ func _on_license_checked(result: int, code: int, _h: PackedStringArray, body: Pa
 	if not ok:
 		lic_status.text = "Ez a kulcs nem érvényes ehhez a kiegészítőhöz. Ellenőrizd, hogy pontosan másoltad-e."
 		return
-	# a Gumroad az eladó saját, bejelentkezett „vásárlását” próbavásárlásnak veszi: fizetés nélkül ad kulcsot,
-	# de az nem valódi eladás – ezt nem fogadjuk el (teszteléshez a 100%-os kedvezménykód való)
-	if bool(purchase.get("test", false)):
-		lic_status.text = "Ez egy próbavásárlás kulcsa (fizetés nélkül, az eladó fiókjából), ezért nem váltható be."
-		return
+	# (a Gumroad próbavásárlásának kulcsa – csak az eladó saját fiókjából – is beváltható, a teszteléshez)
 	# egy licenckulcs csak egyszer használható: ha ez már nem az első beváltás, elutasítjuk
 	if int(data.get("uses", 1)) > 1:
 		lic_status.text = "Ezt a kulcsot már beváltották. Egy licenckulcs csak egyszer használható – ha a tiéd, és új gépre telepítesz, írj nekünk."
