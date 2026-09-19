@@ -108,7 +108,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 16
+const LAUNCHER_BUILD := 17
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -170,7 +170,7 @@ var chk_play: CheckBox
 # Kiegészítők
 var dlc_box: VBoxContainer           # a kiválasztott játék kiegészítő-kártyái
 var dlc_scroll: ScrollContainer      # a kártyák görgethető kerete: legfeljebb DLC_MAX_H magas, hogy semmi ne lógjon ki
-const DLC_MAX_H := 232.0             # a cím és három kártya; ha több van, a lista görgethető
+const DLC_MAX_H := 340.0             # a cím és öt kártya; ha több van, a lista görgethető
 var http_dlc: HTTPRequest            # licencellenőrzés és a csomag letöltése (a játék letöltésétől külön)
 var dlc_busy := false
 var license_popup: PopupPanel
@@ -181,7 +181,6 @@ var lic_dlc := {}                    # melyik kiegészítő kulcsát váltják b
 
 func _ready() -> void:
 	if _relaunch_without_console(): return
-	_fit_window()
 	_repo_file = _read_repo_file()
 	cfg.load(CFG_PATH)
 	_load_common()
@@ -507,25 +506,15 @@ func _build_ui() -> void:
 	lbl_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_status.add_theme_font_size_override("font_size", 17)
 
-	var notes_panel := PanelContainer.new()
-	notes_panel.size_flags_vertical = SIZE_EXPAND_FILL
-	notes_panel.custom_minimum_size = Vector2(0, 44)     # legalább egy teljes sor látsszon
-	var inner := StyleBoxFlat.new()
-	inner.bg_color = S.NOTES_BG
-	inner.border_color = Color(S.BORDER, 0.8)
-	inner.set_border_width_all(1)
-	inner.set_corner_radius_all(3)
-	inner.set_content_margin_all(10)
-	inner.content_margin_top = 5; inner.content_margin_bottom = 5
-	notes_panel.add_theme_stylebox_override("panel", inner)
-	box.add_child(notes_panel)
+	# A kiadási jegyzetek panelje nincs a felületen (a felhasználó kérésére): a szövegét a kód továbbra is
+	# kitöltheti, de rejtve marad. Helyette rugalmas térköz tartja lent a gombokat.
 	txt_notes = RichTextLabel.new()
 	txt_notes.bbcode_enabled = true
-	txt_notes.fit_content = false
-	txt_notes.scroll_active = true
-	txt_notes.add_theme_font_size_override("normal_font_size", 15)
-	notes_panel.add_child(txt_notes)
-
+	txt_notes.visible = false
+	_ui.add_child(txt_notes)
+	var spacer := Control.new()
+	spacer.size_flags_vertical = SIZE_EXPAND_FILL
+	box.add_child(spacer)
 	# A kiválasztott játék megvásárolható kiegészítői (lakattal, amíg nincs meg)
 	dlc_scroll = ScrollContainer.new()
 	dlc_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -572,16 +561,6 @@ func _build_ui() -> void:
 
 	_build_settings()
 	_build_license_popup()
-
-# Ha a képernyő elég magas, az ablak is magasabb (a leírásnak több hely jut); kisebb képernyőn
-# marad 760 – a tartalom úgy is kifér (a kiegészítők listája szükség esetén görgethető)
-func _fit_window() -> void:
-	if OS.has_feature("editor") or DisplayServer.get_name() == "headless": return
-	var usable := DisplayServer.screen_get_usable_rect(get_window().current_screen)
-	var h := clampi(usable.size.y - 60, 760, 820)
-	if get_window().size.y >= h: return
-	get_window().size = Vector2i(get_window().size.x, h)
-	get_window().position = usable.position + (usable.size - get_window().size) / 2
 
 # Váltás a két játék között: a mostani állapotot elmentjük, a másikét betöltjük.
 func _switch_game(idx: int) -> void:
