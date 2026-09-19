@@ -57,6 +57,7 @@ const GAMES := [
 #   gumroad_product_id – a Gumroad termék azonosítója (a termék oldalán: Content → License key)
 #   store_url          – a vásárlási oldal (pl. https://valaki.gumroad.com/l/skandinavia)
 #   download_url       – a csomag (dlc/_csomagok/<key>.zip) letöltési címe
+#   game_id            – a játék saját beállításfájljában ([dlc] szakasz) ezzel a névvel kapcsolható ki-be
 # Amíg valamelyik üres, a kártya látszik, de a gomb jelzi, hogy a bolt még nincs beállítva.
 const DLCS := {
 	"heptarchia": [
@@ -66,6 +67,7 @@ const DLCS := {
 			"desc": "Dánia, Norvégia, Svédek, Izland és Grönland – öt új nép, kibővített térkép, saját események.",
 			"price": "4 $",
 			"user_dir": "Heptarchia",
+			"game_id": "scandinavia",      # a kiegészítő azonosítója a játékban (settings.cfg [dlc])
 			"gumroad_product_id": "bpMjj0INnbiEv1kf1hglPg==",
 			"store_url": "https://parthenon62.gumroad.com/l/ltsalt",
 			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/latest/download/skandinavia.zip",
@@ -77,7 +79,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 6
+const LAUNCHER_BUILD := 7
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -730,6 +732,25 @@ func _dlc_zip_path(d: Dictionary) -> String:
 func _dlc_installed(d: Dictionary) -> bool:
 	return FileAccess.file_exists(_dlc_zip_path(d))
 
+# Ki- és bekapcsolás: ugyanaz a beállítás, amit a játék Beállítások → Kiegészítők füle ír
+# (…/app_userdata/<user_dir>/settings.cfg, [dlc] <game_id> = true/false; alapból bekapcsolva)
+func _game_settings_path(d: Dictionary) -> String:
+	return OS.get_user_data_dir().get_base_dir().path_join(str(d["user_dir"])).path_join("settings.cfg")
+
+func _dlc_enabled(d: Dictionary) -> bool:
+	var gc := ConfigFile.new()
+	gc.load(_game_settings_path(d))
+	return bool(gc.get_value("dlc", str(d["game_id"]), true))
+
+func _set_dlc_enabled(d: Dictionary, on: bool) -> void:
+	var gc := ConfigFile.new()
+	gc.load(_game_settings_path(d))
+	gc.set_value("dlc", str(d["game_id"]), on)
+	DirAccess.make_dir_recursive_absolute(_game_settings_path(d).get_base_dir())
+	gc.save(_game_settings_path(d))
+	_status("A(z) %s %s. A játék következő indításakor érvényes." % [str(d["name"]), "bekapcsolva" if on else "kikapcsolva"],
+		S.GREEN if on else S.TEXT)
+
 # A kártyák újraépítése: név, leírás, és lakat + „Megvásárlás” vagy pipa + állapot
 func _refresh_dlc() -> void:
 	if dlc_box == null or not is_instance_valid(dlc_box): return
@@ -786,11 +807,23 @@ func _dlc_card(d: Dictionary) -> Control:
 	btns.size_flags_vertical = SIZE_SHRINK_CENTER
 	row.add_child(btns)
 	if owned:
-		var state := Label.new()
-		state.text = "✔ Telepítve" if _dlc_installed(d) else "Nincs letöltve"
-		state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		state.add_theme_color_override("font_color", S.GREEN if _dlc_installed(d) else S.TEXT_DIM)
-		btns.add_child(state)
+		if _dlc_installed(d):
+			# ki-be kapcsoló (a játékban is ugyanez: Beállítások → Kiegészítők)
+			var sw := CheckButton.new()
+			sw.text = "Bekapcsolva"
+			sw.button_pressed = _dlc_enabled(d)
+			sw.add_theme_font_size_override("font_size", 15)
+			sw.add_theme_color_override("font_color", S.TEXT)
+			sw.add_theme_color_override("font_pressed_color", S.GREEN)
+			sw.add_theme_color_override("font_hover_pressed_color", S.GREEN)
+			sw.tooltip_text = "Ki- vagy bekapcsolja a kiegészítőt a játékban (a következő indítástól)"
+			sw.toggled.connect(func(on: bool): _set_dlc_enabled(d, on))
+			btns.add_child(sw)
+		else:
+			var state := Label.new()
+			state.text = "Nincs letöltve"
+			state.add_theme_color_override("font_color", S.TEXT_DIM)
+			btns.add_child(state)
 		var dl := _button(btns, "Újratöltés" if _dlc_installed(d) else "Letöltés", func(): _download_dlc(d))
 		dl.disabled = dlc_busy
 		dl.add_theme_font_size_override("font_size", 15)
