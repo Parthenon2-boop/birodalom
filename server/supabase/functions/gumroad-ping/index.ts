@@ -29,12 +29,17 @@ const PRODUCTS: Record<string, string> = {
 
 Deno.serve(async (req: Request) => {
 	const url = new URL(req.url);
-	const secret = Deno.env.get("GUMROAD_PING_SECRET") ?? "";
-	if (secret === "" || url.searchParams.get("secret") !== secret) {
+	const secret = (Deno.env.get("GUMROAD_PING_SECRET") ?? "").trim();   // bemásoláskor a végére kerülhet sortörés
+	if (secret === "" || (url.searchParams.get("secret") ?? "").trim() !== secret) {
 		return new Response("forbidden", { status: 403 });
 	}
-	const form = await req.formData();
-	const get = (k: string) => String(form.get(k) ?? "");
+	// a valódi értesítés űrlapadat, a „Send test ping” JSON-t küld
+	let data: Record<string, unknown> = {};
+	try {
+		if ((req.headers.get("content-type") ?? "").includes("json")) data = await req.json();
+		else data = Object.fromEntries((await req.formData()).entries());
+	} catch { return new Response("bad request", { status: 400 }); }
+	const get = (k: string) => String(data[k] ?? "");
 	const permalink = (get("permalink") || get("product_permalink")).split("/").pop() ?? "";
 	const dlc = PRODUCTS[get("product_id")] ?? PRODUCTS[permalink];
 	if (!dlc) return new Response("unknown product", { status: 200 });
