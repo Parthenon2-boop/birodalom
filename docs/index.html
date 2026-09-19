@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ParthLauncher</title>
+<meta name="description" content="ParthLauncher – a Birodalom és a Heptarchia stratégiai játékok indítója. Letöltés, kiegészítők és hírek.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+	:root {
+		--bg: #1d1510; --bg2: #271c14; --panel: #2f2219; --line: #6b4f2a;
+		--gold: #d9a441; --gold-2: #f0cf85; --text: #eadcbc; --muted: #b7a37f;
+		--parch: #eadcbc; --ink: #3a2a1a; --red: #b0382a; --green: #7fae5a;
+	}
+	* { box-sizing: border-box; }
+	html { scroll-behavior: smooth; }
+	body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.55 "EB Garamond", Georgia, serif;
+		background-image: radial-gradient(ellipse at top, #3a2818 0%, var(--bg) 60%); background-attachment: fixed; }
+	a { color: var(--gold-2); }
+	.wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+	h1, h2, h3 { font-family: Cinzel, Georgia, serif; font-weight: 700; letter-spacing: .03em; margin: 0; }
+
+	/* fejléc */
+	header { border-bottom: 1px solid var(--line); background: rgba(20,14,10,.7); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(6px); }
+	header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; }
+	.logo { font-family: Cinzel, serif; font-size: 22px; color: var(--gold); text-decoration: none; white-space: nowrap; }
+	nav { display: flex; gap: 18px; flex-wrap: wrap; justify-content: flex-end; }
+	nav a { color: var(--muted); text-decoration: none; font-size: 16px; }
+	nav a:hover { color: var(--gold-2); }
+
+	/* nyitókép */
+	.hero { text-align: center; padding: 64px 0 48px; }
+	.runes { font-family: Cinzel, serif; color: var(--muted); letter-spacing: .5em; font-size: 13px; margin-bottom: 10px; }
+	.hero h1 { font-size: clamp(38px, 8vw, 68px); color: var(--gold); text-shadow: 0 2px 18px rgba(217,164,65,.25); }
+	.hero p.lead { max-width: 640px; margin: 14px auto 30px; color: var(--text); font-size: 20px; }
+	.dl { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+	.btn { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 230px;
+		padding: 14px 26px; border-radius: 8px; border: 1px solid var(--gold); text-decoration: none;
+		font-family: Cinzel, serif; font-size: 18px; color: var(--bg); background: linear-gradient(#e7b95a, #b98326);
+		box-shadow: 0 6px 20px rgba(0,0,0,.4); transition: transform .12s, box-shadow .12s; }
+	.btn:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.5); }
+	.btn small { font-family: "EB Garamond", serif; font-size: 14px; opacity: .8; }
+	.btn.alt { background: transparent; color: var(--gold-2); }
+	.note { color: var(--muted); font-size: 15px; margin-top: 18px; }
+	.ver { color: var(--gold-2); }
+
+	section { padding: 42px 0; border-top: 1px solid rgba(107,79,42,.5); }
+	section > .wrap > h2 { font-size: 28px; color: var(--gold); margin-bottom: 6px; }
+	.sub { color: var(--muted); margin: 0 0 22px; }
+
+	/* játékok */
+	.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+	.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 0; }
+	.card h3 { color: var(--gold-2); font-size: 21px; overflow-wrap: anywhere; }
+	.card .tag { display: inline-block; font-size: 14px; color: var(--muted); margin: 4px 0 10px; }
+	.card p { margin: 0 0 12px; }
+	.pill { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 14px; color: var(--gold-2); }
+
+	/* kiegészítők */
+	.dlc { background: var(--parch); color: var(--ink); border-color: #b8862b; display: flex; flex-direction: column; }
+	.dlc h3 { color: #8a2a1c; }
+	.dlc .tag { color: #6b5638; }
+	.dlc p { flex: 1; }
+	.dlc .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+	.price { font-family: Cinzel, serif; font-size: 22px; color: #5a3d22; }
+	.buy { background: #5a3d22; color: #f3e3b8; text-decoration: none; padding: 8px 16px; border-radius: 6px; border: 1px solid #b8862b; font-family: Cinzel, serif; font-size: 15px; }
+	.buy:hover { background: #6d4a29; }
+
+	/* hírek */
+	.news { display: flex; flex-direction: column; gap: 14px; }
+	.item { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 8px; padding: 16px 18px; min-width: 0; }
+	.item .meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+	.item h3 { font-size: 19px; color: var(--gold-2); margin-bottom: 6px; overflow-wrap: anywhere; }
+	.item p { margin: 0; overflow-wrap: anywhere; }
+	.item.dlcnews { border-left-color: var(--green); }
+	.more { margin: 18px auto 0; display: block; background: transparent; color: var(--gold-2); border: 1px solid var(--gold); border-radius: 6px; padding: 8px 20px; font: 16px Cinzel, serif; cursor: pointer; }
+
+	/* lépések */
+	ol.steps { margin: 0; padding-left: 22px; }
+	ol.steps li { margin-bottom: 8px; }
+
+	footer { border-top: 1px solid var(--line); padding: 26px 0 40px; color: var(--muted); font-size: 15px; text-align: center; }
+
+	@media (max-width: 560px) {
+		body { font-size: 17px; }
+		nav { gap: 12px; }
+		nav a { font-size: 15px; }
+		.hero { padding: 40px 0 32px; }
+		.btn { min-width: 0; width: 100%; }
+	}
+</style>
+</head>
+<body>
+<header>
+	<div class="wrap">
+		<a class="logo" href="#">ParthLauncher</a>
+		<nav>
+			<a href="#letoltes">Letöltés</a>
+			<a href="#jatekok">Játékok</a>
+			<a href="#kiegeszitok">Kiegészítők</a>
+			<a href="#hirek">Hírek</a>
+		</nav>
+	</div>
+</header>
+
+<main>
+	<div class="hero" id="letoltes">
+		<div class="wrap">
+			<div class="runes">ᛈᚨᚱᚦᛚᚨᚢᚾᚲᚺᛖᚱ</div>
+			<h1>ParthLauncher</h1>
+			<p class="lead">Egy indító két stratégiai játékhoz. Telepíti és naprakészen tartja a <b>Birodalmat</b> és a <b>Heptarchiát</b>, és kezeli a megvásárolt kiegészítőket.</p>
+			<div class="dl">
+				<a class="btn" id="btn-win" href="https://github.com/Parthenon2-boop/birodalom/releases/latest/download/ParthLauncher-Setup.exe">
+					Letöltés Windowsra<small>telepítő · <span class="ver" id="ver-launcher">legújabb változat</span></small>
+				</a>
+				<a class="btn alt" id="btn-mac" href="https://github.com/Parthenon2-boop/birodalom/releases/latest/download/ParthLauncher-macos.zip">
+					Letöltés macOS-re<small>Intel és Apple Silicon</small>
+				</a>
+			</div>
+			<p class="note">Windows: ha a SmartScreen figyelmeztet, válaszd a <i>További információ → Futtatás mindenképp</i> lehetőséget.<br>
+				Mac: első indításkor jobb klikk az alkalmazáson → <i>Megnyitás</i>.</p>
+		</div>
+	</div>
+
+	<section id="jatekok">
+		<div class="wrap">
+			<h2>Játékok</h2>
+			<p class="sub">Mindkettő ingyenes. A ParthLauncher magától letölti és frissíti őket.</p>
+			<div class="grid">
+				<article class="card">
+					<h3>Heptarchia</h3>
+					<span class="tag">Angolszász nagystratégia, 790-től</span>
+					<p>Vezesd Wessexet, Merciát vagy Northumbriát – vagy a skótokat, piktek és írek népeit. Diplomácia, Witan, egyház, lakosság és toborzás, a vikingek érkezése.</p>
+					<span class="pill" id="ver-heptarchia">…</span>
+				</article>
+				<article class="card">
+					<h3>Birodalom</h3>
+					<span class="tag">Valós idejű stratégia, 1400 – 1945</span>
+					<p>Építs birodalmat öt és fél évszázadon át: gazdaság, hadsereg és nagyhatalmi politika a késő középkortól a modern korig.</p>
+					<span class="pill" id="ver-birodalom">…</span>
+				</article>
+			</div>
+		</div>
+	</section>
+
+	<section id="kiegeszitok">
+		<div class="wrap">
+			<h2>Kiegészítők a Heptarchiához</h2>
+			<p class="sub">Egymással és az alapjátékkal is kompatibilisek – bármelyik kombinációban játszhatók. A vásárlás a Gumroadon történik; a kiegészítő a ParthLauncher-fiókodhoz kötődik.</p>
+			<div class="grid" id="dlc-grid"></div>
+		</div>
+	</section>
+
+	<section id="hirek">
+		<div class="wrap">
+			<h2>Hírek és frissítések</h2>
+			<p class="sub">A legújabb változások a játékokban és a kiegészítőkben.</p>
+			<div class="news" id="news"><p class="sub">Hírek betöltése…</p></div>
+			<button class="more" id="more" hidden>Korábbi hírek</button>
+		</div>
+	</section>
+
+	<section id="kezdes">
+		<div class="wrap">
+			<h2>Így kezdj neki</h2>
+			<ol class="steps">
+				<li>Töltsd le és telepítsd a ParthLaunchert.</li>
+				<li>Válaszd ki a játékot, és kattints a <b>Frissítés</b> / <b>Indítás</b> gombra – a letöltés magától megy.</li>
+				<li>Kiegészítőhöz: <b>Bejelentkezés / Regisztráció</b> a launcherben, majd vásárlás a Gumroadon <b>ugyanazzal az e-mail-címmel</b>. Ha kulcsot kaptál, a <b>Van kulcsom</b> gombbal is beválthatod.</li>
+			</ol>
+		</div>
+	</section>
+</main>
+
+<footer>
+	<div class="wrap">ParthLauncher · Birodalom · Heptarchia</div>
+</footer>
+
+<script>
+	const DLCS = [
+		{ key: "skandinavia", name: "Skandinávia", price: "4 $", url: "https://parthenon62.gumroad.com/l/ltsalt",
+			desc: "Dánia, Norvégia, Svédek, Izland és Grönland – öt új nép, kibővített térkép, saját események." },
+		{ key: "vikingek", name: "A vikingek kora", price: "3 $", url: "https://parthenon62.gumroad.com/l/fxtisw",
+			desc: "Vezesd a nagy portyákat: Lindisfarne, Dorestad, Sevilla, Párizs feldúlása – egészen Normandia megszerzéséig." },
+		{ key: "vallas", name: "Hit és egyház", price: "3 $", url: "https://parthenon62.gumroad.com/l/iwqkt",
+			desc: "Minden népnek saját vallása és tanfája: Canterbury, Szent Dávid, Columba, Patrik egyháza, Odin, Thor és Frey hite." },
+		{ key: "varegok", name: "A varégok útja", price: "5 $", url: "https://parthenon62.gumroad.com/l/jrzwus",
+			desc: "Keletre kibővített térkép: Novgorod, Kijev, Miklagarðr. A Rusz és Bizánc, expedíciók a Volgán és a Dnyeperen, a Varangi Gárda, Szicília." },
+	];
+	const API = "https://api.github.com/repos/Parthenon2-boop/";
+	const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+	const fmtDate = d => new Date(d).toLocaleDateString("hu-HU", { year: "numeric", month: "long", day: "numeric" });
+	const getJSON = url => fetch(url).then(r => r.ok ? r.json() : Promise.reject(r.status));
+
+	// kiegészítő-kártyák
+	document.getElementById("dlc-grid").innerHTML = DLCS.map(d => `
+		<article class="card dlc">
+			<h3>${esc(d.name)}</h3>
+			<span class="tag" id="dlcver-${d.key}">Heptarchia-kiegészítő</span>
+			<p>${esc(d.desc)}</p>
+			<div class="row"><span class="price">${esc(d.price)}</span><a class="buy" href="${d.url}" target="_blank" rel="noopener">Megvásárlás</a></div>
+		</article>`).join("");
+
+	// Macen a macOS-gomb legyen a kiemelt
+	if (/Mac/i.test(navigator.platform || navigator.userAgent)) {
+		const w = document.getElementById("btn-win"), m = document.getElementById("btn-mac");
+		w.classList.add("alt"); m.classList.remove("alt"); m.parentNode.insertBefore(m, w);
+	}
+
+	// aktuális változatok
+	getJSON(API + "birodalom/releases/latest").then(r => {
+		document.getElementById("ver-launcher").textContent = r.tag_name + " · " + fmtDate(r.published_at);
+		document.getElementById("ver-birodalom").textContent = "Legújabb: " + r.tag_name;
+	}).catch(() => { document.getElementById("ver-birodalom").textContent = "Letölthető a launcherrel"; });
+	getJSON(API + "heptarchia/releases/latest").then(r => {
+		document.getElementById("ver-heptarchia").textContent = "Legújabb: " + r.tag_name;
+	}).catch(() => { document.getElementById("ver-heptarchia").textContent = "Letölthető a launcherrel"; });
+
+	// hírek: a kézzel írt hírek + a kiegészítők kiadásai (automatikusan)
+	const PAGE = 8;
+	let all = [], shown = 0;
+	function render() {
+		const box = document.getElementById("news");
+		shown = Math.min(all.length, shown + PAGE);
+		box.innerHTML = all.slice(0, shown).map(n => `
+			<article class="item${n.dlc ? " dlcnews" : ""}">
+				<div class="meta"><span>${esc(fmtDate(n.date))}</span><span class="pill">${esc(n.tag)}</span></div>
+				<h3>${esc(n.title)}</h3>
+				${n.text ? `<p>${esc(n.text)}</p>` : ""}
+			</article>`).join("") || '<p class="sub">Még nincsenek hírek.</p>';
+		document.getElementById("more").hidden = shown >= all.length;
+	}
+	document.getElementById("more").onclick = render;
+
+	Promise.allSettled([
+		fetch("hirek.json", { cache: "no-cache" }).then(r => r.json()),
+		getJSON(API + "heptarchia-dlc-csomagok/releases?per_page=40"),
+	]).then(([hand, rel]) => {
+		const items = [];
+		if (hand.status === "fulfilled") for (const h of hand.value)
+			items.push({ date: h.datum + "T23:59:00Z", title: h.cim, text: h.szoveg, tag: h.cimke || "Hír" });
+		if (rel.status === "fulfilled") {
+			const seen = {};
+			for (const r of rel.value) {
+				const key = r.tag_name.replace(/-v\d+$/, "");
+				const d = DLCS.find(x => x.key === key);
+				if (!d || r.draft) continue;
+				if (!seen[key]) { seen[key] = 1; const t = document.getElementById("dlcver-" + key); if (t) t.textContent = "Heptarchia-kiegészítő · " + (r.name.match(/\d+(\.\d+)+/) || [r.tag_name])[0]; }
+				items.push({ date: r.published_at, title: r.name || d.name, text: (r.body || "").split(/\r?\n/)[0], tag: d.name, dlc: true });
+			}
+		}
+		all = items.sort((a, b) => new Date(b.date) - new Date(a.date));
+		render();
+	});
+</script>
+</body>
+</html>

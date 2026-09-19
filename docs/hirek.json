@@ -1,0 +1,50 @@
+[
+	{
+		"datum": "2026-09-19",
+		"cim": "ParthLauncher 1.25 – fiókok és regisztráció",
+		"cimke": "ParthLauncher",
+		"szoveg": "A megvásárolt kiegészítők mostantól a fiókodhoz kötődnek: regisztrálj egyszer, és bármelyik gépen belépve megjelennek. A megerősítő levél a ParthLaunchertől érkezik – ha nem látod, nézd meg a Spam mappát is."
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "Új kiegészítő: A varégok útja",
+		"cimke": "Heptarchia DLC",
+		"szoveg": "Keletre kibővített térkép Novgoroddal, Kijevvel és Miklagarðrral. Kereskedelmi expedíciók a Volgán és a Dnyeperen, besenyő rajtaütések a konvojok ellen, testőrség a kereskedőknek, a Varangi Gárda – és Szicília: Szürakuszai ostroma, az arab invázió, Maniakész hadjárata."
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "Heptarchia 1.26 – áttekinthetőbb bal panel",
+		"cimke": "Heptarchia",
+		"szoveg": "A Witan, a királyi célok és a diplomácia saját ablakban nyílik meg egy-egy gombbal, így semmi nem lóg ki a képernyőről."
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "Lakosság és toborzás",
+		"cimke": "Heptarchia",
+		"szoveg": "A sereget a parasztokból toborozod: minden városnak van lakossága, férőhelye és gyarapodása. A falu- és városfejlesztés több embert jelent – az éhínség kevesebbet. Az egyház korhű szintjei: Minster, Püspökség, és érseki székhelyen Érsekség."
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "Portya hadüzenet nélkül",
+		"cimke": "A vikingek kora",
+		"szoveg": "Az óészaki népek háború nélkül portyázhatnak ezüstért. Háború csak akkor lesz, ha a portyázókat elkapják és legyőzik. Ahol egyház áll, ott több az ezüst."
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "Hit és egyház kiegészítő",
+		"cimke": "Heptarchia DLC",
+		"szoveg": "Minden népnek saját vallása és tanfája: Canterbury, Szent Dávid, Columba és Patrik egyháza, Odin, Thor és Frey hite. A hitpontokból bónuszokat fejleszthetsz."
+	},
+	{
+		"datum": "2026-09-18",
+		"cim": "Heptarchia: 790-es kezdés",
+		"cimke": "Heptarchia",
+		"szoveg": "Új kezdőév: Kent, Essex, Sussex, a skótok, piktek és írek. Lindisfarne 793, belháborúk, trónkövetelők, nagy küldetések. Új: a pápaság, fejleszthető gazdaság, kereskedelem és gyakoribb építkezés a gépi királyoknál."
+	},
+	{
+		"datum": "2026-09-17",
+		"cim": "macOS-támogatás",
+		"cimke": "ParthLauncher",
+		"szoveg": "A ParthLauncher és a játékok Macen is futnak (Intel és Apple Silicon). Első indításkor jobb klikk → Megnyitás."
+	}
+]
