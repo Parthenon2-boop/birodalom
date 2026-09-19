@@ -76,6 +76,19 @@ const DLCS := {
 			# a csomag kiadásai: a legújabb olyan kiadás, amelyben <key>.zip van, az aktuális változat
 			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
 		},
+		{
+			"key": "vikingek",
+			"name": "A vikingek kora",
+			"desc": "Vezesd a nagy portyákat: Lindisfarne, Dorestad, Sevilla, Párizs feldúlása – egészen Normandia megszerzéséig.",
+			"price": "3 $",
+			"user_dir": "Heptarchia",
+			"game_id": "vikings",
+			"gumroad_product_id": "",
+			"store_url": "",
+			# a kiadása nem „latest” (az a Skandinávia csomagjáé), ezért konkrét címkével
+			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/download/vikingek-v1/vikingek.zip",
+			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
+		},
 	],
 }
 const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
@@ -83,7 +96,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 8
+const LAUNCHER_BUILD := 9
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -780,14 +793,14 @@ func _dlc_card(d: Dictionary) -> Control:
 	sb.border_color = S.GOLD if owned else Color(S.BORDER, 0.9)
 	sb.set_border_width_all(2 if owned else 1)
 	sb.set_corner_radius_all(4)
-	sb.set_content_margin_all(6)
+	sb.set_content_margin_all(4)
 	card.add_theme_stylebox_override("panel", sb)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	card.add_child(row)
 	# lakat (nincs meg) vagy pecsét pipával (megvásárolva)
 	var icon := Control.new()
-	icon.custom_minimum_size = Vector2(34, 40)
+	icon.custom_minimum_size = Vector2(34, 38)
 	icon.draw.connect(_draw_dlc_icon.bind(icon, owned))
 	row.add_child(icon)
 	var texts := VBoxContainer.new()
@@ -796,13 +809,17 @@ func _dlc_card(d: Dictionary) -> Control:
 	row.add_child(texts)
 	var name_l := Label.new()
 	name_l.text = "%s  –  %s" % [str(d["name"]), "megvásárolva" if owned else str(d["price"])]
-	name_l.add_theme_font_size_override("font_size", 18)
+	name_l.add_theme_font_size_override("font_size", 17)
 	name_l.add_theme_color_override("font_color", S.GREEN if owned else S.TEXT)
 	texts.add_child(name_l)
 	var desc := Label.new()
 	desc.text = str(d["desc"])
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 14)
+	# egy sorban (több kiegészítő is elférjen); a teljes leírás a kártya súgójában
+	desc.clip_text = true
+	desc.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	desc.add_theme_font_size_override("font_size", 13)
+	card.tooltip_text = str(d["desc"])
+	desc.mouse_filter = Control.MOUSE_FILTER_PASS
 	desc.add_theme_color_override("font_color", S.TEXT_DIM)
 	texts.add_child(desc)
 	var btns := HBoxContainer.new()
