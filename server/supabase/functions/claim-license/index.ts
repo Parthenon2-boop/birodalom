@@ -7,6 +7,16 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+// a szerveroldali (titkos) kulcs: a régi service_role, vagy az új sb_secret_… formátum
+function serviceKey(): string {
+	const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+	if (legacy) return legacy;
+	try {
+		const keys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
+		return String(keys.default ?? Object.values(keys)[0] ?? "");
+	} catch { return ""; }
+}
+
 // a kiegészítő kulcsa a launcherben → a Gumroad-termék azonosítója
 const PRODUCTS: Record<string, string> = {
 	skandinavia: "bpMjj0INnbiEv1kf1hglPg==",
@@ -20,7 +30,7 @@ const json = (body: unknown, status = 200) =>
 
 Deno.serve(async (req: Request) => {
 	const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
-	const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+	const db = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey());
 	const { data: auth } = await db.auth.getUser(token);
 	const user = auth?.user;
 	if (!user || !user.email) return json({ error: "not_logged_in" }, 401);

@@ -23,6 +23,10 @@ create index if not exists entitlements_user_idx on public.entitlements (user_id
 
 alter table public.entitlements enable row level security;
 
+-- a Data API-n át csak olvasni lehet (a sorokat a szabály szűri); írni csak a szerverfüggvények írnak
+revoke all on public.entitlements from anon, authenticated;
+grant select on public.entitlements to authenticated;
+
 -- A bejelentkezett felhasználó a saját fiókjához kötött sorokat látja, és azokat a még senkihez nem kötött
 -- vásárlásokat, amelyeket az ő (megerősített) e-mail-címével vettek.
 drop policy if exists "sajat jogosultsagok" on public.entitlements;

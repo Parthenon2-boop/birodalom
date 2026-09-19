@@ -9,6 +9,16 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+// a szerveroldali (titkos) kulcs: a régi service_role, vagy az új sb_secret_… formátum
+function serviceKey(): string {
+	const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+	if (legacy) return legacy;
+	try {
+		const keys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
+		return String(keys.default ?? Object.values(keys)[0] ?? "");
+	} catch { return ""; }
+}
+
 // Gumroad-termék (azonosító vagy rövid link) → a kiegészítő kulcsa a launcherben
 const PRODUCTS: Record<string, string> = {
 	"bpMjj0INnbiEv1kf1hglPg==": "skandinavia", "ltsalt": "skandinavia",
@@ -35,7 +45,7 @@ Deno.serve(async (req: Request) => {
 	const cancelled = ["refunded", "disputed", "chargebacked"].some((k) => get(k) === "true");
 	if (email === "" || saleId === "") return new Response("missing data", { status: 400 });
 
-	const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+	const db = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey());
 
 	if (cancelled) {
 		await db.from("entitlements").update({ revoked: true }).eq("sale_id", saleId);

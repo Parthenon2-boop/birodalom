@@ -122,8 +122,8 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # megjelennek. A Gumroad minden vásárlásnál értesíti a szervert (a vevő e-mail-címével), a „Van kulcsom” pedig
 # a kulcsot a bejelentkezett fiókhoz köti. A szerver kódja: server/supabase (séma és két függvény).
 # Üresen hagyva a launcher a régi, gépenkénti licenckulcsos módon működik.
-const ACCOUNT_URL := ""          # a Supabase-projekt címe, pl. https://abcdefgh.supabase.co
-const ACCOUNT_ANON_KEY := ""     # a projekt nyilvános (anon / publishable) kulcsa – nem titok
+const ACCOUNT_URL := "https://gxvepswtairfqvosdcpb.supabase.co"          # a Supabase-projekt címe, pl. https://abcdefgh.supabase.co
+const ACCOUNT_ANON_KEY := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmVwc3d0YWlyZnF2b3NkY3BiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4MzQyMzYsImV4cCI6MjEwNTQxMDIzNn0.9A86POfj49aRynE3rerz4nMbfds7xny6GLuRePpgSSI"     # a projekt nyilvános (anon / publishable) kulcsa – nem titok
 const ACC_LICENSE := "account"   # a fiókból jövő jogosultság jele a ParthLauncher.cfg-ben
 
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
