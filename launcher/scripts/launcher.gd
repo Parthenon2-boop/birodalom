@@ -89,6 +89,18 @@ const DLCS := {
 			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/download/vikingek-v1/vikingek.zip",
 			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
 		},
+		{
+			"key": "vallas",
+			"name": "Hit és egyház",
+			"desc": "Minden népnek saját vallása és tanfája: Canterbury, Szent Dávid, Columba, Patrik egyháza, Odin, Thor és Frey hite.",
+			"price": "3 $",
+			"user_dir": "Heptarchia",
+			"game_id": "religion",
+			"gumroad_product_id": "",
+			"store_url": "",
+			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/download/vallas-v1/vallas.zip",
+			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
+		},
 	],
 }
 const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
@@ -96,7 +108,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 12
+const LAUNCHER_BUILD := 13
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -157,6 +169,8 @@ var chk_auto: CheckBox
 var chk_play: CheckBox
 # Kiegészítők
 var dlc_box: VBoxContainer           # a kiválasztott játék kiegészítő-kártyái
+var dlc_scroll: ScrollContainer      # a kártyák görgethető kerete: legfeljebb DLC_MAX_H magas, hogy semmi ne lógjon ki
+const DLC_MAX_H := 232.0             # a cím és három kártya; ha több van, a lista görgethető
 var http_dlc: HTTPRequest            # licencellenőrzés és a csomag letöltése (a játék letöltésétől külön)
 var dlc_busy := false
 var license_popup: PopupPanel
@@ -167,6 +181,7 @@ var lic_dlc := {}                    # melyik kiegészítő kulcsát váltják b
 
 func _ready() -> void:
 	if _relaunch_without_console(): return
+	_fit_window()
 	_repo_file = _read_repo_file()
 	cfg.load(CFG_PATH)
 	_load_common()
@@ -439,8 +454,8 @@ func _build_ui() -> void:
 
 	var box := VBoxContainer.new()
 	box.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	box.offset_left = 40; box.offset_right = -40; box.offset_top = 24; box.offset_bottom = -28
-	box.add_theme_constant_override("separation", 8)
+	box.offset_left = 40; box.offset_right = -40; box.offset_top = 20; box.offset_bottom = -34
+	box.add_theme_constant_override("separation", 6)
 	_ui.add_child(box)
 
 	# A Heptarchia indítóján rúnasor áll a cím fölött — itt is az van, ha az
@@ -468,7 +483,7 @@ func _build_ui() -> void:
 		var b := _button(tabs, str(GAMES[i]["name"]), func(): _switch_game(idx))
 		# Két sor fér rá: a játék neve, alatta a változat — ezért magasabb és
 		# valamivel kisebb betűs, mint egy sima gomb.
-		b.custom_minimum_size = Vector2(0, 58)
+		b.custom_minimum_size = Vector2(0, 52)
 		b.add_theme_font_size_override("font_size", 17)
 		b.size_flags_horizontal = SIZE_EXPAND_FILL
 		game_btns.append(b)
@@ -494,12 +509,14 @@ func _build_ui() -> void:
 
 	var notes_panel := PanelContainer.new()
 	notes_panel.size_flags_vertical = SIZE_EXPAND_FILL
+	notes_panel.custom_minimum_size = Vector2(0, 44)     # legalább egy teljes sor látsszon
 	var inner := StyleBoxFlat.new()
 	inner.bg_color = S.NOTES_BG
 	inner.border_color = Color(S.BORDER, 0.8)
 	inner.set_border_width_all(1)
 	inner.set_corner_radius_all(3)
 	inner.set_content_margin_all(10)
+	inner.content_margin_top = 5; inner.content_margin_bottom = 5
 	notes_panel.add_theme_stylebox_override("panel", inner)
 	box.add_child(notes_panel)
 	txt_notes = RichTextLabel.new()
@@ -510,9 +527,13 @@ func _build_ui() -> void:
 	notes_panel.add_child(txt_notes)
 
 	# A kiválasztott játék megvásárolható kiegészítői (lakattal, amíg nincs meg)
+	dlc_scroll = ScrollContainer.new()
+	dlc_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(dlc_scroll)
 	dlc_box = VBoxContainer.new()
+	dlc_box.size_flags_horizontal = SIZE_EXPAND_FILL
 	dlc_box.add_theme_constant_override("separation", 4)
-	box.add_child(dlc_box)
+	dlc_scroll.add_child(dlc_box)
 
 	var bar_row := HBoxContainer.new()
 	bar_row.add_theme_constant_override("separation", 10)
@@ -530,7 +551,7 @@ func _build_ui() -> void:
 
 	# Egyetlen nagy gomb: „Frissítés”, majd ha naprakész, „Indítás”
 	btn_main = _button(box, "Indítás", _on_main_button)
-	btn_main.custom_minimum_size = Vector2(0, 58)
+	btn_main.custom_minimum_size = Vector2(0, 48)
 	btn_main.add_theme_font_size_override("font_size", 24)
 	btn_main.add_theme_color_override("font_color", S.GOLD_LIGHT)
 
@@ -551,6 +572,16 @@ func _build_ui() -> void:
 
 	_build_settings()
 	_build_license_popup()
+
+# Ha a képernyő elég magas, az ablak is magasabb (a leírásnak több hely jut); kisebb képernyőn
+# marad 760 – a tartalom úgy is kifér (a kiegészítők listája szükség esetén görgethető)
+func _fit_window() -> void:
+	if OS.has_feature("editor") or DisplayServer.get_name() == "headless": return
+	var usable := DisplayServer.screen_get_usable_rect(get_window().current_screen)
+	var h := clampi(usable.size.y - 60, 760, 820)
+	if get_window().size.y >= h: return
+	get_window().size = Vector2i(get_window().size.x, h)
+	get_window().position = usable.position + (usable.size - get_window().size) / 2
 
 # Váltás a két játék között: a mostani állapotot elmentjük, a másikét betöltjük.
 func _switch_game(idx: int) -> void:
@@ -800,9 +831,11 @@ func _set_dlc_enabled(d: Dictionary, on: bool) -> void:
 # A kártyák újraépítése: név, leírás, és lakat + „Megvásárlás” vagy pipa + állapot
 func _refresh_dlc() -> void:
 	if dlc_box == null or not is_instance_valid(dlc_box): return
-	for c in dlc_box.get_children(): c.queue_free()
+	for c in dlc_box.get_children():
+		dlc_box.remove_child(c)
+		c.queue_free()
 	var list := _dlcs()
-	dlc_box.visible = not list.is_empty()
+	dlc_scroll.visible = not list.is_empty()
 	if list.is_empty(): return
 	var head := Label.new()
 	head.text = "Kiegészítők"
@@ -813,6 +846,12 @@ func _refresh_dlc() -> void:
 	dlc_box.add_child(head)
 	for d in list:
 		dlc_box.add_child(_dlc_card(d))
+	_fit_dlc.call_deferred()
+
+# A kártyák kerete akkora, mint a tartalma, de legfeljebb DLC_MAX_H (a többi görgethető)
+func _fit_dlc() -> void:
+	if dlc_scroll == null or not is_instance_valid(dlc_scroll): return
+	dlc_scroll.custom_minimum_size.y = minf(dlc_box.get_combined_minimum_size().y, DLC_MAX_H)
 
 func _dlc_card(d: Dictionary) -> Control:
 	var owned := _dlc_license(d) != ""
