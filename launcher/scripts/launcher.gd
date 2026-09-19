@@ -47,7 +47,24 @@ const GAMES := [
 		"marker": "heptarchia_launcher.marker",
 		"home": false,
 	},
+	{
+		"key": "kard_es_magia",
+		"name": "KARD ÉS MÁGIA",
+		"label": "Kard és Mágia",           # a listában és a feliratokban így jelenik meg
+		"sub": "Roguelike kaland  ·  Katakombák rejtelmei",
+		"owner": "Parthenon2-boop",
+		"repo": "kard-es-magia",
+		"branch": "main",
+		"dir": "KardEsMagia",
+		"marker": "kard_es_magia_launcher.marker",
+		"home": false,
+		"cover_has_title": true,            # a borítóképen már rajta a cím
+	},
 ]
+
+# A játék megjelenő neve (pl. „Kard és Mágia”, nem „Kard És Mágia”)
+static func _label_of(g: Dictionary) -> String:
+	return str(g.get("label", str(g["name"]).capitalize()))
 
 # ── MEGVÁSÁROLHATÓ KIEGÉSZÍTŐK (DLC) ─────────────────────────────
 # Játékonként (a GAMES kulcsa szerint). A vevő a Gumroadon fizet, e-mailben licenckulcsot kap,
@@ -471,18 +488,6 @@ func _scan_for_godot(dir_path: String, depth: int) -> String:
 
 const SIDEBAR_W := 236.0
 const COVER_DIR := "res://assets/covers/"
-# A böngészőben futó minijátékok: nem kell letölteni, az indítóval együtt érkeznek.
-const EXTRAS := [
-	{
-		"key": "kard_es_magia",
-		"name": "Kard és Mágia",
-		"sub": "Roguelike  ·  Katakombák rejtelmei",
-		"file": "res://minijatek/katakombak.html",
-		"cover_has_title": true,      # a borítón már rajta a cím
-	},
-]
-var extra_idx := -1                  # >= 0: egy minijáték van kiválasztva (nem a két nagy játék egyike)
-var extra_btns: Array[Button] = []
 var cover: Control
 var cover_tex: Texture2D
 var cover_caption: Control
@@ -550,12 +555,7 @@ func _build_ui() -> void:
 	game_btns.clear()
 	for i in GAMES.size():
 		var idx := i
-		game_btns.append(_game_row(side, str(GAMES[i]["key"]), func(): _select_game(idx)))
-	side.add_child(_section_label("MINIJÁTÉK"))
-	extra_btns.clear()
-	for i in EXTRAS.size():
-		var idx := i
-		extra_btns.append(_game_row(side, str(EXTRAS[i]["key"]), func(): _select_extra(idx)))
+		game_btns.append(_game_row(side, str(GAMES[i]["key"]), func(): _switch_game(idx)))
 	var side_space := Control.new()
 	side_space.size_flags_vertical = SIZE_EXPAND_FILL
 	side.add_child(side_space)
@@ -713,66 +713,12 @@ func _draw_cover(cv: Control) -> void:
 # A borító és a lista kijelölése a kiválasztott elem szerint
 func _refresh_cover() -> void:
 	if cover == null or not is_instance_valid(cover): return
-	var key: String
-	var name_text: String
-	var sub_text: String
-	var caption := true
-	if extra_idx >= 0:
-		var e: Dictionary = EXTRAS[extra_idx]
-		key = str(e["key"]); name_text = str(e["name"]); sub_text = str(e["sub"])
-		caption = not bool(e.get("cover_has_title", false))
-	else:
-		var g := game()
-		key = str(g["key"]); name_text = str(g["name"]); sub_text = str(g["sub"])
-	cover_tex = _cover_of(key)
-	cover_title.text = name_text
-	cover_sub.text = sub_text
-	cover_caption.visible = caption
+	var g := game()
+	cover_tex = _cover_of(str(g["key"]))
+	cover_title.text = str(g["name"])
+	cover_sub.text = str(g["sub"])
+	cover_caption.visible = not bool(g.get("cover_has_title", false))
 	cover.queue_redraw()
-	for i in extra_btns.size():
-		var b := extra_btns[i]
-		b.flat = (i != extra_idx)
-		b.add_theme_color_override("font_color", S.GOLD_LIGHT if i == extra_idx else S.TEXT)
-		b.text = "%s\n%s" % [str(EXTRAS[i]["name"]), "böngészőben indul"]
-
-func _select_game(idx: int) -> void:
-	if extra_idx >= 0 and idx == game_idx:
-		extra_idx = -1
-		_status("")
-		_progress(0, "")
-		_refresh_labels()
-		_refresh_dlc()
-		return
-	extra_idx = -1
-	_switch_game(idx)
-
-func _select_extra(idx: int) -> void:
-	extra_idx = idx
-	_status("")
-	_refresh_labels()
-	_refresh_dlc()
-
-# A minijáték az indítóval érkezik: a felhasználói mappába másoljuk, és a böngésző nyitja meg (internet sem kell hozzá)
-func _play_extra() -> void:
-	var e: Dictionary = EXTRAS[extra_idx]
-	var src := str(e["file"])
-	var html := FileAccess.get_file_as_string(src)
-	if html == "":
-		_status("A(z) %s nem található az indító mellett." % str(e["name"]), S.RED)
-		return
-	DirAccess.make_dir_recursive_absolute("user://minijatek")
-	var dst := "user://minijatek/" + src.get_file()
-	var f := FileAccess.open(dst, FileAccess.WRITE)
-	if f == null:
-		_status("Nem sikerült előkészíteni a(z) %s játékot." % str(e["name"]), S.RED)
-		return
-	f.store_string(html)
-	f.close()
-	var err := OS.shell_open(ProjectSettings.globalize_path(dst))
-	if err != OK:
-		_status("Nem sikerült megnyitni a böngészőt.", S.RED)
-	else:
-		_status("A(z) %s megnyílt a böngésződben. Jó kalandozást!" % str(e["name"]), S.GREEN)
 
 # A fiók gombja jobb felül: belépés előtt „Bejelentkezés / Regisztráció”, utána az e-mail-cím
 func _refresh_acc_btn() -> void:
@@ -832,9 +778,7 @@ func _button(parent: Node, text: String, action: Callable) -> Button:
 
 # A nagy gomb: ha van frissítés, letölti; ha nincs, indítja a játékot
 func _on_main_button() -> void:
-	if extra_idx >= 0:
-		_play_extra()
-	elif launcher_update > 0:
+	if launcher_update > 0:
 		start_launcher_update()
 	elif _needs_download():
 		start_update()
@@ -947,7 +891,7 @@ func _refresh_labels() -> void:
 	_refresh_cover()
 	for i in game_btns.size():
 		var b := game_btns[i]
-		var sel := i == game_idx and extra_idx < 0
+		var sel := i == game_idx
 		b.flat = not sel
 		b.add_theme_color_override("font_color", S.GOLD_LIGHT if sel else S.TEXT)
 		# A fülön MINDIG ott a szám: mi van fent a GitHubon, és — ha más —
@@ -966,18 +910,9 @@ func _refresh_labels() -> void:
 			also = "%s – naprakész" % fent
 		else:
 			also = "%s → %s" % [itt, fent]
-		b.text = "%s\n%s" % [str(GAMES[i]["name"]).capitalize(), also]
-	btn_check.disabled = busy
-	# minijáték: nincs mit letölteni, a nagy gomb a böngészőben nyitja meg
-	if extra_idx >= 0:
-		lbl_installed.text = "Böngészőben indul – nem kell telepíteni, internet sem kell hozzá."
-		lbl_latest.text = ""
-		btn_main.disabled = false
-		btn_main.text = "Játék"
-		btn_main.tooltip_text = "Megnyitja a játékot a böngésződben"
-		return
+		b.text = "%s\n%s" % [_label_of(GAMES[i]), also]
 	# Csak a változatokat mutatjuk – sem a tároló, sem a letöltési cím nem látszik
-	lbl_installed.text = "%s – telepített változat: %s" % [str(g["name"]).capitalize(),
+	lbl_installed.text = "%s – telepített változat: %s" % [_label_of(g),
 		installed_version if installed_version != "" else "még nincs telepítve"]
 	var latest: String = str(remote.get("version", ""))
 	var up_to_date: bool = latest != "" and latest == installed_version
@@ -1001,7 +936,15 @@ func _refresh_labels() -> void:
 	else:
 		btn_main.text = "Indítás"
 		btn_main.tooltip_text = "Elindítja a játékot"
+		_login_button_text()
 	btn_check.disabled = busy
+
+# Belépés nélkül a játék helyett a bejelentkezésre hív a nagy gomb (a letöltés, frissítés belépés nélkül is megy)
+func _login_button_text() -> void:
+	if _acc_enabled() and not _acc_logged_in():
+		btn_main.disabled = false
+		btn_main.text = "Bejelentkezés"
+		btn_main.tooltip_text = "A játékhoz jelentkezz be vagy regisztrálj"
 
 func _status(text: String, color: Color = S.TEXT) -> void:
 	lbl_status.text = text
@@ -1053,7 +996,7 @@ func _refresh_dlc() -> void:
 		c.queue_free()
 	# a fiók gombja jobb felül van: minden játéknál látszik, egy fiók mindkét játékhoz
 	_refresh_acc_btn()
-	var list := _dlcs() if extra_idx < 0 else []
+	var list := _dlcs()
 	dlc_scroll.visible = not list.is_empty()
 	if list.is_empty(): return
 	var head := Label.new()
@@ -1387,6 +1330,15 @@ func _refresh_account_ui() -> void:
 		acc_out_box.visible = _acc_logged_in()
 		acc_who.text = "Belépve: " + _acc_email()
 	_refresh_dlc()
+	_refresh_labels()   # a nagy gomb: belépés előtt „Bejelentkezés”, utána „Indítás”
+
+# Játszani csak bejelentkezve lehet (a két nagy játékkal és a minijátékkal is).
+# Ha nincs belépve, megnyitja a fiókablakot, és igazat ad vissza.
+func _need_login() -> bool:
+	if not _acc_enabled() or _acc_logged_in(): return false
+	_status("A játékhoz jelentkezz be vagy regisztrálj – egy fiók mindegyik játékhoz.", S.GOLD_LIGHT)
+	_open_account()
+	return true
 
 # A kulcs beváltása a bejelentkezett fiókba (a szerver ellenőrzi a Gumroadnál, és a fiókhoz köti)
 func _acc_claim(key: String) -> void:
@@ -1868,7 +1820,7 @@ func _show_notes(key: String) -> void:
 	var v := str(cfg.get_value("notes:" + key, "version", str(latest_ver.get(key, ""))))
 	var date := str(cfg.get_value("notes:" + key, "date", ""))
 	var notes := str(cfg.get_value("notes:" + key, "text", "")).strip_edges()
-	var nev := str(g.get("name", key)).capitalize()
+	var nev := _label_of(g) if g.has("name") else key.capitalize()
 	if v == "":
 		txt_notes.text = "[b]%s[/b]\n\nA változat adatait még töltöm…" % nev
 		return
@@ -2339,6 +2291,7 @@ func _game_installed() -> bool:
 	return _game_exe() != "" or _game_project() != ""
 
 func play() -> void:
+	if _need_login(): return
 	var exe := _game_exe()
 	if exe != "":
 		if _is_mac():

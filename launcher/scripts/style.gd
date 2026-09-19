@@ -32,6 +32,21 @@ const FONT_DIR := "res://assets/fonts/"
 
 static func set_skin(key: String) -> void:
 	skin = key
+	if key == "kard_es_magia":
+		# Kard és Mágia: katakomba – hideg kőfal, fáklyafény (borostyán), arkán kék
+		BG          = Color("0a090c")
+		PANEL       = Color("16131a")
+		PANEL_LT    = Color("272030")
+		PANEL_HOVER = Color("372c44")
+		NOTES_BG    = Color("110e15")
+		BORDER      = Color("4e4252")
+		GOLD        = Color("d98a2b")         # fáklyaláng
+		GOLD_LIGHT  = Color("f3c77a")
+		RED         = Color("c0392b")
+		GREEN       = Color("6aa84f")
+		TEXT        = Color("e6dccf")
+		TEXT_DIM    = Color("9a8f98")
+		return
 	if key == "heptarchia":
 		BG          = Color(0.21, 0.135, 0.08)        # bőr
 		PANEL       = Color(0.89, 0.81, 0.63)         # pergamen
@@ -68,10 +83,10 @@ static func _font(file: String) -> FontFile:
 	return load(path) if ResourceLoader.exists(path) else null
 
 static func font_text() -> FontFile:
-	return _font("EBGaramond.ttf") if skin == "heptarchia" else null
+	return _font("EBGaramond.ttf") if skin == "heptarchia" or skin == "kard_es_magia" else null
 
 static func font_italic() -> FontFile:
-	return _font("EBGaramond-Italic.ttf") if skin == "heptarchia" else null
+	return _font("EBGaramond-Italic.ttf") if skin == "heptarchia" or skin == "kard_es_magia" else null
 
 static func font_title() -> FontFile:
 	return _font("UncialAntiqua-Regular.ttf") if skin == "heptarchia" else null
@@ -102,7 +117,7 @@ static func build_theme() -> Theme:
 	t.set_stylebox("disabled", "Button", _box(PANEL_LT.lerp(Color(0.5, 0.5, 0.5), 0.25),
 		BORDER.lerp(Color(0.5, 0.5, 0.5), 0.3)))
 	t.set_stylebox("focus", "Button", _box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0))
-	var btn_text := TEXT if skin == "birodalom" else Color(0.94, 0.88, 0.73)
+	var btn_text := TEXT if skin != "heptarchia" else Color(0.94, 0.88, 0.73)
 	t.set_color("font_color", "Button", btn_text)
 	t.set_color("font_hover_color", "Button", GOLD_LIGHT)
 	t.set_color("font_pressed_color", "Button", GOLD_LIGHT)
@@ -116,7 +131,7 @@ static func build_theme() -> Theme:
 	t.set_color("default_color", "RichTextLabel", TEXT)
 	t.set_stylebox("normal", "RichTextLabel", _box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0))
 
-	var edit_bg := Color("120d09") if skin == "birodalom" else Color(0.96, 0.92, 0.82)
+	var edit_bg := Color("120d09") if skin != "heptarchia" else Color(0.96, 0.92, 0.82)
 	t.set_stylebox("normal", "LineEdit", _box(edit_bg, BORDER, 1, 3))
 	t.set_stylebox("focus", "LineEdit", _box(edit_bg.lightened(0.06), GOLD, 2, 3))
 	t.set_color("font_color", "LineEdit", TEXT)

@@ -19,8 +19,51 @@ func _ready() -> void:
 func _draw() -> void:
 	if S.skin == "heptarchia":
 		_draw_parchment()
+	elif S.skin == "kard_es_magia":
+		_draw_dungeon()
 	else:
 		_draw_night()
+
+# --- KARD ÉS MÁGIA ---
+# Katakomba: kőtéglás fal, a két felső sarokban fáklyafény, vasalt keret szegecsekkel.
+func _draw_dungeon() -> void:
+	draw_rect(Rect2(Vector2.ZERO, size), S.BG)
+	var page := Rect2(16, 16, size.x - 32, size.y - 32)
+	draw_rect(page.grow(4), Color(0, 0, 0, 0.45))
+	draw_rect(page, S.PANEL)
+	# kőtéglák (soronként eltolva), a fugák sötétebbek
+	var bw := 54.0
+	var bh := 26.0
+	var row := 0
+	var y := page.position.y
+	while y < page.end.y:
+		var off := 0.0 if row % 2 == 0 else bw * 0.5
+		var x := page.position.x - off
+		while x < page.end.x:
+			var r := Rect2(maxf(x, page.position.x), y, minf(x + bw, page.end.x) - maxf(x, page.position.x), minf(bh, page.end.y - y))
+			var v := _noise.get_noise_2d(x * 0.7, y * 0.9)
+			draw_rect(r.grow(-1.0), Color(S.PANEL_LT, 0.28 + v * 0.22))
+			x += bw
+		draw_line(Vector2(page.position.x, y), Vector2(page.end.x, y), Color(0, 0, 0, 0.35), 1.0)
+		y += bh
+		row += 1
+	# fáklyafény a felső sarkokban
+	for c in [Vector2(page.position.x + 90, page.position.y + 60), Vector2(page.end.x - 90, page.position.y + 60)]:
+		for k in 9:
+			var t := float(k) / 9.0
+			draw_circle(c, 260.0 * (1.0 - t) + 20.0, Color(0.85, 0.45, 0.12, 0.018 + t * 0.012))
+	# alul sötétedés
+	for i in 16:
+		var t := float(i) / 16.0
+		draw_rect(Rect2(page.position.x, page.end.y - (i + 1) * 6.0, page.size.x, 6.0), Color(0, 0, 0, 0.03 * (1.0 - t)))
+	draw_rect(page, S.BORDER, false, 3.0)
+	draw_rect(page.grow(-6), Color(S.GOLD, 0.45), false, 1.0)
+	for c in [page.position, Vector2(page.end.x, page.position.y), Vector2(page.position.x, page.end.y), page.end]:
+		var sx := 1.0 if c.x < size.x * 0.5 else -1.0
+		var sy := 1.0 if c.y < size.y * 0.5 else -1.0
+		var o: Vector2 = c + Vector2(12 * sx, 12 * sy)
+		draw_circle(o, 5.0, Color(S.BORDER.lightened(0.2), 0.95))
+		draw_circle(o, 2.2, Color("6aa8ff"))
 
 # --- BIRODALOM ---
 func _draw_night() -> void:
