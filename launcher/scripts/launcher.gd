@@ -96,7 +96,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 11
+const LAUNCHER_BUILD := 12
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -200,16 +200,15 @@ func _ready() -> void:
 func _relaunch_without_console() -> bool:
 	if OS.get_name() != "Windows" or OS.has_feature("editor"): return false
 	var swap_bat := ProjectSettings.globalize_path("user://frissites.bat").replace("/", "\\")
-	var from_swap := FileAccess.file_exists("user://frissites.bat")
-	if not from_swap and not OS.has_environment("PROMPT"): return false
-	if from_swap:
-		# a régi frissítő parancssora (cmd /K) magától sosem zárulna be: leállítjuk, és töröljük a szkriptet
-		var ps := "Start-Sleep -Seconds 1; Get-CimInstance Win32_Process -Filter \"Name='cmd.exe'\" | " \
-			+ "Where-Object { $_.CommandLine -like '*frissites.bat*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }; " \
-			+ "Remove-Item -LiteralPath '" + swap_bat + "' -Force -ErrorAction SilentlyContinue"
-		# kódolva adjuk át (UTF-16LE, base64), így az idézőjelek nem sérülnek a parancssorban
-		var encoded := Marshalls.raw_to_base64(ps.to_utf16_buffer())
-		OS.create_process("powershell.exe", ["-NoProfile", "-WindowStyle", "Hidden", "-EncodedCommand", encoded], false)
+	# A régi frissítő parancssora (cmd /K) magától sosem zárulna be, és a szkriptfájl addigra már törölve
+	# lehet – ezért MINDEN indításkor megkeressük a parancssorát (benne van a „frissites.bat” név), és
+	# rejtve leállítjuk. Kódolva adjuk át (UTF-16LE, base64), így az idézőjelek nem sérülnek.
+	var ps := "Start-Sleep -Seconds 1; Get-CimInstance Win32_Process -Filter \"Name='cmd.exe'\" | " \
+		+ "Where-Object { $_.CommandLine -like '*frissites.bat*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }; " \
+		+ "Remove-Item -LiteralPath '" + swap_bat + "' -Force -ErrorAction SilentlyContinue"
+	var encoded := Marshalls.raw_to_base64(ps.to_utf16_buffer())
+	OS.create_process("powershell.exe", ["-NoProfile", "-WindowStyle", "Hidden", "-EncodedCommand", encoded], false)
+	if not OS.has_environment("PROMPT"): return false
 	if "--no-relaunch" in OS.get_cmdline_user_args(): return false
 	# biztosíték: ha az imént már újraindultunk (és a PROMPT mégis megvan), nem próbáljuk újra
 	var mark := "user://ujraindulas.txt"
