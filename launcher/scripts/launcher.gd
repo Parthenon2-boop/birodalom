@@ -130,7 +130,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 23
+const LAUNCHER_BUILD := 24
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1164,6 +1164,8 @@ func _build_account_popup() -> void:
 	acc_out_box = out
 	acc_who = Label.new()
 	acc_who.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	acc_who.autowrap_mode = TextServer.AUTOWRAP_ARBITRARY   # a hosszú e-mail-cím is kiférjen
+	acc_who.custom_minimum_size = Vector2(520, 0)
 	acc_who.add_theme_color_override("font_color", S.GREEN)
 	out.add_child(acc_who)
 	_button(out, "Kijelentkezés", func():
@@ -1574,7 +1576,11 @@ func _on_commit_checked(result: int, code: int, _h: PackedStringArray, body: Pac
 		_refresh_labels()
 		return
 	if code != 200:
-		_status("A frissítés most nem érhető el (HTTP %d)." % code, S.RED)
+		if code == 403 or code == 429:
+			# a GitHub óránként korlátozza a lekéréseket (egy hálózatról sok gép esetén hamar elfogy)
+			_status("A GitHub most túl sok kérést kapott. Próbáld újra pár perc múlva.", S.RED)
+		else:
+			_status("A frissítés most nem érhető el (HTTP %d)." % code, S.RED)
 		_refresh_labels()
 		return
 	var data = JSON.parse_string(body.get_string_from_utf8())
