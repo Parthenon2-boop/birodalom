@@ -58,6 +58,8 @@ const GAMES := [
 #   store_url          – a vásárlási oldal (pl. https://valaki.gumroad.com/l/skandinavia)
 #   download_url       – a csomag (dlc/_csomagok/<key>.zip) letöltési címe
 #   game_id            – a játék saját beállításfájljában ([dlc] szakasz) ezzel a névvel kapcsolható ki-be
+#   releases_api       – a csomag-tároló kiadásai; ha újabb kiadásban van <key>.zip, az indító magától letölti
+#                        (a letöltött kiadás címkéje: ParthLauncher.cfg [dlc:<key>] version)
 # Amíg valamelyik üres, a kártya látszik, de a gomb jelzi, hogy a bolt még nincs beállítva.
 const DLCS := {
 	"heptarchia": [
@@ -71,6 +73,8 @@ const DLCS := {
 			"gumroad_product_id": "bpMjj0INnbiEv1kf1hglPg==",
 			"store_url": "https://parthenon62.gumroad.com/l/ltsalt",
 			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/latest/download/skandinavia.zip",
+			# a csomag kiadásai: a legújabb olyan kiadás, amelyben <key>.zip van, az aktuális változat
+			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
 		},
 	],
 }
@@ -79,7 +83,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 7
+const LAUNCHER_BUILD := 8
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -941,12 +945,13 @@ func _on_license_checked(result: int, code: int, _h: PackedStringArray, body: Pa
 	license_popup.hide()
 	_status("Köszönjük a vásárlást! A(z) %s feloldva." % str(lic_dlc["name"]), S.GREEN)
 	_refresh_dlc()
-	_download_dlc(lic_dlc)
+	_check_dlc_updates()
 
-# A csomag letöltése a játék adatmappájába (a játék a következő indításkor betölti)
-func _download_dlc(d: Dictionary) -> void:
+# A csomag letöltése a játék adatmappájába (a játék a következő indításkor betölti).
+# url / version: egy konkrét kiadás csomagja (a frissítés-ellenőrzés adja); üresen a legújabb.
+func _download_dlc(d: Dictionary, url: String = "", version: String = "") -> void:
 	if dlc_busy or _dlc_license(d) == "": return
-	var url := str(d["download_url"])
+	if url == "": url = str(d["download_url"])
 	if url == "":
 		_status("A(z) %s letöltése hamarosan elérhető lesz – a kulcsod el van mentve." % str(d["name"]), S.GOLD_LIGHT)
 		return
@@ -957,7 +962,7 @@ func _download_dlc(d: Dictionary) -> void:
 	_status("A(z) %s letöltése…" % str(d["name"]))
 	for c in http_dlc.request_completed.get_connections():
 		http_dlc.request_completed.disconnect(c["callable"])
-	http_dlc.request_completed.connect(_on_dlc_downloaded.bind(d, dest), CONNECT_ONE_SHOT)
+	http_dlc.request_completed.connect(_on_dlc_downloaded.bind(d, dest, version), CONNECT_ONE_SHOT)
 	http_dlc.download_file = dest + ".tmp"
 	if http_dlc.request(url, ["User-Agent: ParthLauncher"]) != OK:
 		dlc_busy = false
@@ -965,7 +970,8 @@ func _download_dlc(d: Dictionary) -> void:
 		_status("A letöltést nem sikerült elindítani.", S.RED)
 		_refresh_dlc()
 
-func _on_dlc_downloaded(result: int, code: int, _h: PackedStringArray, _b: PackedByteArray, d: Dictionary, dest: String) -> void:
+func _on_dlc_downloaded(result: int, code: int, _h: PackedStringArray, _b: PackedByteArray, d: Dictionary, dest: String,
+		version: String) -> void:
 	dlc_busy = false
 	http_dlc.download_file = ""
 	var tmp := dest + ".tmp"
@@ -978,15 +984,60 @@ func _on_dlc_downloaded(result: int, code: int, _h: PackedStringArray, _b: Packe
 	else:
 		DirAccess.remove_absolute(dest)
 		DirAccess.rename_absolute(tmp, dest)
-		_status("A(z) %s telepítve. Indítsd el a játékot, és a Beállítások → Kiegészítők fülön be van kapcsolva." % str(d["name"]), S.GREEN)
+		var was := str(cfg.get_value("dlc:" + str(d["key"]), "version", ""))
+		if version != "":
+			cfg.set_value("dlc:" + str(d["key"]), "version", version)
+			cfg.save(CFG_PATH)
+		_refresh_dlc()
+		_check_dlc_updates.call_deferred()      # ha több kiegészítőnek is van újabb változata
+		_status(("A(z) %s frissítve (%s)." if was != "" else "A(z) %s telepítve (%s).") % [str(d["name"]), version]
+			+ " A játék következő indításakor érvényes.", S.GREEN)
 	_refresh_dlc()
 
-# Induláskor: ha egy megvásárolt kiegészítő csomagja hiányzik (pl. másik gépen), magától letölti
+# Induláskor és a „Frissítés keresése” gombra: a megvásárolt kiegészítők csomagja hiányzik-e
+# (pl. új gépen), vagy van-e újabb kiadása – ha igen, magától letölti. Az összes játék
+# kiegészítőjét nézi, nem csak a kiválasztottét (a csomag a játék adatmappájába kerül).
+var _dlc_check_running := false
+
 func _restore_owned_dlcs() -> void:
-	for d in _dlcs():
-		if _dlc_license(d) != "" and not _dlc_installed(d) and str(d["download_url"]) != "":
-			_download_dlc(d)
+	_check_dlc_updates()
+
+func _check_dlc_updates() -> void:
+	if _dlc_check_running or dlc_busy: return
+	_dlc_check_running = true
+	for game_key in DLCS:
+		for d in DLCS[game_key]:
+			if _dlc_license(d) == "": continue
+			var have := str(cfg.get_value("dlc:" + str(d["key"]), "version", ""))
+			var latest := await _latest_dlc_release(d)      # [címke, letöltési cím] vagy []
+			if latest.is_empty():
+				# a kiadások nem érhetők el: legalább a hiányzó csomagot pótoljuk
+				if not _dlc_installed(d) and str(d["download_url"]) != "":
+					_dlc_check_running = false
+					_download_dlc(d)
+					return
+				continue
+			if _dlc_installed(d) and have == str(latest[0]): continue
+			_dlc_check_running = false
+			_status("A(z) %s új változata letöltés alatt (%s)…" % [str(d["name"]), str(latest[0])], S.GOLD_LIGHT)
+			_download_dlc(d, str(latest[1]), str(latest[0]))
 			return
+	_dlc_check_running = false
+
+# A csomag legújabb kiadása: [címke, letöltési cím], vagy [] ha nem sikerült lekérdezni
+func _latest_dlc_release(d: Dictionary) -> Array:
+	var api := str(d.get("releases_api", ""))
+	if api == "": return []
+	var body := await _fetch_text(api)
+	var data = JSON.parse_string(body) if body != "" else null
+	if not data is Array: return []
+	var want := str(d["key"]) + ".zip"
+	for rel in data:
+		if not rel is Dictionary or bool(rel.get("draft", false)) or bool(rel.get("prerelease", false)): continue
+		for a in rel.get("assets", []):
+			if str(a.get("name", "")) == want:
+				return [str(rel.get("tag_name", "")), str(a.get("browser_download_url", ""))]
+	return []
 
 # ── Frissítés keresése ────────────────────────────────────────
 
@@ -998,8 +1049,9 @@ func check_latest() -> void:
 	_status("Frissítés keresése…")
 	_progress(0, "")
 	_request("%s/repos/%s/%s/releases/latest" % [API, repo_owner, repo], _on_release_checked)
-	# A gombnyomásra az indító a saját változatát is újranézi.
+	# A gombnyomásra az indító a saját változatát és a kiegészítőket is újranézi.
 	_check_home_launcher()
+	_check_dlc_updates()
 
 # ── Mindkét játék változata (a füleken) ───────────────────────
 #
