@@ -129,7 +129,7 @@ const ACC_LICENSE := "account"   # a fiókból jövő jogosultság jele a ParthL
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 20
+const LAUNCHER_BUILD := 21
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1059,7 +1059,7 @@ func _acc_login(signup: bool) -> void:
 	if code >= 400:
 		var msg := str(data.get("msg", data.get("error_description", data.get("message", ""))))
 		if msg.to_lower().contains("confirm"):
-			acc_status.text = "Előbb erősítsd meg az e-mail-címedet (nézd meg a leveleidet)."
+			acc_status.text = "Előbb erősítsd meg az e-mail-címedet (nézd meg a leveleidet – a Spam / Levélszemét mappát is)."
 		elif msg.to_lower().contains("already"):
 			acc_status.text = "Ezzel az e-mail-címmel már van fiók – lépj be."
 		else:
@@ -1074,7 +1074,7 @@ func _acc_login(signup: bool) -> void:
 		_refresh_account_ui()
 	else:
 		# regisztráció e-mail-megerősítéssel
-		acc_status.text = "Elküldtük a megerősítő levelet a(z) %s címre. Kattints a benne lévő linkre, aztán lépj be." % email
+		acc_status.text = "Elküldtük a megerősítő levelet a(z) %s címre. Kattints a benne lévő linkre, aztán lépj be.\nHa nem látod, nézd meg a Spam / Levélszemét mappát is – a levél a ParthLaunchertől jön." % email
 
 func _acc_logout(silent: bool = false) -> void:
 	acc_token = ""
