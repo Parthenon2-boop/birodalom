@@ -130,7 +130,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 22
+const LAUNCHER_BUILD := 23
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -837,10 +837,13 @@ func _refresh_dlc() -> void:
 		dlc_box.remove_child(c)
 		c.queue_free()
 	var list := _dlcs()
-	dlc_scroll.visible = not list.is_empty()
-	if list.is_empty(): return
+	# a fiók közös: minden játék fülén látszik (akkor is, ha a játéknak nincs kiegészítője)
+	dlc_scroll.visible = not list.is_empty() or _acc_enabled()
+	if not dlc_scroll.visible: return
 	var head := Label.new()
-	head.text = "Kiegészítők"
+	head.text = "Kiegészítők" if not list.is_empty() else "Fiók"
+	if list.is_empty():
+		head.tooltip_text = "Egy fiók mindkét játékhoz: a belépés a Birodalomra és a Heptarchiára is érvényes."
 	var tf := S.font_title()
 	if tf != null: head.add_theme_font_override("font", tf)
 	head.add_theme_font_size_override("font_size", 18)
@@ -859,6 +862,15 @@ func _refresh_dlc() -> void:
 		acc.custom_minimum_size.x = 220
 	else:
 		dlc_box.add_child(head)
+	if list.is_empty():
+		var note := Label.new()
+		note.text = ("Belépve – a fiókod a Birodalomra és a Heptarchiára is érvényes." if _acc_logged_in()
+			else "Egy fiók mindkét játékhoz: egyszer lépsz be, és a Birodalomra és a Heptarchiára is érvényes.")
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		note.custom_minimum_size.x = 200
+		note.add_theme_font_size_override("font_size", 14)
+		note.add_theme_color_override("font_color", S.GREEN if _acc_logged_in() else S.TEXT)
+		dlc_box.add_child(note)
 	for d in list:
 		dlc_box.add_child(_dlc_card(d))
 	_fit_dlc.call_deferred()
@@ -1116,7 +1128,7 @@ func _build_account_popup() -> void:
 	acc_popup.add_child(v)
 	v.add_child(S.make_title("Fiók", 24, S.GOLD_LIGHT))
 	var info := Label.new()
-	info.text = "A megvásárolt kiegészítők a fiókodhoz kötődnek: bármelyik gépen belépve megjelennek. Vásárláskor ugyanazt az e-mail-címet add meg a Gumroadon."
+	info.text = "Egy fiók mindkét játékhoz (Birodalom és Heptarchia). A megvásárolt kiegészítők a fiókodhoz kötődnek: bármelyik gépen belépve megjelennek. Vásárláskor ugyanazt az e-mail-címet add meg a Gumroadon."
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.custom_minimum_size = Vector2(520, 0)
 	info.add_theme_color_override("font_color", S.GOLD_LIGHT if S.skin == "heptarchia" else S.TEXT)

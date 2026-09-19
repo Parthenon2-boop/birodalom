@@ -1,6 +1,12 @@
 [
 	{
 		"datum": "2026-09-19",
+		"cim": "ParthLauncher 1.27 – egy fiók mindkét játékhoz",
+		"cimke": "ParthLauncher",
+		"szoveg": "A bejelentkezés a Birodalom fülén is elérhető. Egyszer lépsz be, és a fiókod a Birodalomra és a Heptarchiára is érvényes."
+	},
+	{
+		"datum": "2026-09-19",
 		"cim": "ParthLauncher 1.26 – regisztráció a weboldalon, elfelejtett jelszó",
 		"cimke": "ParthLauncher",
 		"szoveg": "Fiókot mostantól a weboldalon is létrehozhatsz, és ha elfelejtetted a jelszavad, itt vagy a launcher fiókablakában kérhetsz újat. A weboldalra képek is kerültek mindkét játékból."
