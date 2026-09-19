@@ -24,7 +24,7 @@
 
 	/* fejléc */
 	header { border-bottom: 1px solid var(--line); background: rgba(20,14,10,.7); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(6px); }
-	header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; }
+	header .wrap { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; min-height: 58px; padding-top: 8px; padding-bottom: 8px; }
 	.logo { font-family: Cinzel, serif; font-size: 22px; color: var(--gold); text-decoration: none; white-space: nowrap; }
 	nav { display: flex; gap: 18px; flex-wrap: wrap; justify-content: flex-end; }
 	nav a { color: var(--muted); text-decoration: none; font-size: 16px; }
@@ -44,14 +44,14 @@
 	.btn small { font-family: "EB Garamond", serif; font-size: 14px; opacity: .8; }
 	.btn.alt { background: transparent; color: var(--gold-2); }
 	.note { color: var(--muted); font-size: 15px; margin-top: 18px; }
-	.ver { color: var(--gold-2); }
+	.ver { color: inherit; font-weight: 600; }
 
 	section { padding: 42px 0; border-top: 1px solid rgba(107,79,42,.5); }
 	section > .wrap > h2 { font-size: 28px; color: var(--gold); margin-bottom: 6px; }
 	.sub { color: var(--muted); margin: 0 0 22px; }
 
 	/* játékok */
-	.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+	.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); }
 	.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 0; }
 	.card h3 { color: var(--gold-2); font-size: 21px; overflow-wrap: anywhere; }
 	.card .tag { display: inline-block; font-size: 14px; color: var(--muted); margin: 4px 0 10px; }
@@ -89,6 +89,8 @@
 		nav a { font-size: 15px; }
 		.hero { padding: 40px 0 32px; }
 		.btn { min-width: 0; width: 100%; }
+		header .wrap { justify-content: center; }
+		nav { justify-content: center; }
 	}
 </style>
 </head>
@@ -240,7 +242,7 @@
 	]).then(([hand, rel]) => {
 		const items = [];
 		if (hand.status === "fulfilled") for (const h of hand.value)
-			items.push({ date: h.datum + "T23:59:00Z", title: h.cim, text: h.szoveg, tag: h.cimke || "Hír" });
+			items.push({ date: h.datum + "T12:00:00", title: h.cim, text: h.szoveg, tag: h.cimke || "Hír" });
 		if (rel.status === "fulfilled") {
 			const seen = {};
 			for (const r of rel.value) {
