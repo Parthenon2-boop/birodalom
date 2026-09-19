@@ -117,6 +117,15 @@ const DLCS := {
 }
 const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 
+# ── Fiókok (Supabase) ─────────────────────────────────────────────
+# Ha be van állítva, a megvásárolt kiegészítők a fiókhoz kötődnek: regisztráció / belépés után bármelyik gépen
+# megjelennek. A Gumroad minden vásárlásnál értesíti a szervert (a vevő e-mail-címével), a „Van kulcsom” pedig
+# a kulcsot a bejelentkezett fiókhoz köti. A szerver kódja: server/supabase (séma és két függvény).
+# Üresen hagyva a launcher a régi, gépenkénti licenckulcsos módon működik.
+const ACCOUNT_URL := ""          # a Supabase-projekt címe, pl. https://abcdefgh.supabase.co
+const ACCOUNT_ANON_KEY := ""     # a projekt nyilvános (anon / publishable) kulcsa – nem titok
+const ACC_LICENSE := "account"   # a fiókból jövő jogosultság jele a ParthLauncher.cfg-ben
+
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
@@ -211,6 +220,7 @@ func _ready() -> void:
 	_apply_net_settings()
 	_refresh_dlc()
 	_restore_owned_dlcs()
+	if _acc_enabled(): _acc_refresh()
 	_refresh_labels()
 	_show_notes(str(game()["key"]))   # a legutóbb látott leírás azonnal
 	check_latest()
@@ -834,7 +844,20 @@ func _refresh_dlc() -> void:
 	if tf != null: head.add_theme_font_override("font", tf)
 	head.add_theme_font_size_override("font_size", 18)
 	head.add_theme_color_override("font_color", S.RED if S.skin == "heptarchia" else S.GOLD_LIGHT)
-	dlc_box.add_child(head)
+	if _acc_enabled():
+		# a fejléc sorában jobbra: belépés / a fiók
+		var hrow := HBoxContainer.new()
+		dlc_box.add_child(hrow)
+		head.size_flags_horizontal = SIZE_EXPAND_FILL
+		hrow.add_child(head)
+		var acc := _button(hrow, ("👤 " + _acc_email()) if _acc_logged_in() else "Bejelentkezés / Regisztráció", _open_account)
+		acc.custom_minimum_size = Vector2(0, 30)
+		acc.add_theme_font_size_override("font_size", 14)
+		acc.clip_text = true
+		acc.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		acc.custom_minimum_size.x = 220
+	else:
+		dlc_box.add_child(head)
 	for d in list:
 		dlc_box.add_child(_dlc_card(d))
 	_fit_dlc.call_deferred()
@@ -936,6 +959,232 @@ func _draw_dlc_icon(c: Control, owned: bool) -> void:
 	c.draw_circle(Vector2(cx, 27), 3.2, hole)
 	c.draw_rect(Rect2(cx - 1.5, 28, 3, 7), hole)
 
+# ── Fiók: regisztráció, belépés, a jogosultságok betöltése ───────
+
+var acc_token := ""              # a belépés rövid életű tokenje (csak memóriában)
+var acc_popup: PopupPanel
+var acc_email_edit: LineEdit
+var acc_pass_edit: LineEdit
+var acc_status: Label
+var acc_login_box: Control
+var acc_out_box: Control
+var acc_who: Label
+
+func _acc_enabled() -> bool:
+	return ACCOUNT_URL != "" and ACCOUNT_ANON_KEY != ""
+
+func _acc_email() -> String:
+	return str(cfg.get_value("account", "email", ""))
+
+func _acc_logged_in() -> bool:
+	return _acc_enabled() and str(cfg.get_value("account", "refresh_token", "")) != ""
+
+# Egy kérés a fiókszerverhez: [HTTP-kód (0 = nem sikerült elérni), válasz (Dictionary / Array)]
+func _acc_call(method: int, path: String, body = null, token: String = "") -> Array:
+	var req := HTTPRequest.new()
+	req.timeout = 30.0
+	add_child(req)
+	req.set_https_proxy(proxy_host, proxy_port)
+	req.set_http_proxy(proxy_host, proxy_port)
+	req.set_tls_options(TLSOptions.client_unsafe() if insecure_tls else TLSOptions.client())
+	var headers := ["apikey: " + ACCOUNT_ANON_KEY, "Content-Type: application/json", "User-Agent: ParthLauncher"]
+	if token != "": headers.append("Authorization: Bearer " + token)
+	var err := req.request(ACCOUNT_URL + path, headers, method, "" if body == null else JSON.stringify(body))
+	if err != OK:
+		req.queue_free()
+		return [0, {}]
+	var res: Array = await req.request_completed
+	req.queue_free()
+	var data = JSON.parse_string((res[3] as PackedByteArray).get_string_from_utf8())
+	var code: int = int(res[1]) if int(res[0]) == HTTPRequest.RESULT_SUCCESS else 0
+	return [code, data if data != null else {}]
+
+func _acc_store_session(data: Dictionary) -> void:
+	acc_token = str(data.get("access_token", ""))
+	cfg.set_value("account", "refresh_token", str(data.get("refresh_token", "")))
+	var user: Dictionary = data.get("user", {}) if data.get("user") is Dictionary else {}
+	if user.has("email"): cfg.set_value("account", "email", str(user["email"]))
+	cfg.save(CFG_PATH)
+
+# Induláskor: a mentett munkamenet frissítése, és a fiók kiegészítőinek betöltése
+func _acc_refresh() -> void:
+	if not _acc_logged_in(): return
+	var r := await _acc_call(HTTPClient.METHOD_POST, "/auth/v1/token?grant_type=refresh_token",
+		{"refresh_token": str(cfg.get_value("account", "refresh_token", ""))})
+	if int(r[0]) == 200 and r[1] is Dictionary:
+		_acc_store_session(r[1])
+		await _acc_sync()
+	elif int(r[0]) >= 400:
+		_acc_logout(true)      # lejárt vagy visszavont munkamenet: újra be kell lépni
+	_refresh_account_ui()
+
+# A fiók kiegészítői: ezek „megvásároltak” lesznek (a ParthLauncher.cfg-ben ACC_LICENSE jellel)
+func _acc_sync() -> void:
+	if acc_token == "": return
+	var r := await _acc_call(HTTPClient.METHOD_GET, "/rest/v1/entitlements?select=dlc_key", null, acc_token)
+	if int(r[0]) != 200 or not r[1] is Array: return
+	var owned := {}
+	for row in r[1]:
+		if row is Dictionary: owned[str(row.get("dlc_key", ""))] = true
+	for game_key in DLCS:
+		for d in DLCS[game_key]:
+			var sect := "dlc:" + str(d["key"])
+			var have := str(cfg.get_value(sect, "license", ""))
+			if owned.has(str(d["key"])):
+				if have == "": cfg.set_value(sect, "license", ACC_LICENSE)
+			elif have == ACC_LICENSE:
+				cfg.set_value(sect, "license", "")
+	cfg.save(CFG_PATH)
+	_refresh_dlc()
+	_check_dlc_updates()
+
+func _acc_login(signup: bool) -> void:
+	var email := acc_email_edit.text.strip_edges()
+	var pw := acc_pass_edit.text
+	if email == "" or pw == "":
+		acc_status.text = "Add meg az e-mail-címet és a jelszót."
+		return
+	if signup and pw.length() < 8:
+		acc_status.text = "A jelszó legalább 8 karakter legyen."
+		return
+	acc_status.text = "Regisztráció…" if signup else "Belépés…"
+	var path := "/auth/v1/signup" if signup else "/auth/v1/token?grant_type=password"
+	var r := await _acc_call(HTTPClient.METHOD_POST, path, {"email": email, "password": pw})
+	var code := int(r[0])
+	var data: Dictionary = r[1] if r[1] is Dictionary else {}
+	acc_pass_edit.text = ""
+	if code == 0:
+		acc_status.text = "Nem sikerült elérni a szervert. Van internet?"
+		return
+	if code >= 400:
+		var msg := str(data.get("msg", data.get("error_description", data.get("message", ""))))
+		if msg.to_lower().contains("confirm"):
+			acc_status.text = "Előbb erősítsd meg az e-mail-címedet (nézd meg a leveleidet)."
+		elif msg.to_lower().contains("already"):
+			acc_status.text = "Ezzel az e-mail-címmel már van fiók – lépj be."
+		else:
+			acc_status.text = "Nem sikerült: hibás e-mail-cím vagy jelszó."
+		return
+	if data.has("access_token"):
+		_acc_store_session(data)
+		acc_status.text = ""
+		acc_popup.hide()
+		_status("Belépve: %s. A fiókodhoz tartozó kiegészítők betöltése…" % _acc_email(), S.GREEN)
+		await _acc_sync()
+		_refresh_account_ui()
+	else:
+		# regisztráció e-mail-megerősítéssel
+		acc_status.text = "Elküldtük a megerősítő levelet a(z) %s címre. Kattints a benne lévő linkre, aztán lépj be." % email
+
+func _acc_logout(silent: bool = false) -> void:
+	acc_token = ""
+	cfg.set_value("account", "refresh_token", "")
+	for game_key in DLCS:
+		for d in DLCS[game_key]:
+			if str(cfg.get_value("dlc:" + str(d["key"]), "license", "")) == ACC_LICENSE:
+				cfg.set_value("dlc:" + str(d["key"]), "license", "")
+	cfg.save(CFG_PATH)
+	_refresh_dlc()
+	_refresh_account_ui()
+	if not silent: _status("Kijelentkeztél.", S.TEXT)
+
+func _build_account_popup() -> void:
+	acc_popup = PopupPanel.new()
+	add_child(acc_popup)
+	var v := VBoxContainer.new()
+	v.custom_minimum_size = Vector2(520, 0)
+	v.add_theme_constant_override("separation", 8)
+	acc_popup.add_child(v)
+	v.add_child(S.make_title("Fiók", 24, S.GOLD_LIGHT))
+	var info := Label.new()
+	info.text = "A megvásárolt kiegészítők a fiókodhoz kötődnek: bármelyik gépen belépve megjelennek. Vásárláskor ugyanazt az e-mail-címet add meg a Gumroadon."
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.custom_minimum_size = Vector2(520, 0)
+	info.add_theme_color_override("font_color", S.GOLD_LIGHT if S.skin == "heptarchia" else S.TEXT)
+	v.add_child(info)
+	var login := VBoxContainer.new()
+	login.add_theme_constant_override("separation", 6)
+	v.add_child(login)
+	acc_login_box = login
+	acc_email_edit = LineEdit.new()
+	acc_email_edit.placeholder_text = "e-mail-cím"
+	acc_email_edit.custom_minimum_size = Vector2(0, 36)
+	acc_email_edit.add_theme_color_override("font_placeholder_color", Color(0.42, 0.32, 0.22))
+	login.add_child(acc_email_edit)
+	acc_pass_edit = LineEdit.new()
+	acc_pass_edit.placeholder_text = "jelszó (legalább 8 karakter)"
+	acc_pass_edit.secret = true
+	acc_pass_edit.custom_minimum_size = Vector2(0, 36)
+	acc_pass_edit.add_theme_color_override("font_placeholder_color", Color(0.42, 0.32, 0.22))
+	acc_pass_edit.text_submitted.connect(func(_t): _acc_login(false))
+	login.add_child(acc_pass_edit)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	login.add_child(row)
+	_button(row, "Belépés", func(): _acc_login(false)).size_flags_horizontal = SIZE_EXPAND_FILL
+	_button(row, "Regisztráció", func(): _acc_login(true)).size_flags_horizontal = SIZE_EXPAND_FILL
+	var out := VBoxContainer.new()
+	out.add_theme_constant_override("separation", 6)
+	v.add_child(out)
+	acc_out_box = out
+	acc_who = Label.new()
+	acc_who.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	acc_who.add_theme_color_override("font_color", S.GREEN)
+	out.add_child(acc_who)
+	_button(out, "Kijelentkezés", func():
+		_acc_logout()
+		acc_popup.hide())
+	acc_status = Label.new()
+	acc_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	acc_status.custom_minimum_size = Vector2(520, 0)
+	acc_status.add_theme_color_override("font_color", S.GOLD_LIGHT if S.skin == "heptarchia" else S.TEXT)
+	v.add_child(acc_status)
+	_button(v, "Bezárás", func(): acc_popup.hide())
+
+func _open_account() -> void:
+	if acc_popup == null: _build_account_popup()
+	acc_status.text = ""
+	acc_email_edit.text = _acc_email()
+	_refresh_account_ui()
+	# a tartalomhoz igazodó méret (a rejtett rész ne hagyjon üres helyet)
+	acc_popup.size = Vector2i(560, 0)
+	acc_popup.reset_size()
+	acc_popup.popup_centered()
+	if not _acc_logged_in(): acc_email_edit.grab_focus()
+
+func _refresh_account_ui() -> void:
+	if acc_popup != null:
+		acc_login_box.visible = not _acc_logged_in()
+		acc_out_box.visible = _acc_logged_in()
+		acc_who.text = "Belépve: " + _acc_email()
+	_refresh_dlc()
+
+# A kulcs beváltása a bejelentkezett fiókba (a szerver ellenőrzi a Gumroadnál, és a fiókhoz köti)
+func _acc_claim(key: String) -> void:
+	if not _acc_logged_in() or acc_token == "":
+		lic_status.text = "A kulcsot a fiókodhoz kötjük: előbb jelentkezz be (vagy regisztrálj)."
+		license_popup.hide()
+		_open_account()
+		return
+	dlc_busy = true
+	lic_status.text = "Ellenőrzés…"
+	var r := await _acc_call(HTTPClient.METHOD_POST, "/functions/v1/claim-license",
+		{"dlc": str(lic_dlc["key"]), "license_key": key}, acc_token)
+	dlc_busy = false
+	var data: Dictionary = r[1] if r[1] is Dictionary else {}
+	match int(r[0]):
+		200:
+			license_popup.hide()
+			_status("Köszönjük! A(z) %s a fiókodhoz került (%s)." % [str(lic_dlc["name"]), _acc_email()], S.GREEN)
+			await _acc_sync()
+		0:
+			lic_status.text = "Nem sikerült elérni a szervert. Van internet?"
+		_:
+			match str(data.get("error", "")):
+				"key_taken": lic_status.text = "Ezt a kulcsot már egy másik fiókhoz kötötték."
+				"not_logged_in": lic_status.text = "A belépés lejárt – jelentkezz be újra."
+				_: lic_status.text = "Ez a kulcs nem érvényes ehhez a kiegészítőhöz. Ellenőrizd, hogy pontosan másoltad-e."
+
 func _buy_dlc(d: Dictionary) -> void:
 	var url := str(d["store_url"])
 	if url == "":
@@ -986,6 +1235,9 @@ func _open_license(d: Dictionary) -> void:
 func _redeem_license() -> void:
 	var key := lic_edit.text.strip_edges()
 	if key == "" or dlc_busy: return
+	if _acc_enabled():
+		_acc_claim(key)
+		return
 	var pid := str(lic_dlc.get("gumroad_product_id", ""))
 	if pid == "":
 		lic_status.text = "A bolt még nincs beállítva, ezért most nem lehet kulcsot beváltani."
