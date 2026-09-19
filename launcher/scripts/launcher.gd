@@ -130,7 +130,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 24
+const LAUNCHER_BUILD := 25
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -192,7 +192,7 @@ var chk_play: CheckBox
 # Kiegészítők
 var dlc_box: VBoxContainer           # a kiválasztott játék kiegészítő-kártyái
 var dlc_scroll: ScrollContainer      # a kártyák görgethető kerete: legfeljebb DLC_MAX_H magas, hogy semmi ne lógjon ki
-const DLC_MAX_H := 340.0             # a cím és öt kártya; ha több van, a lista görgethető
+const DLC_MAX_H := 262.0             # a cím és négy kártya; ha több van, a lista görgethető
 var http_dlc: HTTPRequest            # licencellenőrzés és a csomag letöltése (a játék letöltésétől külön)
 var dlc_busy := false
 var license_popup: PopupPanel
@@ -463,6 +463,33 @@ func _scan_for_godot(dir_path: String, depth: int) -> String:
 	return ""
 
 # ── Felület ───────────────────────────────────────────────────
+# Felépítés (a régi Birodalom-indító mintájára, a ParthLauncher saját stílusában):
+#   fent        – a cím, jobbra a fiók (Bejelentkezés / Regisztráció)
+#   bal oldalt  – a játékok listája (és a minijáték)
+#   középen     – a kiválasztott játék képe, alatta a kiegészítők és az állapot
+#   jobb alul   – a nagy gomb: Frissítés vagy Indítás
+
+const SIDEBAR_W := 236.0
+const COVER_DIR := "res://assets/covers/"
+# A böngészőben futó minijátékok: nem kell letölteni, az indítóval együtt érkeznek.
+const EXTRAS := [
+	{
+		"key": "kard_es_magia",
+		"name": "Kard és Mágia",
+		"sub": "Roguelike  ·  Katakombák rejtelmei",
+		"file": "res://minijatek/katakombak.html",
+		"cover_has_title": true,      # a borítón már rajta a cím
+	},
+]
+var extra_idx := -1                  # >= 0: egy minijáték van kiválasztva (nem a két nagy játék egyike)
+var extra_btns: Array[Button] = []
+var cover: Control
+var cover_tex: Texture2D
+var cover_caption: Control
+var cover_title: Label
+var cover_sub: Label
+var acc_top_btn: Button
+var _thumbs := {}                    # kulcs -> a lista kis képe
 
 func _build_ui() -> void:
 	_ui = Control.new()
@@ -476,114 +503,282 @@ func _build_ui() -> void:
 
 	var box := VBoxContainer.new()
 	box.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	box.offset_left = 40; box.offset_right = -40; box.offset_top = 20; box.offset_bottom = -34
-	box.add_theme_constant_override("separation", 6)
+	box.offset_left = 44; box.offset_right = -44; box.offset_top = 32; box.offset_bottom = -34
+	box.add_theme_constant_override("separation", 8)
 	_ui.add_child(box)
 
-	# A Heptarchia indítóján rúnasor áll a cím fölött — itt is az van, ha az
-	# a játék van kiválasztva.
+	# ── fejléc: cím balra, fiók jobbra ──
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 12)
+	box.add_child(head)
+	var title_box := VBoxContainer.new()
+	title_box.add_theme_constant_override("separation", -4)
+	title_box.size_flags_horizontal = SIZE_EXPAND_FILL
+	head.add_child(title_box)
 	if S.skin == "heptarchia":
 		var runes := Label.new()
 		runes.text = "ᚻᛖᛈᛏᚪᚱᚳᚻᛁᚪ"
 		var rf := S.font_runes()
 		if rf != null: runes.add_theme_font_override("font", rf)
-		runes.add_theme_font_size_override("font_size", 19)
+		runes.add_theme_font_size_override("font_size", 14)
 		runes.add_theme_color_override("font_color", Color(S.BORDER, 0.9))
-		runes.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		box.add_child(runes)
-		box.add_child(S.make_title("ParthLauncher", 34, S.RED))
-	else:
-		box.add_child(S.make_title("ParthLauncher", 34, S.GOLD_LIGHT))
+		title_box.add_child(runes)
+	var title := S.make_title("ParthLauncher", 30, S.RED if S.skin == "heptarchia" else S.GOLD_LIGHT)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	title_box.add_child(title)
+	acc_top_btn = _button(head, "Bejelentkezés / Regisztráció", _open_account)
+	acc_top_btn.custom_minimum_size = Vector2(260, 38)
+	acc_top_btn.size_flags_vertical = SIZE_SHRINK_CENTER
+	acc_top_btn.add_theme_font_size_override("font_size", 15)
+	acc_top_btn.clip_text = true
+	acc_top_btn.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	acc_top_btn.tooltip_text = "Egy fiók mindkét játékhoz: a megvásárolt kiegészítők bármelyik gépen megjelennek."
+	acc_top_btn.visible = _acc_enabled()
+	box.add_child(_divider())
 
-	# A két játék: fent két gomb, a kiválasztott ki van emelve.
-	var tabs := HBoxContainer.new()
-	tabs.add_theme_constant_override("separation", 10)
-	box.add_child(tabs)
+	# ── törzs: balra a lista, középen a kiválasztott játék ──
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 18)
+	body.size_flags_vertical = SIZE_EXPAND_FILL
+	box.add_child(body)
+
+	var side := VBoxContainer.new()
+	side.custom_minimum_size.x = SIDEBAR_W
+	side.add_theme_constant_override("separation", 6)
+	body.add_child(side)
+	side.add_child(_section_label("JÁTÉKAIM"))
 	game_btns.clear()
 	for i in GAMES.size():
 		var idx := i
-		var b := _button(tabs, str(GAMES[i]["name"]), func(): _switch_game(idx))
-		# Két sor fér rá: a játék neve, alatta a változat — ezért magasabb és
-		# valamivel kisebb betűs, mint egy sima gomb.
-		b.custom_minimum_size = Vector2(0, 52)
-		b.add_theme_font_size_override("font_size", 17)
-		b.size_flags_horizontal = SIZE_EXPAND_FILL
-		game_btns.append(b)
+		game_btns.append(_game_row(side, str(GAMES[i]["key"]), func(): _select_game(idx)))
+	side.add_child(_section_label("MINIJÁTÉK"))
+	extra_btns.clear()
+	for i in EXTRAS.size():
+		var idx := i
+		extra_btns.append(_game_row(side, str(EXTRAS[i]["key"]), func(): _select_extra(idx)))
+	var side_space := Control.new()
+	side_space.size_flags_vertical = SIZE_EXPAND_FILL
+	side.add_child(side_space)
+	btn_check = _button(side, "Frissítés keresése", check_latest)
+	_button(side, "Beállítások", func(): _open_settings())
+	_button(side, "Kilépés", func(): get_tree().quit())
 
-	lbl_game = Label.new()
-	lbl_game.add_theme_font_size_override("font_size", 16)
+	var mid := VBoxContainer.new()
+	mid.add_theme_constant_override("separation", 6)
+	mid.size_flags_horizontal = SIZE_EXPAND_FILL
+	body.add_child(mid)
+
+	# a borítókép, alján a játék nevével
+	cover = Control.new()
+	cover.size_flags_vertical = SIZE_EXPAND_FILL
+	cover.custom_minimum_size = Vector2(0, 150)
+	cover.clip_contents = true
+	cover.draw.connect(_draw_cover.bind(cover))
+	cover.resized.connect(cover.queue_redraw)
+	mid.add_child(cover)
+	var cap := VBoxContainer.new()
+	cap.set_anchors_and_offsets_preset(PRESET_BOTTOM_WIDE)
+	cap.offset_left = 20; cap.offset_right = -20; cap.offset_top = -80; cap.offset_bottom = -12
+	cap.alignment = BoxContainer.ALIGNMENT_END
+	cap.add_theme_constant_override("separation", 0)
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cover.add_child(cap)
+	cover_caption = cap
+	cover_title = S.make_title("", 34, Color("f3dc8e"))
+	cover_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	cover_title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
+	cover_title.add_theme_constant_override("shadow_offset_x", 2)
+	cover_title.add_theme_constant_override("shadow_offset_y", 2)
+	cover_title.clip_text = true
+	cap.add_child(cover_title)
+	cover_sub = Label.new()
 	var itf := S.font_italic()
-	if itf != null: lbl_game.add_theme_font_override("font", itf)
-	lbl_game.add_theme_color_override("font_color",
-		S.GOLD if S.skin == "birodalom" else S.TEXT_DIM)
-	lbl_game.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	box.add_child(lbl_game)
-	box.add_child(_divider())
-
-	lbl_installed = _info_label(box)
-	lbl_installed.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_latest = _info_label(box)
-	lbl_latest.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_latest.add_theme_font_size_override("font_size", 20)
-	lbl_status = _info_label(box)
-	lbl_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_status.add_theme_font_size_override("font_size", 17)
+	if itf != null: cover_sub.add_theme_font_override("font", itf)
+	cover_sub.add_theme_font_size_override("font_size", 16)
+	cover_sub.add_theme_color_override("font_color", Color("e4d3a8"))
+	cover_sub.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
+	cover_sub.clip_text = true
+	cap.add_child(cover_sub)
 
 	# A kiadási jegyzetek panelje nincs a felületen (a felhasználó kérésére): a szövegét a kód továbbra is
-	# kitöltheti, de rejtve marad. Helyette rugalmas térköz tartja lent a gombokat.
+	# kitöltheti, de rejtve marad.
 	txt_notes = RichTextLabel.new()
 	txt_notes.bbcode_enabled = true
 	txt_notes.visible = false
 	_ui.add_child(txt_notes)
-	var spacer := Control.new()
-	spacer.size_flags_vertical = SIZE_EXPAND_FILL
-	box.add_child(spacer)
+
 	# A kiválasztott játék megvásárolható kiegészítői (lakattal, amíg nincs meg)
 	dlc_scroll = ScrollContainer.new()
 	dlc_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	box.add_child(dlc_scroll)
+	mid.add_child(dlc_scroll)
 	dlc_box = VBoxContainer.new()
 	dlc_box.size_flags_horizontal = SIZE_EXPAND_FILL
 	dlc_box.add_theme_constant_override("separation", 4)
 	dlc_scroll.add_child(dlc_box)
 
+	lbl_installed = _info_label(mid)
+	lbl_installed.add_theme_font_size_override("font_size", 16)
+	lbl_latest = _info_label(mid)
+	lbl_latest.add_theme_font_size_override("font_size", 18)
+	lbl_status = _info_label(mid)
+	lbl_status.add_theme_font_size_override("font_size", 16)
+	# lbl_game: a borító alcíme (a régi kód is írja)
+	lbl_game = cover_sub
+
+	# ── alsó sáv: haladás balra, a nagy gomb jobbra ──
+	var foot := HBoxContainer.new()
+	foot.add_theme_constant_override("separation", 14)
+	mid.add_child(foot)
 	var bar_row := HBoxContainer.new()
 	bar_row.add_theme_constant_override("separation", 10)
-	box.add_child(bar_row)
+	bar_row.size_flags_horizontal = SIZE_EXPAND_FILL
+	bar_row.size_flags_vertical = SIZE_SHRINK_CENTER
+	foot.add_child(bar_row)
 	bar = ProgressBar.new()
-	bar.custom_minimum_size = Vector2(0, 22)
+	bar.custom_minimum_size = Vector2(0, 20)
 	bar.size_flags_horizontal = SIZE_EXPAND_FILL
+	bar.size_flags_vertical = SIZE_SHRINK_CENTER
 	bar.show_percentage = false
 	bar.value = 0
 	bar_row.add_child(bar)
 	lbl_bar = Label.new()
-	lbl_bar.custom_minimum_size = Vector2(120, 0)
+	lbl_bar.custom_minimum_size = Vector2(118, 0)
 	lbl_bar.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	lbl_bar.add_theme_font_size_override("font_size", 15)
 	bar_row.add_child(lbl_bar)
-
 	# Egyetlen nagy gomb: „Frissítés”, majd ha naprakész, „Indítás”
-	btn_main = _button(box, "Indítás", _on_main_button)
-	btn_main.custom_minimum_size = Vector2(0, 48)
-	btn_main.add_theme_font_size_override("font_size", 24)
+	btn_main = _button(foot, "Indítás", _on_main_button)
+	btn_main.custom_minimum_size = Vector2(230, 54)
+	btn_main.add_theme_font_size_override("font_size", 22)
 	btn_main.add_theme_color_override("font_color", S.GOLD_LIGHT)
-
-	var opts := HBoxContainer.new()
-	opts.alignment = BoxContainer.ALIGNMENT_CENTER
-	opts.add_theme_constant_override("separation", 18)
-	box.add_child(opts)
-	chk_play = _checkbox(opts, "Frissítés után induljon automatikusan", auto_play, _set_auto_play)
-	chk_auto = _checkbox(opts, "Frissítés keresése induláskor", auto_update, _set_auto_update)
-
-	var row2 := HBoxContainer.new()
-	row2.add_theme_constant_override("separation", 10)
-	box.add_child(row2)
-	btn_check = _button(row2, "Frissítés keresése", check_latest)
-	btn_check.size_flags_horizontal = SIZE_EXPAND_FILL
-	_button(row2, "Beállítások", func(): _open_settings()).size_flags_horizontal = SIZE_EXPAND_FILL
-	_button(row2, "Kilépés", func(): get_tree().quit()).size_flags_horizontal = SIZE_EXPAND_FILL
 
 	_build_settings()
 	_build_license_popup()
+
+func _section_label(text: String) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", 13)
+	l.add_theme_color_override("font_color", S.TEXT_DIM)
+	return l
+
+# A lista egy sora: kis kép, a játék neve, alatta az állapota
+func _game_row(parent: Node, key: String, action: Callable) -> Button:
+	var b := _button(parent, "", action)
+	b.custom_minimum_size = Vector2(0, 60)
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.add_theme_font_size_override("font_size", 15)
+	b.add_theme_constant_override("h_separation", 10)
+	b.clip_text = true
+	b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	b.icon = _thumb(key)
+	b.expand_icon = false
+	return b
+
+func _cover_of(key: String) -> Texture2D:
+	var path := COVER_DIR + key + ".jpg"
+	return load(path) if ResourceLoader.exists(path) else null
+
+func _thumb(key: String) -> Texture2D:
+	if _thumbs.has(key): return _thumbs[key]
+	var tex := _cover_of(key)
+	if tex == null: return null
+	var img := tex.get_image()
+	if img == null: return null
+	if img.is_compressed(): img.decompress()
+	var side := mini(img.get_width(), img.get_height())
+	img = img.get_region(Rect2i((img.get_width() - side) / 2, (img.get_height() - side) / 2, side, side))
+	img.resize(42, 42, Image.INTERPOLATE_LANCZOS)
+	var t := ImageTexture.create_from_image(img)
+	_thumbs[key] = t
+	return t
+
+# A borító: a kép kitölti a keretet (középről vágva), az alja elsötétül, hogy a felirat olvasható legyen
+func _draw_cover(cv: Control) -> void:
+	var r := Rect2(Vector2.ZERO, cv.size)
+	cv.draw_rect(r, Color(0.05, 0.04, 0.03))
+	if cover_tex != null:
+		var ts := cover_tex.get_size()
+		var k := maxf(r.size.x / ts.x, r.size.y / ts.y)
+		var src_size := r.size / k
+		var src := Rect2((ts - src_size) * 0.5, src_size)
+		cv.draw_texture_rect_region(cover_tex, r, src)
+	if cover_caption != null and cover_caption.visible:
+		var top := r.size.y * 0.45
+		cv.draw_polygon(PackedVector2Array([Vector2(0, top), Vector2(r.size.x, top), r.size, Vector2(0, r.size.y)]),
+			PackedColorArray([Color(0, 0, 0, 0), Color(0, 0, 0, 0), Color(0.03, 0.02, 0.01, 0.85), Color(0.03, 0.02, 0.01, 0.85)]))
+	cv.draw_rect(r, S.BORDER, false, 3.0)
+	cv.draw_rect(r.grow(-5), Color(S.GOLD, 0.55), false, 1.0)
+
+# A borító és a lista kijelölése a kiválasztott elem szerint
+func _refresh_cover() -> void:
+	if cover == null or not is_instance_valid(cover): return
+	var key: String
+	var name_text: String
+	var sub_text: String
+	var caption := true
+	if extra_idx >= 0:
+		var e: Dictionary = EXTRAS[extra_idx]
+		key = str(e["key"]); name_text = str(e["name"]); sub_text = str(e["sub"])
+		caption = not bool(e.get("cover_has_title", false))
+	else:
+		var g := game()
+		key = str(g["key"]); name_text = str(g["name"]); sub_text = str(g["sub"])
+	cover_tex = _cover_of(key)
+	cover_title.text = name_text
+	cover_sub.text = sub_text
+	cover_caption.visible = caption
+	cover.queue_redraw()
+	for i in extra_btns.size():
+		var b := extra_btns[i]
+		b.flat = (i != extra_idx)
+		b.add_theme_color_override("font_color", S.GOLD_LIGHT if i == extra_idx else S.TEXT)
+		b.text = "%s\n%s" % [str(EXTRAS[i]["name"]), "böngészőben indul"]
+
+func _select_game(idx: int) -> void:
+	if extra_idx >= 0 and idx == game_idx:
+		extra_idx = -1
+		_status("")
+		_progress(0, "")
+		_refresh_labels()
+		_refresh_dlc()
+		return
+	extra_idx = -1
+	_switch_game(idx)
+
+func _select_extra(idx: int) -> void:
+	extra_idx = idx
+	_status("")
+	_refresh_labels()
+	_refresh_dlc()
+
+# A minijáték az indítóval érkezik: a felhasználói mappába másoljuk, és a böngésző nyitja meg (internet sem kell hozzá)
+func _play_extra() -> void:
+	var e: Dictionary = EXTRAS[extra_idx]
+	var src := str(e["file"])
+	var html := FileAccess.get_file_as_string(src)
+	if html == "":
+		_status("A(z) %s nem található az indító mellett." % str(e["name"]), S.RED)
+		return
+	DirAccess.make_dir_recursive_absolute("user://minijatek")
+	var dst := "user://minijatek/" + src.get_file()
+	var f := FileAccess.open(dst, FileAccess.WRITE)
+	if f == null:
+		_status("Nem sikerült előkészíteni a(z) %s játékot." % str(e["name"]), S.RED)
+		return
+	f.store_string(html)
+	f.close()
+	var err := OS.shell_open(ProjectSettings.globalize_path(dst))
+	if err != OK:
+		_status("Nem sikerült megnyitni a böngészőt.", S.RED)
+	else:
+		_status("A(z) %s megnyílt a böngésződben. Jó kalandozást!" % str(e["name"]), S.GREEN)
+
+# A fiók gombja jobb felül: belépés előtt „Bejelentkezés / Regisztráció”, utána az e-mail-cím
+func _refresh_acc_btn() -> void:
+	if acc_top_btn == null or not is_instance_valid(acc_top_btn): return
+	acc_top_btn.visible = _acc_enabled()
+	acc_top_btn.text = ("👤  " + _acc_email()) if _acc_logged_in() else "Bejelentkezés / Regisztráció"
 
 # Váltás a két játék között: a mostani állapotot elmentjük, a másikét betöltjük.
 func _switch_game(idx: int) -> void:
@@ -637,7 +832,9 @@ func _button(parent: Node, text: String, action: Callable) -> Button:
 
 # A nagy gomb: ha van frissítés, letölti; ha nincs, indítja a játékot
 func _on_main_button() -> void:
-	if launcher_update > 0:
+	if extra_idx >= 0:
+		_play_extra()
+	elif launcher_update > 0:
 		start_launcher_update()
 	elif _needs_download():
 		start_update()
@@ -659,6 +856,10 @@ func _checkbox(parent: Node, text: String, value: bool, action: Callable) -> Che
 	c.toggled.connect(action)
 	parent.add_child(c)
 	return c
+
+# A felugró ablakok (sötét hátterén) olvasható szövegszín: a Heptarchia pergamen-tintája ott nem látszana
+func _popup_text() -> Color:
+	return S.GOLD_LIGHT if S.skin == "heptarchia" else S.TEXT
 
 func _set_auto_update(value: bool) -> void:
 	auto_update = value
@@ -686,7 +887,7 @@ func _build_settings() -> void:
 	for f in fields:
 		var l := Label.new()
 		l.text = f[1]
-		l.add_theme_color_override("font_color", S.TEXT)
+		l.add_theme_color_override("font_color", _popup_text())
 		l.add_theme_font_size_override("font_size", 15)
 		v.add_child(l)
 		var e := LineEdit.new()
@@ -695,10 +896,15 @@ func _build_settings() -> void:
 		set_fields[f[0]] = e
 	var chk := CheckBox.new()
 	chk.text = "Iskolai / céges hálózat: tanúsítvány-ellenőrzés kikapcsolása"
-	chk.add_theme_color_override("font_color", S.TEXT)
+	chk.add_theme_color_override("font_color", _popup_text())
 	chk.add_theme_font_size_override("font_size", 15)
 	v.add_child(chk)
 	set_fields["insecure"] = chk
+	# a frissítés beállításai (korábban a főablak alján voltak)
+	chk_play = _checkbox(v, "Frissítés után a játék induljon automatikusan", auto_play, _set_auto_play)
+	chk_play.add_theme_color_override("font_color", _popup_text())
+	chk_auto = _checkbox(v, "Frissítés keresése induláskor", auto_update, _set_auto_update)
+	chk_auto.add_theme_color_override("font_color", _popup_text())
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
@@ -738,12 +944,12 @@ func _apply_settings() -> void:
 
 func _refresh_labels() -> void:
 	var g := game()
-	lbl_game.text = str(g["sub"])
+	_refresh_cover()
 	for i in game_btns.size():
 		var b := game_btns[i]
-		b.flat = (i != game_idx)
-		b.add_theme_color_override("font_color",
-			S.GOLD_LIGHT if i == game_idx else S.TEXT)
+		var sel := i == game_idx and extra_idx < 0
+		b.flat = not sel
+		b.add_theme_color_override("font_color", S.GOLD_LIGHT if sel else S.TEXT)
 		# A fülön MINDIG ott a szám: mi van fent a GitHubon, és — ha más —
 		# mi van telepítve. Így a másik játékról is látszik, van-e újabb.
 		var k := str(GAMES[i]["key"])
@@ -755,12 +961,21 @@ func _refresh_labels() -> void:
 		elif fent == "" :
 			also = "telepítve: %s" % itt
 		elif itt == "" :
-			also = "%s (nincs telepítve)" % fent
+			also = "%s – letölthető" % fent
 		elif itt == fent:
 			also = "%s – naprakész" % fent
 		else:
 			also = "%s → %s" % [itt, fent]
-		b.text = "%s\n%s" % [str(GAMES[i]["name"]), also]
+		b.text = "%s\n%s" % [str(GAMES[i]["name"]).capitalize(), also]
+	btn_check.disabled = busy
+	# minijáték: nincs mit letölteni, a nagy gomb a böngészőben nyitja meg
+	if extra_idx >= 0:
+		lbl_installed.text = "Böngészőben indul – nem kell telepíteni, internet sem kell hozzá."
+		lbl_latest.text = ""
+		btn_main.disabled = false
+		btn_main.text = "Játék"
+		btn_main.tooltip_text = "Megnyitja a játékot a böngésződben"
+		return
 	# Csak a változatokat mutatjuk – sem a tároló, sem a letöltési cím nem látszik
 	lbl_installed.text = "%s – telepített változat: %s" % [str(g["name"]).capitalize(),
 		installed_version if installed_version != "" else "még nincs telepítve"]
@@ -836,41 +1051,18 @@ func _refresh_dlc() -> void:
 	for c in dlc_box.get_children():
 		dlc_box.remove_child(c)
 		c.queue_free()
-	var list := _dlcs()
-	# a fiók közös: minden játék fülén látszik (akkor is, ha a játéknak nincs kiegészítője)
-	dlc_scroll.visible = not list.is_empty() or _acc_enabled()
-	if not dlc_scroll.visible: return
+	# a fiók gombja jobb felül van: minden játéknál látszik, egy fiók mindkét játékhoz
+	_refresh_acc_btn()
+	var list := _dlcs() if extra_idx < 0 else []
+	dlc_scroll.visible = not list.is_empty()
+	if list.is_empty(): return
 	var head := Label.new()
-	head.text = "Kiegészítők" if not list.is_empty() else "Fiók"
-	if list.is_empty():
-		head.tooltip_text = "Egy fiók mindkét játékhoz: a belépés a Birodalomra és a Heptarchiára is érvényes."
+	head.text = "Kiegészítők"
 	var tf := S.font_title()
 	if tf != null: head.add_theme_font_override("font", tf)
 	head.add_theme_font_size_override("font_size", 18)
 	head.add_theme_color_override("font_color", S.RED if S.skin == "heptarchia" else S.GOLD_LIGHT)
-	if _acc_enabled():
-		# a fejléc sorában jobbra: belépés / a fiók
-		var hrow := HBoxContainer.new()
-		dlc_box.add_child(hrow)
-		head.size_flags_horizontal = SIZE_EXPAND_FILL
-		hrow.add_child(head)
-		var acc := _button(hrow, ("👤 " + _acc_email()) if _acc_logged_in() else "Bejelentkezés / Regisztráció", _open_account)
-		acc.custom_minimum_size = Vector2(0, 30)
-		acc.add_theme_font_size_override("font_size", 14)
-		acc.clip_text = true
-		acc.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-		acc.custom_minimum_size.x = 220
-	else:
-		dlc_box.add_child(head)
-	if list.is_empty():
-		var note := Label.new()
-		note.text = ("Belépve – a fiókod a Birodalomra és a Heptarchiára is érvényes." if _acc_logged_in()
-			else "Egy fiók mindkét játékhoz: egyszer lépsz be, és a Birodalomra és a Heptarchiára is érvényes.")
-		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		note.custom_minimum_size.x = 200
-		note.add_theme_font_size_override("font_size", 14)
-		note.add_theme_color_override("font_color", S.GREEN if _acc_logged_in() else S.TEXT)
-		dlc_box.add_child(note)
+	dlc_box.add_child(head)
 	for d in list:
 		dlc_box.add_child(_dlc_card(d))
 	_fit_dlc.call_deferred()

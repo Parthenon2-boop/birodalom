@@ -1,6 +1,12 @@
 [
 	{
 		"datum": "2026-09-19",
+		"cim": "ParthLauncher 1.29 – új felület és egy minijáték",
+		"cimke": "ParthLauncher",
+		"szoveg": "Megújult az indító: balra a játékok listája, középen a kiválasztott játék képe, jobb felül a bejelentkezés. Bekerült a Kard és Mágia roguelike is, amely a böngésződben indul, telepítés és internet nélkül. A pályái mindig bejárhatók: nem fordulhat elő, hogy bezáródsz egy terembe."
+	},
+	{
+		"datum": "2026-09-19",
 		"cim": "ParthLauncher 1.27 – egy fiók mindkét játékhoz",
 		"cimke": "ParthLauncher",
 		"szoveg": "A bejelentkezés a Birodalom fülén is elérhető. Egyszer lépsz be, és a fiókod a Birodalomra és a Heptarchiára is érvényes."
