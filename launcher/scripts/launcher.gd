@@ -96,8 +96,8 @@ const DLCS := {
 			"price": "3 $",
 			"user_dir": "Heptarchia",
 			"game_id": "religion",
-			"gumroad_product_id": "",
-			"store_url": "",
+			"gumroad_product_id": "DzryuhWncOHx3Pq0IRIP8g==",
+			"store_url": "https://parthenon62.gumroad.com/l/iwqkt",
 			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/download/vallas-v1/vallas.zip",
 			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
 		},
@@ -108,7 +108,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 13
+const LAUNCHER_BUILD := 14
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
