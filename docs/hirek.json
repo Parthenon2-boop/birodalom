@@ -1,6 +1,12 @@
 [
 	{
 		"datum": "2026-09-19",
+		"cim": "ParthLauncher 1.26 – regisztráció a weboldalon, elfelejtett jelszó",
+		"cimke": "ParthLauncher",
+		"szoveg": "Fiókot mostantól a weboldalon is létrehozhatsz, és ha elfelejtetted a jelszavad, itt vagy a launcher fiókablakában kérhetsz újat. A weboldalra képek is kerültek mindkét játékból."
+	},
+	{
+		"datum": "2026-09-19",
 		"cim": "ParthLauncher 1.25 – fiókok és regisztráció",
 		"cimke": "ParthLauncher",
 		"szoveg": "A megvásárolt kiegészítők mostantól a fiókodhoz kötődnek: regisztrálj egyszer, és bármelyik gépen belépve megjelennek. A megerősítő levél a ParthLaunchertől érkezik – ha nem látod, nézd meg a Spam mappát is."

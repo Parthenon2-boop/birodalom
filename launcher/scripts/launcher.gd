@@ -124,12 +124,13 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Üresen hagyva a launcher a régi, gépenkénti licenckulcsos módon működik.
 const ACCOUNT_URL := "https://gxvepswtairfqvosdcpb.supabase.co"          # a Supabase-projekt címe, pl. https://abcdefgh.supabase.co
 const ACCOUNT_ANON_KEY := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmVwc3d0YWlyZnF2b3NkY3BiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4MzQyMzYsImV4cCI6MjEwNTQxMDIzNn0.9A86POfj49aRynE3rerz4nMbfds7xny6GLuRePpgSSI"     # a projekt nyilvános (anon / publishable) kulcsa – nem titok
-const ACC_LICENSE := "account"   # a fiókból jövő jogosultság jele a ParthLauncher.cfg-ben
+const ACCOUNT_RESET_PAGE := "https://parthenon2-boop.github.io/birodalom/fiok.html"   # itt adható meg az új jelszó
+const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLauncher.cfg-ben
 
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 21
+const LAUNCHER_BUILD := 22
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1063,7 +1064,7 @@ func _acc_login(signup: bool) -> void:
 		elif msg.to_lower().contains("already"):
 			acc_status.text = "Ezzel az e-mail-címmel már van fiók – lépj be."
 		else:
-			acc_status.text = "Nem sikerült: hibás e-mail-cím vagy jelszó."
+			acc_status.text = "Nem sikerült: hibás e-mail-cím vagy jelszó. Ha elfelejtetted, kattints az „Elfelejtett jelszó” gombra."
 		return
 	if data.has("access_token"):
 		_acc_store_session(data)
@@ -1075,6 +1076,24 @@ func _acc_login(signup: bool) -> void:
 	else:
 		# regisztráció e-mail-megerősítéssel
 		acc_status.text = "Elküldtük a megerősítő levelet a(z) %s címre. Kattints a benne lévő linkre, aztán lépj be.\nHa nem látod, nézd meg a Spam / Levélszemét mappát is – a levél a ParthLaunchertől jön." % email
+
+# Elfelejtett jelszó: a szerver levelet küld, amelynek linkje a weboldalra visz (ott adható meg az új jelszó)
+func _acc_forgot() -> void:
+	var email := acc_email_edit.text.strip_edges()
+	if not ("@" in email and "." in email):
+		acc_status.text = "Írd be fent az e-mail-címedet, aztán kattints újra az „Elfelejtett jelszó” gombra."
+		return
+	acc_status.text = "Levél küldése…"
+	var r := await _acc_call(HTTPClient.METHOD_POST, "/auth/v1/recover?redirect_to=" + ACCOUNT_RESET_PAGE.uri_encode(), {"email": email})
+	var code := int(r[0])
+	if code == 0:
+		acc_status.text = "Nem sikerült elérni a szervert. Van internet?"
+	elif code == 429:
+		acc_status.text = "Túl sok kérés rövid időn belül. Várj egy percet, és próbáld újra."
+	elif code >= 400:
+		acc_status.text = "Nem sikerült elküldeni a levelet. Próbáld újra később."
+	else:
+		acc_status.text = "Ha van fiók ezzel a címmel, elküldtük a levelet: a benne lévő gombbal új jelszót állíthatsz be.\nHa nem látod, nézd meg a Spam / Levélszemét mappát is."
 
 func _acc_logout(silent: bool = false) -> void:
 	acc_token = ""
@@ -1123,6 +1142,10 @@ func _build_account_popup() -> void:
 	login.add_child(row)
 	_button(row, "Belépés", func(): _acc_login(false)).size_flags_horizontal = SIZE_EXPAND_FILL
 	_button(row, "Regisztráció", func(): _acc_login(true)).size_flags_horizontal = SIZE_EXPAND_FILL
+	var forgot := _button(login, "Elfelejtett jelszó", _acc_forgot)
+	forgot.flat = true
+	forgot.custom_minimum_size = Vector2(0, 30)
+	forgot.add_theme_color_override("font_color", S.GOLD_LIGHT if S.skin == "heptarchia" else S.TEXT)
 	var out := VBoxContainer.new()
 	out.add_theme_constant_override("separation", 6)
 	v.add_child(out)

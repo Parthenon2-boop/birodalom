@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ParthLauncher – fiók</title>
+<meta name="description" content="ParthLauncher-fiók: regisztráció és elfelejtett jelszó.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+	:root { --bg: #1d1510; --panel: #2f2219; --line: #6b4f2a; --gold: #d9a441; --gold-2: #f0cf85;
+		--text: #eadcbc; --muted: #b7a37f; --ok: #9fcf7a; --err: #f08a74; }
+	* { box-sizing: border-box; }
+	body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 18px/1.55 "EB Garamond", Georgia, serif;
+		background-image: radial-gradient(ellipse at top, #3a2818 0%, var(--bg) 60%); background-attachment: fixed; }
+	a { color: var(--gold-2); }
+	header { border-bottom: 1px solid var(--line); background: rgba(20,14,10,.7); }
+	header .wrap { max-width: 1040px; margin: 0 auto; padding: 8px 16px; min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+	.logo { font-family: Cinzel, serif; font-size: 22px; color: var(--gold); text-decoration: none; }
+	header nav a { color: var(--muted); text-decoration: none; font-size: 16px; margin-left: 16px; }
+	main { max-width: 480px; margin: 40px auto; padding: 0 16px; }
+	h1 { font-family: Cinzel, serif; color: var(--gold); text-align: center; font-size: 30px; margin: 0 0 18px; }
+	.box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+	.tabs { display: flex; border-bottom: 1px solid var(--line); }
+	.tabs button { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--muted); padding: 14px 8px; font: 16px Cinzel, serif; cursor: pointer; border-bottom: 3px solid transparent; }
+	.tabs button[aria-selected="true"] { color: var(--gold-2); border-bottom-color: var(--gold); background: rgba(217,164,65,.07); }
+	form { padding: 22px 20px 24px; display: flex; flex-direction: column; gap: 12px; }
+	form[hidden] { display: none; }
+	label { font-size: 16px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+	input { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); background: #1a130e; color: var(--text); font: 17px "EB Garamond", serif; }
+	input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+	button.main { margin-top: 6px; padding: 12px; border-radius: 7px; border: 1px solid var(--gold); background: linear-gradient(#e7b95a, #b98326); color: var(--bg); font: 17px Cinzel, serif; cursor: pointer; }
+	button.main:disabled { opacity: .6; cursor: wait; }
+	.hint { font-size: 15px; color: var(--muted); margin: 0; }
+	.msg { font-size: 16px; margin: 0; padding: 10px 12px; border-radius: 6px; }
+	.msg:empty { display: none; }
+	.msg.ok { color: var(--ok); background: rgba(127,174,90,.12); border: 1px solid rgba(127,174,90,.4); }
+	.msg.err { color: var(--err); background: rgba(176,56,42,.14); border: 1px solid rgba(176,56,42,.45); }
+	.back { text-align: center; margin-top: 18px; font-size: 16px; }
+</style>
+</head>
+<body>
+<header>
+	<div class="wrap">
+		<a class="logo" href="./">ParthLauncher</a>
+		<nav><a href="./">Főoldal</a><a href="./#letoltes">Letöltés</a></nav>
+	</div>
+</header>
+<main>
+	<h1>Fiók</h1>
+	<div class="box">
+		<div class="tabs" role="tablist" id="tabs">
+			<button role="tab" data-tab="reg" aria-selected="true">Regisztráció</button>
+			<button role="tab" data-tab="forgot" aria-selected="false">Elfelejtett jelszó</button>
+		</div>
+
+		<form id="reg" novalidate>
+			<p class="hint">A fiókkal a megvásárolt kiegészítők bármelyik gépen megjelennek a ParthLauncherben. Vásárláskor ugyanezt az e-mail-címet add meg a Gumroadon.</p>
+			<label>E-mail-cím<input type="email" name="email" autocomplete="email" required></label>
+			<label>Jelszó (legalább 8 karakter)<input type="password" name="pw" autocomplete="new-password" minlength="8" required></label>
+			<label>Jelszó még egyszer<input type="password" name="pw2" autocomplete="new-password" minlength="8" required></label>
+			<button class="main" type="submit">Regisztráció</button>
+			<p class="msg" role="status"></p>
+		</form>
+
+		<form id="forgot" novalidate hidden>
+			<p class="hint">Add meg a fiókod e-mail-címét: küldünk egy levelet, amelyben új jelszót állíthatsz be.</p>
+			<label>E-mail-cím<input type="email" name="email" autocomplete="email" required></label>
+			<button class="main" type="submit">Levél küldése</button>
+			<p class="msg" role="status"></p>
+		</form>
+
+		<form id="newpw" novalidate hidden>
+			<p class="hint">Add meg az új jelszavadat.</p>
+			<label>Új jelszó (legalább 8 karakter)<input type="password" name="pw" autocomplete="new-password" minlength="8" required></label>
+			<label>Új jelszó még egyszer<input type="password" name="pw2" autocomplete="new-password" minlength="8" required></label>
+			<button class="main" type="submit">Jelszó mentése</button>
+			<p class="msg" role="status"></p>
+		</form>
+	</div>
+	<p class="back">A belépés a ParthLauncherben történik. <a href="./#letoltes">Letöltés</a></p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+	const URL_ = "https://gxvepswtairfqvosdcpb.supabase.co";
+	// nyilvános (anon) kulcs – a böngészőbe szánták, a jogosultságokat a szerver szabályai védik
+	const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmVwc3d0YWlyZnF2b3NkY3BiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4MzQyMzYsImV4cCI6MjEwNTQxMDIzNn0.9A86POfj49aRynE3rerz4nMbfds7xny6GLuRePpgSSI";
+	const BASE = location.origin + location.pathname.replace(/[^/]*$/, "");
+	const SPAM = " Ha nem látod, nézd meg a Spam / Levélszemét mappát is – a levél a ParthLaunchertől jön.";
+	const sb = window.supabase.createClient(URL_, ANON, { auth: { persistSession: false, detectSessionInUrl: true, flowType: "implicit" } });
+
+	const $ = id => document.getElementById(id);
+	const forms = ["reg", "forgot", "newpw"];
+	function show(name) {
+		forms.forEach(f => $(f).hidden = f !== name);
+		document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+		$("tabs").hidden = name === "newpw";
+	}
+	document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => show(b.dataset.tab));
+	function say(form, text, ok) { const m = form.querySelector(".msg"); m.textContent = text; m.className = "msg " + (ok ? "ok" : "err"); }
+	const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+	async function busy(form, fn) { const b = form.querySelector("button.main"); b.disabled = true; try { await fn(); } finally { b.disabled = false; } }
+	function friendly(err) {
+		const m = String(err && (err.message || err)).toLowerCase();
+		if (m.includes("rate") || m.includes("seconds")) return "Túl sok kérés rövid időn belül. Várj egy percet, és próbáld újra.";
+		if (m.includes("different")) return "Az új jelszó nem lehet ugyanaz, mint a régi.";
+		if (m.includes("weak") || m.includes("password")) return "Ez a jelszó túl gyenge. Legalább 8 karakter legyen.";
+		if (m.includes("network") || m.includes("fetch")) return "Nem sikerült elérni a szervert. Van internet?";
+		return "Nem sikerült. Próbáld újra később.";
+	}
+
+	$("reg").onsubmit = e => { e.preventDefault(); const f = e.target;
+		const email = f.email.value.trim(), pw = f.pw.value, pw2 = f.pw2.value;
+		if (!validEmail(email)) return say(f, "Adj meg egy érvényes e-mail-címet.");
+		if (pw.length < 8) return say(f, "A jelszó legalább 8 karakter legyen.");
+		if (pw !== pw2) return say(f, "A két jelszó nem egyezik.");
+		busy(f, async () => {
+			const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: BASE + "megerosites.html" } });
+			if (error) {
+				if (String(error.message).toLowerCase().includes("already")) return say(f, "Ezzel az e-mail-címmel már van fiók. Lépj be a ParthLauncherben, vagy kérj új jelszót.");
+				return say(f, friendly(error));
+			}
+			if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0)
+				return say(f, "Ezzel az e-mail-címmel már van fiók. Lépj be a ParthLauncherben, vagy kérj új jelszót.");
+			f.reset();
+			say(f, "Elküldtük a megerősítő levelet a(z) " + email + " címre. Kattints a benne lévő gombra, aztán lépj be a ParthLauncherben." + SPAM, true);
+		});
+	};
+
+	$("forgot").onsubmit = e => { e.preventDefault(); const f = e.target;
+		const email = f.email.value.trim();
+		if (!validEmail(email)) return say(f, "Adj meg egy érvényes e-mail-címet.");
+		busy(f, async () => {
+			const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: BASE + "fiok.html" });
+			if (error) return say(f, friendly(error));
+			say(f, "Ha van fiók ezzel a címmel, elküldtük a levelet a jelszó módosításához." + SPAM, true);
+		});
+	};
+
+	$("newpw").onsubmit = e => { e.preventDefault(); const f = e.target;
+		const pw = f.pw.value, pw2 = f.pw2.value;
+		if (pw.length < 8) return say(f, "A jelszó legalább 8 karakter legyen.");
+		if (pw !== pw2) return say(f, "A két jelszó nem egyezik.");
+		busy(f, async () => {
+			const { error } = await sb.auth.updateUser({ password: pw });
+			if (error) return say(f, friendly(error));
+			await sb.auth.signOut();
+			f.reset(); f.querySelector("button.main").hidden = true;
+			say(f, "Kész, az új jelszavad mentve. Most már beléphetsz vele a ParthLauncherben.", true);
+		});
+	};
+
+	// a jelszó-visszaállító levél linkje ide vezet: a Supabase a címsor „#” utáni részében adja át az adatokat
+	const h = new URLSearchParams(location.hash.slice(1));
+	if (h.get("error") || h.get("error_code")) {
+		show("forgot");
+		say($("forgot"), "A link lejárt vagy már felhasználták. Kérj új levelet.");
+		history.replaceState(null, "", location.pathname);
+	} else if (h.get("type") === "recovery") {
+		show("newpw");
+	} else if (location.hash === "#elfelejtett") {
+		show("forgot");
+	}
+	sb.auth.onAuthStateChange(ev => {
+		if (ev === "PASSWORD_RECOVERY") { show("newpw"); history.replaceState(null, "", location.pathname); }
+	});
+</script>
+</body>
+</html>
