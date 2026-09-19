@@ -101,6 +101,18 @@ const DLCS := {
 			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/download/vallas-v1/vallas.zip",
 			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
 		},
+		{
+			"key": "varegok",
+			"name": "A varégok útja",
+			"desc": "Keletre kibővített térkép: Novgorod, Kijev, Miklagarðr. A Rusz és Bizánc, expedíciók a Volgán és a Dnyeperen, a Varangi Gárda.",
+			"price": "5 $",
+			"user_dir": "Heptarchia",
+			"game_id": "varangians",
+			"gumroad_product_id": "lKinUakqfvjYPDG8EnuTbA==",
+			"store_url": "https://parthenon62.gumroad.com/l/jrzwus",
+			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/download/varegok-v1/varegok.zip",
+			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
+		},
 	],
 }
 const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
@@ -108,7 +120,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 17
+const LAUNCHER_BUILD := 18
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
