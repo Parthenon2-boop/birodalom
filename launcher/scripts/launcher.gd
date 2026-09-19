@@ -83,8 +83,8 @@ const DLCS := {
 			"price": "3 $",
 			"user_dir": "Heptarchia",
 			"game_id": "vikings",
-			"gumroad_product_id": "",
-			"store_url": "",
+			"gumroad_product_id": "3q90_eqTWf2lvTKEkkEr8Q==",
+			"store_url": "https://parthenon62.gumroad.com/l/fxtisw",
 			# a kiadása nem „latest” (az a Skandinávia csomagjáé), ezért konkrét címkével
 			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/download/vikingek-v1/vikingek.zip",
 			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
@@ -96,7 +96,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 9
+const LAUNCHER_BUILD := 10
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -166,6 +166,7 @@ var lic_title: Label
 var lic_dlc := {}                    # melyik kiegészítő kulcsát váltják be
 
 func _ready() -> void:
+	if _relaunch_without_console(): return
 	_repo_file = _read_repo_file()
 	cfg.load(CFG_PATH)
 	_load_common()
@@ -191,6 +192,23 @@ func _ready() -> void:
 	# Ellenőrzéshez:  ParthLauncher -- --shot=<utvonal.png>
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--shot="): _capture_after(a.substr(7))
+
+# Ha az indító parancssorból indult (pl. egy régebbi frissítő szkriptből), a parancssor-ablak nyitva
+# maradna, és a játék kimenete is oda kerülne. Ilyenkor az Intézővel újraindítjuk magunkat ablak nélkül.
+# (A parancssor a PROMPT környezeti változót adja tovább; az Intézőből indított programnak ez nincs.)
+func _relaunch_without_console() -> bool:
+	if OS.get_name() != "Windows" or OS.has_feature("editor") or not OS.has_environment("PROMPT"): return false
+	if "--no-relaunch" in OS.get_cmdline_user_args(): return false
+	# biztosíték: ha az imént már újraindultunk (és a PROMPT mégis megvan), nem próbáljuk újra
+	var mark := "user://ujraindulas.txt"
+	var now := int(Time.get_unix_time_from_system())
+	if FileAccess.file_exists(mark) and now - int(FileAccess.get_file_as_string(mark)) < 20:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(mark))
+		return false
+	_write_text(mark, str(now))
+	OS.create_process("explorer.exe", [OS.get_executable_path().replace("/", "\\")])
+	get_tree().quit()
+	return true
 
 func _capture_after(path: String) -> void:
 	for _i in range(180):
@@ -1469,6 +1487,8 @@ func _swap_launcher(stage: String) -> String:
 
 # A csereszkriptek szövege (külön, hogy ellenőrizhető legyen).
 # Windows: a futó .exe-t nem lehet felülírni, ezért addig próbálkozik, míg ki nem léptünk.
+# Az új indítót az Intéző indítja (explorer.exe), hogy ne kötődjön a szkript parancssor-ablakához,
+# a szkript pedig hibaüzenet nélkül törli magát („(goto) & del”).
 static func windows_swap_script(target: String, new_exe: String, stage: String) -> String:
 	var t := target.replace("/", "\\")
 	var n := new_exe.replace("/", "\\")
@@ -1484,9 +1504,9 @@ static func windows_swap_script(target: String, new_exe: String, stage: String) 
 		+ "ping -n 2 127.0.0.1 >nul\r\n" \
 		+ "goto loop\r\n" \
 		+ ":done\r\n" \
-		+ "start \"\" \"" + t + "\"\r\n" \
 		+ "rmdir /s /q \"" + s + "\" >nul 2>&1\r\n" \
-		+ "del \"%~f0\"\r\n"
+		+ "explorer.exe \"" + t + "\"\r\n" \
+		+ "(goto) 2>nul & del \"%~f0\"\r\n"
 
 # macOS: megvárja, míg a futó indító kilép, majd kicseréli a .app csomagot
 static func mac_swap_script(target: String, new_app: String, stage: String, pid: int) -> String:
