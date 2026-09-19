@@ -96,7 +96,7 @@ const GUMROAD_VERIFY := "https://api.gumroad.com/v2/licenses/verify"
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 10
+const LAUNCHER_BUILD := 11
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -193,11 +193,23 @@ func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--shot="): _capture_after(a.substr(7))
 
-# Ha az indító parancssorból indult (pl. egy régebbi frissítő szkriptből), a parancssor-ablak nyitva
-# maradna, és a játék kimenete is oda kerülne. Ilyenkor az Intézővel újraindítjuk magunkat ablak nélkül.
-# (A parancssor a PROMPT környezeti változót adja tovább; az Intézőből indított programnak ez nincs.)
+# Ha az indító parancssorból indult – főleg egy régebbi frissítő szkriptből, amely „start”-tal futott, ezért
+# az ablaka a szkript után is nyitva marad –, a játék kimenete is oda kerülne. Ilyenkor bezárjuk a
+# frissítő ablakát, és az Intézővel újraindítjuk magunkat ablak nélkül.
+# (Jelek: a frissítő szkript még megvan, vagy a parancssor PROMPT változója öröklődött.)
 func _relaunch_without_console() -> bool:
-	if OS.get_name() != "Windows" or OS.has_feature("editor") or not OS.has_environment("PROMPT"): return false
+	if OS.get_name() != "Windows" or OS.has_feature("editor"): return false
+	var swap_bat := ProjectSettings.globalize_path("user://frissites.bat").replace("/", "\\")
+	var from_swap := FileAccess.file_exists("user://frissites.bat")
+	if not from_swap and not OS.has_environment("PROMPT"): return false
+	if from_swap:
+		# a régi frissítő parancssora (cmd /K) magától sosem zárulna be: leállítjuk, és töröljük a szkriptet
+		var ps := "Start-Sleep -Seconds 1; Get-CimInstance Win32_Process -Filter \"Name='cmd.exe'\" | " \
+			+ "Where-Object { $_.CommandLine -like '*frissites.bat*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }; " \
+			+ "Remove-Item -LiteralPath '" + swap_bat + "' -Force -ErrorAction SilentlyContinue"
+		# kódolva adjuk át (UTF-16LE, base64), így az idézőjelek nem sérülnek a parancssorban
+		var encoded := Marshalls.raw_to_base64(ps.to_utf16_buffer())
+		OS.create_process("powershell.exe", ["-NoProfile", "-WindowStyle", "Hidden", "-EncodedCommand", encoded], false)
 	if "--no-relaunch" in OS.get_cmdline_user_args(): return false
 	# biztosíték: ha az imént már újraindultunk (és a PROMPT mégis megvan), nem próbáljuk újra
 	var mark := "user://ujraindulas.txt"
@@ -1482,7 +1494,8 @@ func _swap_launcher(stage: String) -> String:
 	var bat := ProjectSettings.globalize_path("user://frissites.bat").replace("/", "\\")
 	if not _write_text(bat, windows_swap_script(target, new_exe, stage)):
 		return "Nem sikerült megírni a frissítő szkriptet."
-	OS.create_process("cmd.exe", ["/c", "start", "", "/min", bat])
+	# rejtve (ablak nélkül) futtatjuk: a „start” parancssor-ablakot nyitna, ami a szkript után is nyitva maradna
+	OS.create_process("cmd.exe", ["/c", bat], false)
 	return ""
 
 # A csereszkriptek szövege (külön, hogy ellenőrizhető legyen).
