@@ -93,6 +93,10 @@
 	dialog#lightbox::backdrop { background: rgba(0,0,0,.85); }
 	dialog#lightbox img { display: block; max-width: 96vw; max-height: 92vh; width: auto; height: auto; }
 	dialog#lightbox .close { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(20,14,10,.85); color: var(--gold-2); font-size: 18px; cursor: pointer; }
+	.langs { display: inline-flex; gap: 4px; margin-left: 6px; }
+	.langs button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 5px; padding: 2px 7px; font: 13px "EB Garamond", serif; cursor: pointer; letter-spacing: .04em; }
+	.langs button:hover { color: var(--gold-2); border-color: var(--gold); }
+	.langs button.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
 	footer { border-top: 1px solid var(--line); padding: 26px 0 40px; color: var(--muted); font-size: 15px; text-align: center; }
 
 	@media (max-width: 560px) {
@@ -111,12 +115,13 @@
 	<div class="wrap">
 		<a class="logo" href="#">ParthLauncher</a>
 		<nav>
-			<a href="#letoltes">Letöltés</a>
-			<a href="#jatekok">Játékok</a>
-			<a href="#kiegeszitok">Kiegészítők</a>
-			<a href="#kepek">Képek</a>
-			<a href="#hirek">Hírek</a>
-			<a href="fiok.html" class="navbtn">Regisztráció</a>
+			<a href="#letoltes" data-i18n="nav.download">Letöltés</a>
+			<a href="#jatekok" data-i18n="nav.games">Játékok</a>
+			<a href="#kiegeszitok" data-i18n="nav.dlc">Kiegészítők</a>
+			<a href="#kepek" data-i18n="nav.shots">Képek</a>
+			<a href="#hirek" data-i18n="nav.news">Hírek</a>
+			<a href="fiok.html" class="navbtn" data-i18n="nav.register">Regisztráció</a>
+			<span class="langs" id="langs"></span>
 		</nav>
 	</div>
 </header>
@@ -126,38 +131,45 @@
 		<div class="wrap">
 			<div class="runes">ᛈᚨᚱᚦᛚᚨᚢᚾᚲᚺᛖᚱ</div>
 			<h1>ParthLauncher</h1>
-			<p class="lead">Egy indító két stratégiai játékhoz. Telepíti és naprakészen tartja a <b>Birodalmat</b> és a <b>Heptarchiát</b>, és kezeli a megvásárolt kiegészítőket.</p>
+			<p class="lead" data-i18n="hero.lead" data-i18n-html="1">Egy indító három játékhoz. Telepíti és naprakészen tartja a <b>Birodalmat</b>, a <b>Heptarchiát</b> és a <b>Kard és Mágiát</b>, és kezeli a megvásárolt kiegészítőket.</p>
 			<div class="dl">
 				<a class="btn" id="btn-win" href="https://github.com/Parthenon2-boop/birodalom/releases/latest/download/ParthLauncher-Setup.exe">
-					Letöltés Windowsra<small>telepítő · <span class="ver" id="ver-launcher">legújabb változat</span></small>
+					<span data-i18n="hero.win">Letöltés Windowsra</span><small><span data-i18n="hero.installer">telepítő</span> · <span class="ver" id="ver-launcher">…</span></small>
 				</a>
 				<a class="btn alt" id="btn-mac" href="https://github.com/Parthenon2-boop/birodalom/releases/latest/download/ParthLauncher-macos.zip">
-					Letöltés macOS-re<small>Intel és Apple Silicon</small>
+					<span data-i18n="hero.mac">Letöltés macOS-re</span><small data-i18n="hero.macsub">Intel és Apple Silicon</small>
 				</a>
 			</div>
-			<p class="note">Windows: ha a SmartScreen figyelmeztet, válaszd a <i>További információ → Futtatás mindenképp</i> lehetőséget.<br>
+			<p class="note" data-i18n="hero.note" data-i18n-html="1">Windows: ha a SmartScreen figyelmeztet, válaszd a <i>További információ → Futtatás mindenképp</i> lehetőséget.<br>
 				Mac: első indításkor jobb klikk az alkalmazáson → <i>Megnyitás</i>.</p>
 		</div>
 	</div>
 
 	<section id="jatekok">
 		<div class="wrap">
-			<h2>Játékok</h2>
-			<p class="sub">Mindkettő ingyenes. A ParthLauncher magától letölti és frissíti őket.</p>
+			<h2 data-i18n="games.title">Játékok</h2>
+			<p class="sub" data-i18n="games.sub">Mindegyik ingyenes. A ParthLauncher magától letölti és frissíti őket.</p>
 			<div class="grid">
 				<article class="card game">
-					<button class="shot" data-full="kepek/hep_wessex.jpg" aria-label="Heptarchia képernyőkép nagyítása"><img src="kepek/hep_wessex.jpg" alt="Heptarchia: a Brit-szigetek térképe 790-ben" loading="lazy" width="1024" height="720"></button>
+					<button class="shot" data-full="kepek/hep_wessex.jpg" aria-label="Heptarchia"><img src="kepek/hep_wessex.jpg" alt="Heptarchia" loading="lazy" width="1024" height="720"></button>
 					<h3>Heptarchia</h3>
-					<span class="tag">Angolszász nagystratégia, 790-től</span>
-					<p>Vezesd Wessexet, Merciát vagy Northumbriát – vagy a skótokat, piktek és írek népeit. Diplomácia, Witan, egyház, lakosság és toborzás, a vikingek érkezése.</p>
+					<span class="tag" data-i18n="games.hep.tag">Angolszász nagystratégia, 790-től</span>
+					<p data-i18n="games.hep.desc">Vezesd Wessexet, Merciát vagy Northumbriát – vagy a skótokat, piktek és írek népeit. Diplomácia, Witan, egyház, lakosság és toborzás, a vikingek érkezése.</p>
 					<span class="pill" id="ver-heptarchia">…</span>
 				</article>
 				<article class="card game">
-					<button class="shot" data-full="kepek/bir_kozepkor.jpg" aria-label="Birodalom képernyőkép nagyítása"><img src="kepek/bir_kozepkor.jpg" alt="Birodalom: középkori település laktanyával és egységekkel" loading="lazy" width="1028" height="749"></button>
+					<button class="shot" data-full="kepek/bir_kozepkor.jpg" aria-label="Birodalom"><img src="kepek/bir_kozepkor.jpg" alt="Birodalom" loading="lazy" width="1028" height="749"></button>
 					<h3>Birodalom</h3>
-					<span class="tag">Valós idejű stratégia, 1400 – 1945</span>
-					<p>Építs birodalmat öt és fél évszázadon át: gazdaság, hadsereg és nagyhatalmi politika a késő középkortól a modern korig.</p>
+					<span class="tag" data-i18n="games.bir.tag">Valós idejű stratégia, 1400 – 1945</span>
+					<p data-i18n="games.bir.desc">Építs birodalmat öt és fél évszázadon át: gazdaság, hadsereg és nagyhatalmi politika a késő középkortól a modern korig.</p>
 					<span class="pill" id="ver-birodalom">…</span>
+				</article>
+				<article class="card game">
+					<button class="shot" data-full="kepek/kard_menu.jpg" aria-label="Kard és Mágia"><img src="kepek/kard_menu.jpg" alt="Kard és Mágia" loading="lazy" width="1028" height="642"></button>
+					<h3>Kard és Mágia</h3>
+					<span class="tag" data-i18n="games.kard.tag">Roguelike kaland · öt mélység</span>
+					<p data-i18n="games.kard.desc">Lovag, mágus vagy íjász: harcolj végig öt mélységet a Sárkányig. A lovag közelharcban erős, az íjász messziről sebez, a mágus kék varázsgömböt lő. Minden pálya bejárható.</p>
+					<span class="pill" id="ver-kard">…</span>
 				</article>
 			</div>
 		</div>
@@ -165,83 +177,209 @@
 
 	<section id="kepek">
 		<div class="wrap">
-			<h2>Képek a játékokból</h2>
-			<p class="sub">Kattints egy képre a nagyításhoz.</p>
+			<h2 data-i18n="shots.title">Képek a játékokból</h2>
+			<p class="sub" data-i18n="shots.sub">Kattints egy képre a nagyításhoz.</p>
 			<div class="gallery">
-				<figure><button class="shot" data-full="kepek/hep_wessex.jpg"><img src="kepek/hep_wessex.jpg" alt="Heptarchia – a Brit-szigetek 790-ben" loading="lazy" width="1024" height="720"></button><figcaption>Heptarchia – a Brit-szigetek 790-ben</figcaption></figure>
-				<figure><button class="shot" data-full="kepek/hep_anglia.jpg"><img src="kepek/hep_anglia.jpg" alt="Heptarchia – Wessex, Mercia és Kelet-Anglia" loading="lazy" width="1024" height="720"></button><figcaption>Heptarchia – Wessex, Mercia és Kelet-Anglia</figcaption></figure>
-				<figure><button class="shot" data-full="kepek/hep_rusz.jpg"><img src="kepek/hep_rusz.jpg" alt="A varégok útja – a Rusz Novgorodtól Kijevig" loading="lazy" width="1024" height="720"></button><figcaption>A varégok útja – Novgorodtól Kijevig</figcaption></figure>
-				<figure><button class="shot" data-full="kepek/bir_kozepkor.jpg"><img src="kepek/bir_kozepkor.jpg" alt="Birodalom – középkori település" loading="lazy" width="1028" height="749"></button><figcaption>Birodalom – középkori település</figcaption></figure>
-				<figure><button class="shot" data-full="kepek/bir_modern.jpg"><img src="kepek/bir_modern.jpg" alt="Birodalom – a világháborúk kora" loading="lazy" width="1028" height="749"></button><figcaption>Birodalom – a világháborúk kora</figcaption></figure>
-				<figure><button class="shot" data-full="kepek/bir_tenger.jpg"><img src="kepek/bir_tenger.jpg" alt="Birodalom – tengeri csata a kalózkorban" loading="lazy" width="1028" height="749"></button><figcaption>Birodalom – tengeri csata a kalózkorban</figcaption></figure>
+				<figure><button class="shot" data-full="kepek/hep_wessex.jpg"><img src="kepek/hep_wessex.jpg" alt="Heptarchia" loading="lazy" width="1024" height="720"></button><figcaption data-i18n="shot.hep1">Heptarchia – a Brit-szigetek 790-ben</figcaption></figure>
+				<figure><button class="shot" data-full="kepek/hep_anglia.jpg"><img src="kepek/hep_anglia.jpg" alt="Heptarchia" loading="lazy" width="1024" height="720"></button><figcaption data-i18n="shot.hep2">Heptarchia – Wessex, Mercia és Kelet-Anglia</figcaption></figure>
+				<figure><button class="shot" data-full="kepek/hep_rusz.jpg"><img src="kepek/hep_rusz.jpg" alt="A varégok útja" loading="lazy" width="1024" height="720"></button><figcaption data-i18n="shot.hep3">A varégok útja – Novgorodtól Kijevig</figcaption></figure>
+				<figure><button class="shot" data-full="kepek/kard_play.jpg"><img src="kepek/kard_play.jpg" alt="Kard és Mágia" loading="lazy" width="1028" height="642"></button><figcaption data-i18n="shot.kard">Kard és Mágia – válassz hőst</figcaption></figure>
+				<figure><button class="shot" data-full="kepek/bir_kozepkor.jpg"><img src="kepek/bir_kozepkor.jpg" alt="Birodalom" loading="lazy" width="1028" height="749"></button><figcaption data-i18n="shot.bir1">Birodalom – középkori település</figcaption></figure>
+				<figure><button class="shot" data-full="kepek/bir_modern.jpg"><img src="kepek/bir_modern.jpg" alt="Birodalom" loading="lazy" width="1028" height="749"></button><figcaption data-i18n="shot.bir2">Birodalom – a világháborúk kora</figcaption></figure>
+				<figure><button class="shot" data-full="kepek/bir_tenger.jpg"><img src="kepek/bir_tenger.jpg" alt="Birodalom" loading="lazy" width="1028" height="749"></button><figcaption data-i18n="shot.bir3">Birodalom – tengeri csata a kalózkorban</figcaption></figure>
 			</div>
 		</div>
 	</section>
 
 	<section id="kiegeszitok">
 		<div class="wrap">
-			<h2>Kiegészítők a Heptarchiához</h2>
-			<p class="sub">Egymással és az alapjátékkal is kompatibilisek – bármelyik kombinációban játszhatók. A vásárlás a Gumroadon történik; a kiegészítő a ParthLauncher-fiókodhoz kötődik.</p>
+			<h2 data-i18n="dlc.title">Kiegészítők a Heptarchiához</h2>
+			<p class="sub" data-i18n="dlc.sub">Egymással és az alapjátékkal is kompatibilisek – bármelyik kombinációban játszhatók. A vásárlás a Gumroadon történik; a kiegészítő a ParthLauncher-fiókodhoz kötődik.</p>
 			<div class="grid" id="dlc-grid"></div>
 		</div>
 	</section>
 
 	<section id="hirek">
 		<div class="wrap">
-			<h2>Hírek és frissítések</h2>
-			<p class="sub">A legújabb változások a játékokban és a kiegészítőkben.</p>
-			<div class="news" id="news"><p class="sub">Hírek betöltése…</p></div>
-			<button class="more" id="more" hidden>Korábbi hírek</button>
+			<h2 data-i18n="news.title">Hírek és frissítések</h2>
+			<p class="sub" data-i18n="news.sub">A legújabb változások a játékokban és a kiegészítőkben.</p>
+			<div class="news" id="news"><p class="sub" data-i18n="news.loading">Hírek betöltése…</p></div>
+			<button class="more" id="more" hidden data-i18n="news.more">Korábbi hírek</button>
 		</div>
 	</section>
 
 	<section id="kezdes">
 		<div class="wrap">
-			<h2>Így kezdj neki</h2>
+			<h2 data-i18n="start.title">Így kezdj neki</h2>
 			<ol class="steps">
-				<li>Töltsd le és telepítsd a ParthLaunchert.</li>
-				<li>Válaszd ki a játékot, és kattints a <b>Frissítés</b> / <b>Indítás</b> gombra – a letöltés magától megy.</li>
-				<li>Kiegészítőhöz: <a href="fiok.html">regisztrálj itt a weboldalon</a> vagy a launcherben (<b>Bejelentkezés / Regisztráció</b>), majd vásárolj a Gumroadon <b>ugyanazzal az e-mail-címmel</b>. Ha kulcsot kaptál, a <b>Van kulcsom</b> gombbal is beválthatod.</li>
-				<li>Elfelejtetted a jelszavad? <a href="fiok.html#elfelejtett">Itt kérhetsz újat</a>, vagy a launcher fiókablakában.</li>
+				<li data-i18n="start.s1">Töltsd le és telepítsd a ParthLaunchert.</li>
+				<li data-i18n="start.s2" data-i18n-html="1">Válaszd ki a játékot, és kattints a <b>Frissítés</b> / <b>Indítás</b> gombra – a letöltés magától megy.</li>
+				<li data-i18n="start.s3" data-i18n-html="1">Játékhoz és kiegészítőhöz fiók kell: <a href="fiok.html">regisztrálj itt a weboldalon</a> vagy a launcherben (<b>Bejelentkezés / Regisztráció</b>). Kiegészítőt a Gumroadon vásárolj <b>ugyanazzal az e-mail-címmel</b>; ha kulcsot kaptál, a <b>Van kulcsom</b> gombbal is beválthatod.</li>
+				<li data-i18n="start.s4" data-i18n-html="1">Elfelejtetted a jelszavad? <a href="fiok.html#elfelejtett">Itt kérhetsz újat</a>, vagy a launcher fiókablakában.</li>
 			</ol>
 		</div>
 	</section>
 </main>
 
 <footer>
-	<div class="wrap">ParthLauncher · Birodalom · Heptarchia</div>
+	<div class="wrap">ParthLauncher · Birodalom · Heptarchia · Kard és Mágia</div>
 </footer>
 
 <dialog id="lightbox"><img alt=""><button class="close" aria-label="Bezárás">✕</button></dialog>
 
 <script>
+	// ── Nyelvek: magyar, angol, német (a választás a böngészőben megmarad) ──
+	const LANGS = { hu: "Magyar", en: "English", de: "Deutsch" };
+	const I18N = {
+		hu: {},   // a magyar szöveg magában a lapban van
+		en: {
+			"nav.download": "Download", "nav.games": "Games", "nav.dlc": "Add-ons", "nav.shots": "Screenshots",
+			"nav.news": "News", "nav.register": "Sign up",
+			"hero.lead": "One launcher for three games. It installs and updates <b>Birodalom</b>, <b>Heptarchia</b> and <b>Kard és Mágia</b>, and manages the add-ons you bought.",
+			"hero.win": "Download for Windows", "hero.installer": "installer", "hero.mac": "Download for macOS",
+			"hero.macsub": "Intel and Apple Silicon",
+			"hero.note": "Windows: if SmartScreen warns you, choose <i>More info → Run anyway</i>.<br>Mac: on first launch right-click the app → <i>Open</i>.",
+			"games.title": "Games", "games.sub": "All free. The ParthLauncher downloads and updates them for you.",
+			"games.hep.tag": "Anglo-Saxon grand strategy, from 790",
+			"games.hep.desc": "Lead Wessex, Mercia or Northumbria – or the Scots, Picts and Irish. Diplomacy, the Witan, the church, population and recruitment, and the coming of the vikings.",
+			"games.bir.tag": "Real-time strategy, 1400 – 1945",
+			"games.bir.desc": "Build an empire across five and a half centuries: economy, armies and great-power politics from the late Middle Ages to the modern era.",
+			"games.kard.tag": "Roguelike adventure · five depths",
+			"games.kard.desc": "Knight, mage or archer: fight down five depths to the Dragon. The knight is strong in melee, the archer deals damage from afar, the mage casts a blue arcane orb. Every level is always passable.",
+			"shots.title": "Screenshots", "shots.sub": "Click a picture to enlarge it.",
+			"shot.hep1": "Heptarchia – the British Isles in 790", "shot.hep2": "Heptarchia – Wessex, Mercia and East Anglia",
+			"shot.hep3": "The Varangian Road – from Novgorod to Kiev", "shot.kard": "Kard és Mágia – choose your hero",
+			"shot.bir1": "Birodalom – a medieval settlement", "shot.bir2": "Birodalom – the age of the world wars",
+			"shot.bir3": "Birodalom – a naval battle in the age of pirates",
+			"dlc.title": "Add-ons for Heptarchia",
+			"dlc.sub": "They are compatible with each other and with the base game – play any combination. You buy on Gumroad; the add-on is tied to your ParthLauncher account.",
+			"news.title": "News and updates", "news.sub": "The latest changes in the games and the add-ons.",
+			"news.loading": "Loading news…", "news.more": "Earlier news", "news.none": "No news yet.",
+			"start.title": "How to start",
+			"start.s1": "Download and install the ParthLauncher.",
+			"start.s2": "Pick a game and click <b>Update</b> / <b>Play</b> – the download runs by itself.",
+			"start.s3": "Playing and add-ons need an account: <a href=\"fiok.html\">sign up here on the website</a> or in the launcher (<b>Sign in / Sign up</b>). Buy add-ons on Gumroad with <b>the same e-mail address</b>; if you received a key, you can redeem it with the <b>I have a key</b> button.",
+			"start.s4": "Forgot your password? <a href=\"fiok.html#elfelejtett\">Request a new one here</a>, or in the launcher's account window.",
+			"dlc.buy": "Buy", "dlc.addon": "Heptarchia add-on", "ver.latest": "Latest: ", "ver.viaLauncher": "Get it with the launcher",
+			"news.tagNews": "News",
+		},
+		de: {
+			"nav.download": "Download", "nav.games": "Spiele", "nav.dlc": "Erweiterungen", "nav.shots": "Bilder",
+			"nav.news": "Neues", "nav.register": "Registrieren",
+			"hero.lead": "Ein Starter für drei Spiele. Er installiert und aktualisiert <b>Birodalom</b>, <b>Heptarchia</b> und <b>Kard és Mágia</b> und verwaltet die gekauften Erweiterungen.",
+			"hero.win": "Download für Windows", "hero.installer": "Installationsprogramm", "hero.mac": "Download für macOS",
+			"hero.macsub": "Intel und Apple Silicon",
+			"hero.note": "Windows: Wenn SmartScreen warnt, wähle <i>Weitere Informationen → Trotzdem ausführen</i>.<br>Mac: Beim ersten Start Rechtsklick auf die App → <i>Öffnen</i>.",
+			"games.title": "Spiele", "games.sub": "Alle kostenlos. Der ParthLauncher lädt sie herunter und hält sie aktuell.",
+			"games.hep.tag": "Angelsächsische Großstrategie, ab 790",
+			"games.hep.desc": "Führe Wessex, Mercia oder Northumbria – oder die Schotten, Pikten und Iren. Diplomatie, Witan, Kirche, Bevölkerung und Aushebung sowie die Ankunft der Wikinger.",
+			"games.bir.tag": "Echtzeitstrategie, 1400 – 1945",
+			"games.bir.desc": "Baue ein Reich über fünfeinhalb Jahrhunderte auf: Wirtschaft, Heer und Großmachtpolitik vom Spätmittelalter bis in die Moderne.",
+			"games.kard.tag": "Roguelike-Abenteuer · fünf Tiefen",
+			"games.kard.desc": "Ritter, Magier oder Bogenschütze: Kämpfe dich durch fünf Tiefen bis zum Drachen. Der Ritter ist im Nahkampf stark, der Bogenschütze trifft aus der Ferne, der Magier schleudert eine blaue Zauberkugel. Jede Ebene ist immer begehbar.",
+			"shots.title": "Bilder aus den Spielen", "shots.sub": "Klicke auf ein Bild, um es zu vergrößern.",
+			"shot.hep1": "Heptarchia – die Britischen Inseln im Jahr 790", "shot.hep2": "Heptarchia – Wessex, Mercia und Ostanglien",
+			"shot.hep3": "Der Warägerweg – von Nowgorod bis Kiew", "shot.kard": "Kard és Mágia – wähle deinen Helden",
+			"shot.bir1": "Birodalom – eine mittelalterliche Siedlung", "shot.bir2": "Birodalom – die Zeit der Weltkriege",
+			"shot.bir3": "Birodalom – eine Seeschlacht im Zeitalter der Piraten",
+			"dlc.title": "Erweiterungen für Heptarchia",
+			"dlc.sub": "Sie sind untereinander und mit dem Grundspiel kompatibel – in jeder Kombination spielbar. Gekauft wird über Gumroad; die Erweiterung gehört zu deinem ParthLauncher-Konto.",
+			"news.title": "Neues und Updates", "news.sub": "Die neuesten Änderungen in den Spielen und Erweiterungen.",
+			"news.loading": "Neuigkeiten werden geladen…", "news.more": "Ältere Meldungen", "news.none": "Noch keine Neuigkeiten.",
+			"start.title": "So fängst du an",
+			"start.s1": "Lade den ParthLauncher herunter und installiere ihn.",
+			"start.s2": "Wähle ein Spiel und klicke auf <b>Aktualisieren</b> / <b>Starten</b> – der Download läuft von selbst.",
+			"start.s3": "Zum Spielen und für Erweiterungen brauchst du ein Konto: <a href=\"fiok.html\">registriere dich hier auf der Website</a> oder im Launcher (<b>Anmelden / Registrieren</b>). Erweiterungen kaufst du auf Gumroad mit <b>derselben E-Mail-Adresse</b>; hast du einen Schlüssel erhalten, kannst du ihn mit <b>Ich habe einen Schlüssel</b> einlösen.",
+			"start.s4": "Passwort vergessen? <a href=\"fiok.html#elfelejtett\">Hier kannst du ein neues anfordern</a> oder im Kontofenster des Launchers.",
+			"dlc.buy": "Kaufen", "dlc.addon": "Heptarchia-Erweiterung", "ver.latest": "Neueste: ", "ver.viaLauncher": "Mit dem Launcher erhältlich",
+			"news.tagNews": "Neues",
+		},
+	};
+	const HU_DEFAULTS = {
+		"dlc.buy": "Megvásárlás", "dlc.addon": "Heptarchia-kiegészítő", "ver.latest": "Legújabb: ",
+		"ver.viaLauncher": "Letölthető a launcherrel", "news.none": "Még nincsenek hírek.", "news.tagNews": "Hír",
+	};
+	const LOCALE = { hu: "hu-HU", en: "en-GB", de: "de-DE" };
+	let lang = "hu";
+	try { lang = localStorage.getItem("parth_lang") || ""; } catch (e) { lang = ""; }
+	const urlLang = new URLSearchParams(location.search).get("lang");
+	if (LANGS[urlLang]) lang = urlLang;
+	if (!LANGS[lang]) {
+		const nav = (navigator.language || "hu").slice(0, 2).toLowerCase();
+		lang = LANGS[nav] ? nav : (nav === "hu" ? "hu" : "en");
+	}
+	const T = key => (lang === "hu" ? HU_DEFAULTS[key] : (I18N[lang] || {})[key]) ?? HU_DEFAULTS[key] ?? key;
+
+	// a magyar szövegeket a lapról mentjük el, hogy vissza lehessen váltani
+	const HU_TEXT = new Map();
+	document.querySelectorAll("[data-i18n]").forEach(el => HU_TEXT.set(el, el.innerHTML));
+
+	function applyLang() {
+		document.documentElement.lang = lang;
+		document.querySelectorAll("[data-i18n]").forEach(el => {
+			const key = el.dataset.i18n;
+			const val = lang === "hu" ? HU_TEXT.get(el) : (I18N[lang] || {})[key];
+			if (val != null) el.innerHTML = val;
+		});
+		document.querySelectorAll("#langs button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
+		try { localStorage.setItem("parth_lang", lang); } catch (e) {}
+		renderDlc();
+		if (all.length) { shown = 0; render(); }
+		showVersions();
+	}
+	document.getElementById("langs").innerHTML = Object.keys(LANGS)
+		.map(k => `<button type="button" data-lang="${k}" title="${LANGS[k]}">${k.toUpperCase()}</button>`).join("");
+	document.querySelectorAll("#langs button").forEach(b => b.onclick = () => { lang = b.dataset.lang; applyLang(); });
+
 	const DLCS = [
-		{ key: "skandinavia", name: "Skandinávia", price: "4 $", url: "https://parthenon62.gumroad.com/l/ltsalt",
-			desc: "Dánia, Norvégia, Svédek, Izland és Grönland – öt új nép, kibővített térkép, saját események." },
-		{ key: "vikingek", name: "A vikingek kora", price: "3 $", url: "https://parthenon62.gumroad.com/l/fxtisw",
-			desc: "Vezesd a nagy portyákat: Lindisfarne, Dorestad, Sevilla, Párizs feldúlása – egészen Normandia megszerzéséig." },
-		{ key: "vallas", name: "Hit és egyház", price: "3 $", url: "https://parthenon62.gumroad.com/l/iwqkt",
-			desc: "Minden népnek saját vallása és tanfája: Canterbury, Szent Dávid, Columba, Patrik egyháza, Odin, Thor és Frey hite." },
-		{ key: "varegok", name: "A varégok útja", price: "5 $", url: "https://parthenon62.gumroad.com/l/jrzwus",
-			desc: "Keletre kibővített térkép: Novgorod, Kijev, Miklagarðr. A Rusz és Bizánc, expedíciók a Volgán és a Dnyeperen, a Varangi Gárda, Szicília." },
+		{ key: "skandinavia", price: "4 $", url: "https://parthenon62.gumroad.com/l/ltsalt",
+			name: { hu: "Skandinávia", en: "Scandinavia", de: "Skandinavien" },
+			desc: {
+				hu: "Dánia, Norvégia, Svédek, Izland és Grönland – öt új nép, kibővített térkép, saját események.",
+				en: "Denmark, Norway, the Swedes, Iceland and Greenland – five new nations, a wider map and their own events.",
+				de: "Dänemark, Norwegen, die Schweden, Island und Grönland – fünf neue Völker, größere Karte, eigene Ereignisse." } },
+		{ key: "vikingek", price: "3 $", url: "https://parthenon62.gumroad.com/l/fxtisw",
+			name: { hu: "A vikingek kora", en: "The Viking Age", de: "Das Zeitalter der Wikinger" },
+			desc: {
+				hu: "Vezesd a nagy portyákat: Lindisfarne, Dorestad, Sevilla, Párizs feldúlása – egészen Normandia megszerzéséig.",
+				en: "Lead the great raids: Lindisfarne, Dorestad, Seville and the sack of Paris – all the way to winning Normandy.",
+				de: "Führe die großen Raubzüge an: Lindisfarne, Dorestad, Sevilla und die Plünderung von Paris – bis hin zur Eroberung der Normandie." } },
+		{ key: "vallas", price: "3 $", url: "https://parthenon62.gumroad.com/l/iwqkt",
+			name: { hu: "Hit és egyház", en: "Faith and Church", de: "Glaube und Kirche" },
+			desc: {
+				hu: "Minden népnek saját vallása és tanfája: Canterbury, Szent Dávid, Columba, Patrik egyháza, Odin, Thor és Frey hite.",
+				en: "Every people has its own faith and doctrine tree: Canterbury, Saint David, Columba, Patrick – and the worship of Odin, Thor and Freyr.",
+				de: "Jedes Volk hat seinen eigenen Glauben und Lehrbaum: Canterbury, Sankt David, Columba, Patrick – und die Verehrung von Odin, Thor und Freyr." } },
+		{ key: "varegok", price: "5 $", url: "https://parthenon62.gumroad.com/l/jrzwus",
+			name: { hu: "A varégok útja", en: "The Varangian Road", de: "Der Warägerweg" },
+			desc: {
+				hu: "Keletre kibővített térkép: Novgorod, Kijev, Miklagarðr. A Rusz és Bizánc, expedíciók a Volgán és a Dnyeperen, a Varangi Gárda, Szicília.",
+				en: "The map reaches east: Novgorod, Kiev, Miklagarðr. The Rus and Byzantium, expeditions on the Volga and the Dnieper, the Varangian Guard and Sicily.",
+				de: "Die Karte reicht nach Osten: Nowgorod, Kiew, Miklagard. Die Rus und Byzanz, Fahrten auf Wolga und Dnjepr, die Warägergarde und Sizilien." } },
 	];
 	const API = "https://api.github.com/repos/Parthenon2-boop/";
 	const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-	const fmtDate = d => new Date(d).toLocaleDateString("hu-HU", { year: "numeric", month: "long", day: "numeric" });
+	const fmtDate = d => new Date(d).toLocaleDateString(LOCALE[lang] || "hu-HU", { year: "numeric", month: "long", day: "numeric" });
 	const getJSON = url => fetch(url).then(r => r.ok ? r.json() : Promise.reject(r.status));
+	const pick = o => (o && (o[lang] ?? o.hu)) ?? "";
 
 	// kiegészítő-kártyák
-	document.getElementById("dlc-grid").innerHTML = DLCS.map(d => `
-		<article class="card dlc">
-			<h3>${esc(d.name)}</h3>
-			<span class="tag" id="dlcver-${d.key}">Heptarchia-kiegészítő</span>
-			<p>${esc(d.desc)}</p>
-			<div class="row"><span class="price">${esc(d.price)}</span><a class="buy" href="${d.url}" target="_blank" rel="noopener">Megvásárlás</a></div>
-		</article>`).join("");
+	const dlcVer = {};
+	function renderDlc() {
+		document.getElementById("dlc-grid").innerHTML = DLCS.map(d => `
+			<article class="card dlc">
+				<h3>${esc(pick(d.name))}</h3>
+				<span class="tag">${esc(T("dlc.addon"))}${dlcVer[d.key] ? " · " + esc(dlcVer[d.key]) : ""}</span>
+				<p>${esc(pick(d.desc))}</p>
+				<div class="row"><span class="price">${esc(d.price)}</span><a class="buy" href="${d.url}" target="_blank" rel="noopener">${esc(T("dlc.buy"))}</a></div>
+			</article>`).join("");
+	}
 
 	// képnagyító
 	const lb = document.getElementById("lightbox");
-	document.querySelectorAll(".shot").forEach(b => b.onclick = () => {
+	document.addEventListener("click", e => {
+		const b = e.target.closest(".shot");
+		if (!b) return;
 		const img = lb.querySelector("img");
 		img.src = b.dataset.full; img.alt = b.querySelector("img").alt;
 		lb.showModal();
@@ -255,15 +393,23 @@
 	}
 
 	// aktuális változatok
+	const vers = {};
+	function showVersions() {
+		const set = (id, tag) => {
+			const el = document.getElementById(id);
+			if (el) el.textContent = tag ? T("ver.latest") + tag : T("ver.viaLauncher");
+		};
+		set("ver-birodalom", vers.birodalom); set("ver-heptarchia", vers.heptarchia); set("ver-kard", vers.kard);
+		const l = document.getElementById("ver-launcher");
+		if (l && vers.launcher) l.textContent = vers.launcher.tag + " · " + fmtDate(vers.launcher.date);
+	}
 	getJSON(API + "birodalom/releases/latest").then(r => {
-		document.getElementById("ver-launcher").textContent = r.tag_name + " · " + fmtDate(r.published_at);
-		document.getElementById("ver-birodalom").textContent = "Legújabb: " + r.tag_name;
-	}).catch(() => { document.getElementById("ver-birodalom").textContent = "Letölthető a launcherrel"; });
-	getJSON(API + "heptarchia/releases/latest").then(r => {
-		document.getElementById("ver-heptarchia").textContent = "Legújabb: " + r.tag_name;
-	}).catch(() => { document.getElementById("ver-heptarchia").textContent = "Letölthető a launcherrel"; });
+		vers.launcher = { tag: r.tag_name, date: r.published_at }; vers.birodalom = r.tag_name; showVersions();
+	}).catch(showVersions);
+	getJSON(API + "heptarchia/releases/latest").then(r => { vers.heptarchia = r.tag_name; showVersions(); }).catch(showVersions);
+	getJSON(API + "kard-es-magia/releases/latest").then(r => { vers.kard = r.tag_name; showVersions(); }).catch(showVersions);
 
-	// hírek: a kézzel írt hírek + a kiegészítők kiadásai (automatikusan)
+	// hírek: a kézzel írt hírek (nyelvenként) + a kiegészítők kiadásai (automatikusan)
 	const PAGE = 8;
 	let all = [], shown = 0;
 	function render() {
@@ -271,10 +417,10 @@
 		shown = Math.min(all.length, shown + PAGE);
 		box.innerHTML = all.slice(0, shown).map(n => `
 			<article class="item${n.dlc ? " dlcnews" : ""}">
-				<div class="meta"><span>${esc(fmtDate(n.date))}</span><span class="pill">${esc(n.tag)}</span></div>
-				<h3>${esc(n.title)}</h3>
-				${n.text ? `<p>${esc(n.text)}</p>` : ""}
-			</article>`).join("") || '<p class="sub">Még nincsenek hírek.</p>';
+				<div class="meta"><span>${esc(fmtDate(n.date))}</span><span class="pill">${esc(pick(n.tag))}</span></div>
+				<h3>${esc(pick(n.title))}</h3>
+				${pick(n.text) ? `<p>${esc(pick(n.text))}</p>` : ""}
+			</article>`).join("") || `<p class="sub">${esc(T("news.none"))}</p>`;
 		document.getElementById("more").hidden = shown >= all.length;
 	}
 	document.getElementById("more").onclick = render;
@@ -285,20 +431,28 @@
 	]).then(([hand, rel]) => {
 		const items = [];
 		if (hand.status === "fulfilled") for (const h of hand.value)
-			items.push({ date: h.datum + "T12:00:00", title: h.cim, text: h.szoveg, tag: h.cimke || "Hír" });
+			items.push({
+				date: h.datum + "T12:00:00",
+				title: { hu: h.cim, en: h.cim_en, de: h.cim_de },
+				text: { hu: h.szoveg, en: h.szoveg_en, de: h.szoveg_de },
+				tag: { hu: h.cimke || T("news.tagNews"), en: h.cimke_en || h.cimke, de: h.cimke_de || h.cimke },
+			});
 		if (rel.status === "fulfilled") {
 			const seen = {};
 			for (const r of rel.value) {
 				const key = r.tag_name.replace(/-v\d+$/, "");
 				const d = DLCS.find(x => x.key === key);
 				if (!d || r.draft) continue;
-				if (!seen[key]) { seen[key] = 1; const t = document.getElementById("dlcver-" + key); if (t) t.textContent = "Heptarchia-kiegészítő · " + (r.name.match(/\d+(\.\d+)+/) || [r.tag_name])[0]; }
-				items.push({ date: r.published_at, title: r.name || d.name, text: (r.body || "").split(/\r?\n/)[0], tag: d.name, dlc: true });
+				if (!seen[key]) { seen[key] = 1; dlcVer[key] = (r.name.match(/\d+(\.\d+)+/) || [r.tag_name])[0]; }
+				items.push({ date: r.published_at, title: { hu: r.name || pick(d.name) }, text: { hu: (r.body || "").split(/\r?\n/)[0] }, tag: d.name, dlc: true });
 			}
+			renderDlc();
 		}
 		all = items.sort((a, b) => new Date(b.date) - new Date(a.date));
 		render();
 	});
+
+	applyLang();
 </script>
 </body>
 </html>
