@@ -29,8 +29,11 @@ const PRODUCTS: Record<string, string> = {
 
 // Érmecsomagok (Kard és Mágia bolt): Gumroad-termék → jóváírt érme.
 // 100 érme = 1 $, így a boltban egy megjelenés-rész 10–20 érme, vagyis 10–20 cent.
-// A rövid linkeket (permalink) a termék létrehozása után kell ide beírni.
-const COIN_PACKS: Record<string, number> = {};
+const COIN_PACKS: Record<string, number> = {
+	"iszcby": 100,   // Kard és Mágia – 100 érme (0,99 $)
+	"zwaqr": 220,    // Kard és Mágia – 220 érme (1,99 $)
+	"bnjaw": 600,    // Kard és Mágia – 600 érme (4,99 $)
+};
 
 Deno.serve(async (req: Request) => {
 	const url = new URL(req.url);
