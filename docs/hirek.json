@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-20",
+		"cim": "Heptarchia 1.29 – kikötő és hajó a szigeteken is",
+		"cimke": "Heptarchia",
+		"szoveg": "Eddig csak folyó mellé lehetett kikötőt építeni, és mivel hajóhoz kikötő kell, a tisztán tengerparti vidékeken – Man, Iona, Orkney és társaik – egyetlen hajót sem tudtál vízre bocsátani. Mostantól minden víz menti provinciában áll a kikötő: a tengerparton és a szigeteken is, ugyanúgy, ahogy a kereskedőhely eddig is épülhetett. Összesen kilenc olyan vidék nyílt meg, ahol korábban semmilyen hajód nem lehetett.",
+		"cim_en": "Heptarchia 1.29 – ports and ships on the islands too",
+		"szoveg_en": "Until now a port could only be built beside a river, and since ships need a port, the purely coastal lands – Man, Iona, Orkney and their like – could never launch a single ship. From this version a port can be built in every province that touches water: on the coast and on the islands, just as a market always could. Nine lands that could never have a ship are now open.",
+		"cim_de": "Heptarchia 1.29 – Häfen und Schiffe auch auf den Inseln",
+		"szoveg_de": "Bisher ließ sich ein Hafen nur an einem Fluss bauen, und da Schiffe einen Hafen brauchen, konnten die reinen Küstenlande – Man, Iona, Orkney und ihresgleichen – nie ein einziges Schiff zu Wasser lassen. Ab dieser Fassung entsteht ein Hafen in jeder Provinz am Wasser: an der Küste und auf den Inseln, genau wie der Handelsplatz es schon immer konnte. Neun Landschaften, die nie ein Schiff haben konnten, stehen nun offen.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-20",
 		"cim": "Heptarchia 1.28 – polgárháború, ha a tanács elfordul tőled",
 		"cimke": "Heptarchia",
 		"szoveg": "Eddig a haragos tanács csak egy-egy trónkövetelőt állított ellened. Mostantól ha a Witan (vagy a thing, a llys, az óenach) véleménye végképp összeomlik, polgárháború tör ki: a vidékeid fele egyszerre pártol át, a helyőrségük a trónkövetelőhöz áll, és jóval nagyobb sereg indul a székhelyed ellen. Ha elveszíted, a kincstár háromnegyede odavész és a pártütő vidékek elszakadnak – de az utolsó tartományodat sosem veszíted el. Ha megnyered, a megtört tanács hosszú időre hűséget esküszik. A diplomácia listáján ezentúl a királyságok neve előtt látod a viszonyt: kard a háborúra, kézfogás a szövetségre, mérleg a kereskedelmi egyezményre.",
