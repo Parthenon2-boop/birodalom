@@ -121,6 +121,8 @@
 			"e.rate": "Too many requests in a short time. Wait a minute and try again.",
 			"e.same": "The new password must be different from the old one.",
 			"e.weak": "This password is too weak. Use at least 8 characters.",
+			"e.mail": "We could not send the e-mail just now – the fault is on our side, not yours. Please try again in a few minutes.",
+			"e.mail.reg": " Your account was not created, so you can safely try again.",
 			"e.net": "Could not reach the server. Are you online?", "e.other": "It did not work. Please try again later.",
 		},
 		de: {
@@ -143,6 +145,8 @@
 			"e.rate": "Zu viele Anfragen in kurzer Zeit. Warte eine Minute und versuche es erneut.",
 			"e.same": "Das neue Passwort darf nicht dasselbe wie das alte sein.",
 			"e.weak": "Dieses Passwort ist zu schwach. Verwende mindestens 8 Zeichen.",
+			"e.mail": "Die E-Mail konnte gerade nicht gesendet werden – das liegt an uns, nicht an dir. Bitte versuche es in ein paar Minuten erneut.",
+			"e.mail.reg": " Dein Konto wurde nicht angelegt, du kannst es also bedenkenlos erneut versuchen.",
 			"e.net": "Der Server ist nicht erreichbar. Bist du online?", "e.other": "Es hat nicht geklappt. Bitte versuche es später erneut.",
 		},
 	};
@@ -158,6 +162,8 @@
 		"e.rate": "Túl sok kérés rövid időn belül. Várj egy percet, és próbáld újra.",
 		"e.same": "Az új jelszó nem lehet ugyanaz, mint a régi.",
 		"e.weak": "Ez a jelszó túl gyenge. Legalább 8 karakter legyen.",
+		"e.mail": "A levelet most nem sikerült kiküldeni – ez nálunk akadt el, nem nálad. Próbáld újra pár perc múlva.",
+		"e.mail.reg": " A fiók nem jött létre, úgyhogy nyugodtan próbálkozhatsz újra.",
 		"e.net": "Nem sikerült elérni a szervert. Van internet?", "e.other": "Nem sikerült. Próbáld újra később.",
 	};
 	let lang = "hu";
@@ -192,9 +198,13 @@
 	function say(form, text, ok) { const m = form.querySelector(".msg"); m.textContent = text; m.className = "msg " + (ok ? "ok" : "err"); }
 	const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 	async function busy(form, fn) { const b = form.querySelector("button.main"); b.disabled = true; try { await fn(); } finally { b.disabled = false; } }
-	function friendly(err) {
+	// reg = igaz, ha a regisztrációs űrlapról jön: ilyenkor azt is megírjuk, hogy fiók nem készült
+	function friendly(err, reg) {
 		const m = String(err && (err.message || err)).toLowerCase();
 		if (m.includes("rate") || m.includes("seconds")) return T("e.rate");
+		// a levélküldés akadt el (SMTP): a Supabase ilyenkor „Error sending confirmation/recovery email”-t ad
+		if (m.includes("sending") || m.includes("smtp") || m.includes("mailer"))
+			return T("e.mail") + (reg ? T("e.mail.reg") : "");
 		if (m.includes("different")) return T("e.same");
 		if (m.includes("weak") || m.includes("password")) return T("e.weak");
 		if (m.includes("network") || m.includes("fetch")) return T("e.net");
@@ -210,7 +220,7 @@
 			const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: BASE + "megerosites.html" } });
 			if (error) {
 				if (String(error.message).toLowerCase().includes("already")) return say(f, T("m.exists"));
-				return say(f, friendly(error));
+				return say(f, friendly(error, true));
 			}
 			if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0)
 				return say(f, T("m.exists"));
