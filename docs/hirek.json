@@ -1,4 +1,16 @@
 [
+	{
+		"datum": "2026-09-20",
+		"cim": "Kard és Mágia 3.0 és megújult Birodalom-épületek",
+		"cimke": "Frissítés",
+		"szoveg": "A Kard és Mágia mentés és folytatás, szintlépéskor választható képességek, különleges termek (kincstár, szentély, kereskedő), csapdák, titkos ajtók és automata térkép is került. A hősök és a szörnyek új, részletesebb rajzot kaptak, és megnyílt a kinézet-bolt: fej, test, láb és fegyver külön cserélhető érméért. A Birodalomban az épületek egységes stílust kaptak, korszakonként más anyagból. A weboldalon mostantól írni is tudsz nekünk.",
+		"cim_en": "Kard és Mágia 3.0 and reworked Birodalom buildings",
+		"szoveg_en": "Kard és Mágia now has saving and continuing, a perk to choose on every level-up, special rooms (treasury, shrine, merchant), traps, secret doors and an automap. Heroes and monsters were redrawn with more detail, and the cosmetics shop opened: head, body, legs and weapon can be changed separately for coins. In Birodalom the buildings now share one coherent style, with different materials per era. The website also has a contact form now.",
+		"cim_de": "Kard és Mágia 3.0 und überarbeitete Birodalom-Gebäude",
+		"szoveg_de": "Kard és Mágia bietet jetzt Speichern und Fortsetzen, bei jedem Stufenaufstieg eine wählbare Fähigkeit, besondere Räume (Schatzkammer, Schrein, Händler), Fallen, Geheimtüren und eine Automap. Helden und Monster wurden detaillierter neu gezeichnet, und der Aussehen-Shop ist geöffnet: Kopf, Körper, Beine und Waffe lassen sich einzeln gegen Münzen tauschen. In Birodalom haben die Gebäude jetzt einen einheitlichen Stil mit unterschiedlichen Materialien je Epoche. Auf der Website gibt es außerdem ein Kontaktformular.",
+		"cimke_en": "Update",
+		"cimke_de": "Update"
+	},
     {
         "datum":  "2026-09-20",
         "cim":  "Új játék: Kard és Mágia – ParthLauncher 1.30",

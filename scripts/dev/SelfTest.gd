@@ -1132,36 +1132,38 @@ func _test_sprites() -> void:
 	check("a 19. és a 20. század nem ugyanaz a lap", lapok[2] != lapok[3])
 	check("a 19. század nem ugyanúgy fest, mint a 17.",
 		szinek[2] != szinek[1], "%s / %s" % [szinek[1], szinek[2]])
-	# Az épületek is: tégla és pala a 19., hűvös falak a 20. században.
+	# Az épületek is: MINDEN korszakban más anyagból épülnek — patics és
+	# zsúp, kő és cserép, tégla és pala, végül beton és lemez.
 	var elteres: Array[String] = []
 	for t in ["hq", "barracks", "house", "tower"]:
-		var s2: Array = Building.MATERIALS.get(t, [])
-		if s2.size() < 3 or s2[1] == s2[2]: elteres.append(t)
-	check("a 19. és a 20. századi épületek anyaga különbözik",
+		var latott: Array[String] = []
+		for a in range(4):
+			var kulcs := "%s+%s" % [BuildArt.fal_anyag(t, a), BuildArt.teto_anyag(t, a)]
+			if kulcs in latott: elteres.append("%s@%d" % [t, a])
+			latott.append(kulcs)
+	check("minden korszakban más anyagból épülnek a házak",
 		elteres.is_empty(), str(elteres))
-	# Az anyagfoltok legyenek TÖMÖREK: ahol a forráskép átlátszó, ott a
-	# fal foltokban tűnne el, és a fű látszana át a házon.
+	# Az anyagminták legyenek TÖMÖREK: ha bárhol átlátszó a csempe, ott a
+	# fű látszana át a házon.
 	var likacsos: Array[String] = []
-	for key in Building.TEX_LIB:
-		var e: Array = Building.TEX_LIB[key]
-		var path: String = "res://assets/sprites/buildings/%s.png" % e[0]
-		if not ResourceLoader.exists(path): continue
-		var im: Image = (load(path) as Texture2D).get_image()
-		var r: Rect2 = e[1]
-		var atl := 0
-		var db := 0
-		var yy := int(r.position.y)
-		while yy < int(r.end.y) and yy < im.get_height():
-			var xx := int(r.position.x)
-			while xx < int(r.end.x) and xx < im.get_width():
-				db += 1
-				if im.get_pixel(xx, yy).a < 0.98: atl += 1
-				xx += 2
-			yy += 2
-		if db > 0 and float(atl) / float(db) > 0.05:
-			likacsos.append("%s %d%%" % [key, int(100.0 * float(atl) / float(db))])
+	for key in BuildArt.FAL_SZIN:
+		for a in range(4):
+			var im: Image = BuildArt.anyag_tex(key, a).get_image()
+			var atl := 0
+			for yy in range(0, im.get_height(), 2):
+				for xx in range(0, im.get_width(), 2):
+					if im.get_pixel(xx, yy).a < 0.98: atl += 1
+			if atl > 0 and not (key in likacsos): likacsos.append(key)
 	check("az épületanyagok tömörek (nem látszik át rajtuk a táj)",
 		likacsos.is_empty(), str(likacsos))
+	# EGY STÍLUS: a tetőhajlás szűk sávban marad, hogy a házak egy
+	# nézőpontból rajzoltnak látszódjanak.
+	var kilogo: Array[String] = []
+	for t in Building.ROOF_TAPER:
+		var v: float = Building.ROOF_TAPER[t]
+		if v < 0.08 or v > 0.45: kilogo.append("%s=%.2f" % [t, v])
+	check("a tetők egy nézőpontból készültek (hajlás 0,08–0,45)",
+		kilogo.is_empty(), str(kilogo))
 	check("a korszakcsoportok jól oszlanak el",
 		Building.era_group(0) == 0 and Building.era_group(1) == 0
 		and Building.era_group(2) == 1 and Building.era_group(3) == 2)
@@ -1280,11 +1282,16 @@ func _test_sprites() -> void:
 				Vector2(-9000, -9000), true)   # a palyan kivul, csak betoltesre
 			b.age = age
 			b._load_sprite()
-			if (b._wall_tex == null or b._roof_tex == null) \
+			# A fal és a tető anyagának LÉTEZNIE kell a közös palettában —
+			# különben az épület szín nélkül, tájidegen foltként jelenne meg.
+			if (not BuildArt.FAL_SZIN.has(b._fal_mat)
+					or not BuildArt.TETO_SZIN.has(b._teto_mat)
+					or BuildArt.anyag_tex(b._fal_mat, age) == null) \
 					and not ("%s@%d" % [t, age]) in missing_b:
 				missing_b.append("%s@%d" % [t, age])
 			b.queue_free()
-	check("minden épület-sprite betölt", missing_b.is_empty(), str(missing_b))
+	check("minden épületnek van anyaga a közös palettából",
+		missing_b.is_empty(), str(missing_b))
 	# Méretarány: az épületek a KATONÁHOZ mérve legyenek értelmesek.
 	# (ház ~1,5x, laktanya ~2x, főváros ~3x a gyalogos magassága)
 	var ember := 46.0
@@ -2785,6 +2792,16 @@ func showcase() -> void:
 		var p := origin + Vector2((i % 5) * 150, int(i / 5) * 150)
 		var b = main.spawn_building(types[i], 0, p, true)
 		b.age = GameState.get_age()
+	# A képen az ÁLLAPOTOK is legyenek rajta: egy félkész és egy romlott
+	# ház. Ezeket nézzük meg, ha az állványzat vagy a repedésrajz változik.
+	var epulo = main.spawn_building("house", 0, origin + Vector2(760, 0), false)
+	if epulo != null:
+		epulo.prog = 0.45
+		epulo.queue_redraw()
+	var romos = main.spawn_building("barracks", 0, origin + Vector2(760, 150), true)
+	if romos != null:
+		romos.hp = romos.max_hp * 0.25
+		romos.queue_redraw()
 	var roles := ["worker", "melee", "ranged", "spear", "cav", "priest", "spy",
 		"medic", "siege", "ram"]
 	for i in roles.size():
@@ -2822,6 +2839,18 @@ func showcase() -> void:
 		break
 	main.camera.position = origin + Vector2(300, 150)
 	main.camera.reset_smoothing()
+	# `--showcase --epuletmenu`: munkást jelölünk ki, hogy az ÉPÍTÉSI MENÜ
+	# is látszódjon a képen — az épületikonokat csak így lehet ellenőrizni.
+	if "--epuletmenu" in Main.dev_args():
+		var mu := _first_player_unit("worker")
+		if mu != null:
+			for b2 in get_tree().get_nodes_in_group("player_buildings"):
+				if b2.is_selected(): b2.set_selected(false)
+			main.selected_bld = null
+			main.selected_units.clear()
+			main.selected_units.append(mu)
+			mu.set_selected(true)
+			main.hud.update_selection([mu])
 	# `--showcase --tisztakep`: a felület nélküli, álló kép — így az
 	# épületek sziluettjét semmi nem takarja.
 	if "--tisztakep" in Main.dev_args():

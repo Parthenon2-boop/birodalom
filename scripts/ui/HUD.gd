@@ -202,6 +202,16 @@ func _style_top_bar() -> void:
 		box.add_child(sep)
 		box.move_child(sep, group.get_index())
 
+# Kis épületrajz az építési gombokra. Nem külön rajz: a BuildArt ugyanazt
+# a sziluettet, palettát és tust teszi le, mint a pályán — csak textúra
+# nélkül, mert 26 képponton úgyis eltűnne.
+class BldIcon extends Control:
+	var tipus: String = "house"
+	var age: int = 0
+
+	func _draw() -> void:
+		BuildArt.ikon(self, tipus, age, Rect2(Vector2.ZERO, size))
+
 # Kis rajzolt ikonok a nyersanyagokhoz.
 class ResIcon extends Control:
 	var kind: String = "wood"
@@ -381,10 +391,21 @@ func _build_build_panel() -> void:
 			continue
 		var btn := Button.new()
 		btn.text = build_name(t)
-		btn.custom_minimum_size = Vector2(150, 30)
+		btn.custom_minimum_size = Vector2(158, 32)
 		if main != null:
 			btn.tooltip_text = _cost_text(main.build_cost(GameState.en_id, t))
 		btn.pressed.connect(func() -> void: _on_build_pressed(t))
+		# Kis épületrajz a gombon — UGYANAZZAL a nézőponttal, palettával és
+		# tussal, mint a pályán álló ház (BuildArt.ikon). Így a menü és a
+		# település egy kézből valónak látszik, és a korszakváltás a
+		# gombokon is meglátszik: a gombsor a korszakváltáskor újraépül.
+		var ico := BldIcon.new()
+		ico.tipus = t
+		ico.age = age
+		ico.position = Vector2(5, 3)
+		ico.size = Vector2(26, 26)
+		ico.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		btn.add_child(ico)
 		build_panel.add_child(btn)
 
 func _on_build_pressed(tipus: String) -> void:
