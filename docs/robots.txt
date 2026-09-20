@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://parthenon2-boop.github.io/birodalom/sitemap.xml
