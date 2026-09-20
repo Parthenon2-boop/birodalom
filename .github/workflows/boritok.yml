@@ -1,0 +1,58 @@
+# Borítóképek a weboldalra — magától
+#
+# A játékok borítói a ParthLauncherben élnek (launcher/assets/covers/*.jpg).
+# A weboldal ugyanezeket mutatja, de a GitHub Pages csak a docs/ mappát
+# szolgálja ki, ezért oda másolat kell. Ez a munkafolyamat gondoskodik róla,
+# hogy a másolat SOSE avuljon el: amint egy borító megváltozik a launcherben,
+# a docs/kepek/borito_<játék>.jpg is frissül, és a weboldal a következő
+# percben már az új képet mutatja.
+#
+# Kézzel semmit nem kell csinálni: elég a launcher borítóját lecserélni.
+
+name: Borítók a weboldalra
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "launcher/assets/covers/*.jpg"
+      - ".github/workflows/boritok.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: boritok
+  cancel-in-progress: true
+
+jobs:
+  masolas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Borítók másolása a docs/kepek mappába
+        run: |
+          set -e
+          mkdir -p docs/kepek
+          valtozott=0
+          for f in launcher/assets/covers/*.jpg; do
+            nev="$(basename "$f")"
+            cel="docs/kepek/borito_${nev}"
+            if ! cmp -s "$f" "$cel"; then
+              cp "$f" "$cel"
+              echo "frissült: $cel"
+              valtozott=1
+            fi
+          done
+          echo "valtozott=$valtozott" >> "$GITHUB_ENV"
+
+      - name: Közzététel
+        if: env.valtozott == '1'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/kepek/borito_*.jpg
+          git commit -m "Weboldal: borítóképek frissítése a launcherből"
+          git push
