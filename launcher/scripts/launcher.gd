@@ -147,7 +147,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 27
+const LAUNCHER_BUILD := 28
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1125,7 +1125,8 @@ func _acc_email() -> String:
 	return str(cfg.get_value("account", "email", ""))
 
 func _acc_logged_in() -> bool:
-	return _acc_enabled() and str(cfg.get_value("account", "refresh_token", "")) != ""
+	# belépve vagyunk, ha van mentett kulcs, vagy ha a mostani futásban léptünk be
+	return _acc_enabled() and (acc_token != "" or str(cfg.get_value("account", "refresh_token", "")) != "")
 
 # Egy kérés a fiókszerverhez: [HTTP-kód (0 = nem sikerült elérni), válasz (Dictionary / Array)]
 func _acc_call(method: int, path: String, body = null, token: String = "") -> Array:
@@ -1147,8 +1148,24 @@ func _acc_call(method: int, path: String, body = null, token: String = "") -> Ar
 	var code: int = int(res[1]) if int(res[0]) == HTTPRequest.RESULT_SUCCESS else 0
 	return [code, data if data != null else {}]
 
+var acc_stay: CheckBox
+var acc_refresh_mem := ""        # a munkamenet kulcsa akkor is, ha nem mentjük lemezre
+
+# „Bejelentkezve maradok” – alapból be van kapcsolva
+func _acc_stay_on() -> bool:
+	return bool(cfg.get_value("account", "maradjak", true))
+
 func _acc_store_session(data: Dictionary) -> void:
 	acc_token = str(data.get("access_token", ""))
+	if str(data.get("refresh_token", "")) != "": acc_refresh_mem = str(data["refresh_token"])
+	if not _acc_stay_on():
+		# csak a mostani futásra: a kulcs nem kerül a beállításfájlba
+		cfg.set_value("account", "refresh_token", "")
+		if data.has("user") and data["user"] is Dictionary and (data["user"] as Dictionary).has("email"):
+			cfg.set_value("account", "email", str((data["user"] as Dictionary)["email"]))
+		cfg.save(CFG_PATH)
+		_write_game_session()
+		return
 	cfg.set_value("account", "refresh_token", str(data.get("refresh_token", "")))
 	var user: Dictionary = data.get("user", {}) if data.get("user") is Dictionary else {}
 	if user.has("email"): cfg.set_value("account", "email", str(user["email"]))
@@ -1168,7 +1185,7 @@ func _write_game_session() -> void:
 		"url": ACCOUNT_URL, "anon": ACCOUNT_ANON_KEY,
 		"email": _acc_email(),
 		"access_token": acc_token,
-		"refresh_token": str(cfg.get_value("account", "refresh_token", "")),
+		"refresh_token": acc_refresh_mem if acc_refresh_mem != "" else str(cfg.get_value("account", "refresh_token", "")),
 		"mentve": int(Time.get_unix_time_from_system()),
 	}
 	for key in SESSION_GAMES:
@@ -1184,17 +1201,41 @@ func _clear_game_session() -> void:
 		var p := _game_session_path(str(SESSION_GAMES[key]))
 		if FileAccess.file_exists(p): DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
 
-# Induláskor: a mentett munkamenet frissítése, és a fiók kiegészítőinek betöltése
+# Induláskor: a mentett munkamenet frissítése, és a fiók kiegészítőinek betöltése.
+# A játékok ugyanazt a fiókot használják, és a kiszolgáló minden megújításkor ÚJ kulcsot ad –
+# ezért ha a mi kulcsunk már elavult, megnézzük a játéknak átadott fájlban lévő frissebbet is.
 func _acc_refresh() -> void:
 	if not _acc_logged_in(): return
-	var r := await _acc_call(HTTPClient.METHOD_POST, "/auth/v1/token?grant_type=refresh_token",
-		{"refresh_token": str(cfg.get_value("account", "refresh_token", ""))})
+	var r := await _acc_try_refresh(str(cfg.get_value("account", "refresh_token", "")))
+	if int(r[0]) != 200:
+		var masik := _game_session_refresh_token()
+		if masik != "" and masik != str(cfg.get_value("account", "refresh_token", "")):
+			r = await _acc_try_refresh(masik)
 	if int(r[0]) == 200 and r[1] is Dictionary:
 		_acc_store_session(r[1])
 		await _acc_sync()
 	elif int(r[0]) >= 400:
-		_acc_logout(true)      # lejárt vagy visszavont munkamenet: újra be kell lépni
+		# a belépés lejárt: a fiókot megjegyezzük, csak újra be kell jelentkezni
+		acc_token = ""
+		cfg.set_value("account", "refresh_token", "")
+		cfg.save(CFG_PATH)
+		_status("A belépésed lejárt. Jelentkezz be újra a játékhoz.", S.GOLD_LIGHT)
 	_refresh_account_ui()
+
+func _acc_try_refresh(token: String) -> Array:
+	if token == "": return [0, {}]
+	return await _acc_call(HTTPClient.METHOD_POST, "/auth/v1/token?grant_type=refresh_token",
+		{"refresh_token": token})
+
+# A játéknak átadott fájlban lehet frissebb kulcs (a játék is megújíthatta)
+func _game_session_refresh_token() -> String:
+	for key in SESSION_GAMES:
+		var p := _game_session_path(str(SESSION_GAMES[key]))
+		if not FileAccess.file_exists(p): continue
+		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(p))
+		if d is Dictionary and str(d.get("refresh_token", "")) != "":
+			return str(d["refresh_token"])
+	return ""
 
 # A fiók kiegészítői: ezek „megvásároltak” lesznek (a ParthLauncher.cfg-ben ACC_LICENSE jellel)
 func _acc_sync() -> void:
@@ -1274,6 +1315,7 @@ func _acc_forgot() -> void:
 
 func _acc_logout(silent: bool = false) -> void:
 	acc_token = ""
+	acc_refresh_mem = ""
 	cfg.set_value("account", "refresh_token", "")
 	_clear_game_session()
 	for game_key in DLCS:
@@ -1294,7 +1336,7 @@ func _build_account_popup() -> void:
 	acc_popup.add_child(v)
 	v.add_child(S.make_title("Fiók", 24, S.GOLD_LIGHT))
 	var info := Label.new()
-	info.text = "Egy fiók mindkét játékhoz (Birodalom és Heptarchia). A megvásárolt kiegészítők a fiókodhoz kötődnek: bármelyik gépen belépve megjelennek. Vásárláskor ugyanazt az e-mail-címet add meg a Gumroadon."
+	info.text = "Egy fiók mindegyik játékhoz. A megvásárolt kiegészítők és a boltban vett részek a fiókodhoz kötődnek: bármelyik gépen belépve megjelennek. Vásárláskor ugyanazt az e-mail-címet add meg a Gumroadon."
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.custom_minimum_size = Vector2(520, 0)
 	info.add_theme_color_override("font_color", S.GOLD_LIGHT if S.skin == "heptarchia" else S.TEXT)
@@ -1320,6 +1362,19 @@ func _build_account_popup() -> void:
 	login.add_child(row)
 	_button(row, "Belépés", func(): _acc_login(false)).size_flags_horizontal = SIZE_EXPAND_FILL
 	_button(row, "Regisztráció", func(): _acc_login(true)).size_flags_horizontal = SIZE_EXPAND_FILL
+	# „Bejelentkezve maradok”: a belépés a gépen marad, és induláskor magától megújul.
+	acc_stay = _checkbox(login, "Bejelentkezve maradok ezen a gépen", _acc_stay_on(), func(on: bool):
+		cfg.set_value("account", "maradjak", on)
+		cfg.save(CFG_PATH)
+		if not on:
+			cfg.set_value("account", "refresh_token", "")
+			cfg.save(CFG_PATH)
+			_clear_game_session()
+			acc_status.text = "Rendben: kilépés után újra be kell jelentkezned."
+		else:
+			_acc_store_session({"access_token": acc_token, "refresh_token": acc_refresh_mem})
+			acc_status.text = "Rendben: legközelebb magától belépve maradsz.")
+	acc_stay.add_theme_color_override("font_color", S.GOLD_LIGHT if S.skin == "heptarchia" else S.TEXT)
 	var forgot := _button(login, "Elfelejtett jelszó", _acc_forgot)
 	forgot.flat = true
 	forgot.custom_minimum_size = Vector2(0, 30)

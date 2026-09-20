@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-20",
+		"cim": "ParthLauncher 1.32 – „Bejelentkezve maradok”",
+		"cimke": "ParthLauncher",
+		"szoveg": "Mostantól nem kell minden indításnál belépni: a fiókablakban bepipálhatod a „Bejelentkezve maradok ezen a gépen” lehetőséget, és az indító magától megújítja a belépésedet. Ha kikapcsolod, a kilépés után újra kéri a jelszót. Javítottuk azt is, amikor a launcher és a Kard és Mágia egyszerre újította meg a munkamenetet, és emiatt néha kiléptetett.",
+		"cim_en": "ParthLauncher 1.32 – “Stay signed in”",
+		"szoveg_en": "You no longer have to sign in on every start: tick “Stay signed in on this computer” in the account window and the launcher renews your session by itself. Turn it off and it will ask for your password again after you quit. We also fixed the case where the launcher and Kard és Mágia renewed the session at the same time and signed you out.",
+		"cim_de": "ParthLauncher 1.32 – „Angemeldet bleiben“",
+		"szoveg_de": "Du musst dich nicht mehr bei jedem Start anmelden: Aktiviere im Kontofenster „Auf diesem Rechner angemeldet bleiben“, und der Launcher erneuert deine Sitzung selbst. Schaltest du es aus, wird nach dem Beenden wieder das Passwort verlangt. Außerdem wurde der Fall behoben, dass Launcher und Kard és Mágia die Sitzung gleichzeitig erneuerten und dich abmeldeten.",
+		"cimke_en": "ParthLauncher",
+		"cimke_de": "ParthLauncher"
+	},
+	{
+		"datum": "2026-09-20",
 		"cim": "Kard és Mágia 3.0 és megújult Birodalom-épületek",
 		"cimke": "Frissítés",
 		"szoveg": "A Kard és Mágia mentés és folytatás, szintlépéskor választható képességek, különleges termek (kincstár, szentély, kereskedő), csapdák, titkos ajtók és automata térkép is került. A hősök és a szörnyek új, részletesebb rajzot kaptak, és megnyílt a kinézet-bolt: fej, test, láb és fegyver külön cserélhető érméért. A Birodalomban az épületek egységes stílust kaptak, korszakonként más anyagból. A weboldalon mostantól írni is tudsz nekünk.",
