@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-20",
+		"cim": "Heptarchia 1.27 – ország-tábla a bal oldalon",
+		"cimke": "Heptarchia",
+		"szoveg": "A bal panelen mostantól egy pillantással látod a királyságod állapotát: az uralkodót, a tartományok, erődök és templomok számát, a haderődet, és azt, hány körre elég még az ezüst és az élelem. Alatta az „Ebben a körben” lista mutatja, mi maradt hátra – fogyó készlet, védtelen határvidék, megépíthető épület, toborzás, elégedetlen tanács, lejáró béke. A sorra kattintva a térkép rögtön odaugrik.",
+		"cim_en": "Heptarchia 1.27 – realm board on the left",
+		"szoveg_en": "The left panel now shows your realm at a glance: the ruler, the number of provinces, forts and churches, your host, and how many turns your silver and food will last. Below it the “This turn” list shows what is left to do – dwindling stores, an undefended border, a building you can afford, recruitment, an unhappy council, a truce about to end. Click a row and the map jumps straight there.",
+		"cim_de": "Heptarchia 1.27 – Reichstafel auf der linken Seite",
+		"szoveg_de": "Die linke Leiste zeigt jetzt dein Reich auf einen Blick: den Herrscher, die Zahl der Provinzen, Festungen und Kirchen, dein Heer und wie viele Runden Silber und Nahrung noch reichen. Darunter zeigt die Liste „In dieser Runde“, was noch offen ist – schwindende Vorräte, eine ungeschützte Grenze, ein bezahlbares Gebäude, Rekrutierung, ein unzufriedener Rat, ein auslaufender Waffenstillstand. Ein Klick auf die Zeile, und die Karte springt dorthin.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-20",
 		"cim": "Kard és Mágia 3.3 – él a katakomba",
 		"cimke": "Kard és Mágia",
 		"szoveg": "A szörnyek mostantól akkor is lépnek, ha te épp állsz: aki sokáig tétovázik, azt utolérik. Így minden mozdulat számít, a harc pedig sokkal feszültebb. Az indítóban új borítót kapott a játék: a mostani rajzokkal, és minden hős neve a saját alakja alatt áll.",
