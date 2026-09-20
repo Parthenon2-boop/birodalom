@@ -128,3 +128,76 @@ A leírásba mindig az oldal linkje kerüljön.
 | Havonta | egy nagyobb bejegyzés valamelyik közösségbe (új játék, nagy frissítés) |
 
 **Fontos:** ugyanazt a linket használd mindenhol, és az első órákban válaszolj a hozzászólásokra.
+
+---
+
+# HEPTARCHIA – az első kampány anyagai
+
+A Heptarchia oldala: **https://parthenon2-boop.github.io/birodalom/heptarchia.html**
+(angolul `?lang=en`, németül `?lang=de`)
+
+## H1. Reddit – r/grandstrategy, r/strategygames, r/4Xgaming (angol)
+
+**Cím:** Heptarchia – a free grand strategy game about the Anglo-Saxon kingdoms from 790 (solo dev, Godot)
+
+> You take one of the kingdoms of the Heptarchy in 790 – Wessex, Mercia, Northumbria, or the Scots,
+> Picts and Irish – three years before the first viking ships reach Lindisfarne.
+>
+> What it has: a Witan you must keep on your side, royal goals that decide how long the nobles
+> tolerate you, a church you build up from a minster to an archbishopric (only where a real
+> archiepiscopal see existed), population that your armies are actually recruited from, and the
+> papacy in Rome that will broker peace – but a pilgrimage leaves your kingdom weaker while you
+> are away.
+>
+> It's free, Windows and macOS, and it's in English, German and Hungarian:
+> https://parthenon2-boop.github.io/birodalom/heptarchia.html?lang=en
+>
+> I'm a solo developer and this is the game I've spent the most time on. Ask me anything –
+> especially if you know the period, I'd like to hear what feels wrong.
+
+## H2. Reddit – r/history, r/MedievalHistory (csak ha szabad a linkelés; történelmi hangsúly)
+
+**Cím:** I made a strategy game set in 790s Britain and tried to keep the church hierarchy accurate
+
+> The bit I enjoyed most was the church: minsters, bishoprics, and archbishoprics that can only be
+> built where a see actually existed (Canterbury, York). Old place names show up as well –
+> Winchester is Wintanceaster, Exeter is Exanceaster.
+> Free game, if anyone wants to poke holes in the history:
+> https://parthenon2-boop.github.io/birodalom/heptarchia.html?lang=en
+
+## H3. Magyar bejegyzés (Facebook-csoportok, Discord, Gamekapocs)
+
+> **Heptarchia – ingyenes magyar nagystratégia a 790-es évek Britanniájában**
+>
+> Wessex, Mercia vagy Northumbria élén állsz, három évvel a vikingek első támadása előtt.
+> Witan, királyi célok, egyház a templomtól az érsekségig, lakosságból toborzott sereg, és a
+> pápaság Rómában. 793-ban megérkeznek a hajók, és onnantól minden part veszélyes.
+>
+> Ingyenes, magyarul, Windowsra és Macre:
+> https://parthenon2-boop.github.io/birodalom/heptarchia.html
+>
+> Egyedül fejlesztem, minden visszajelzésnek örülök.
+
+## H4. Rövid posztok (X, Bluesky, Mastodon)
+
+> 790. Wessex trónján ülsz. Három éved van Lindisfarne előtt.
+> Heptarchia – ingyenes nagystratégia, magyarul is.
+> https://parthenon2-boop.github.io/birodalom/heptarchia.html
+> #indiedev #godot #strategygame
+
+> In 790 you take a kingdom of the Heptarchy. In 793 the ships come.
+> Heptarchia – free Anglo-Saxon grand strategy, made solo in Godot.
+> https://parthenon2-boop.github.io/birodalom/heptarchia.html?lang=en
+> #screenshotsaturday #gamedev #strategygame
+
+## H5. Rövid videó vázlatok (15–30 mp)
+
+1. **„793"** – a térkép békés, majd megjelenik a sárkányorrú hajó, felirat: *Lindisfarne*.
+2. **Witan** – a tanács ablaka, a támogatás sáv mozog, felirat: *„A tanács nélkül nincs király."*
+3. **Egyház** – templom → püspökség → érsekség fejlődés három vágásban.
+4. **Toborzás** – a falu nő, a sereg nő; felirat: *„A sereged a parasztjaidból áll."*
+5. **Kiegészítők** – gyors körkép Skandináviáról és a varég útról.
+
+## H6. Egymondatos leírás (mindenhova)
+
+> Heptarchia: ingyenes angolszász nagystratégia 790-től – Witan, egyház, lakosság és a vikingek.
