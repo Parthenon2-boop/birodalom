@@ -27,6 +27,11 @@ const PRODUCTS: Record<string, string> = {
 	"lKinUakqfvjYPDG8EnuTbA==": "varegok", "jrzwus": "varegok",
 };
 
+// Érmecsomagok (Kard és Mágia bolt): Gumroad-termék → jóváírt érme.
+// 100 érme = 1 $, így a boltban egy megjelenés-rész 10–20 érme, vagyis 10–20 cent.
+// A rövid linkeket (permalink) a termék létrehozása után kell ide beírni.
+const COIN_PACKS: Record<string, number> = {};
+
 Deno.serve(async (req: Request) => {
 	const url = new URL(req.url);
 	const secret = (Deno.env.get("GUMROAD_PING_SECRET") ?? "").trim();   // bemásoláskor a végére kerülhet sortörés
@@ -42,7 +47,8 @@ Deno.serve(async (req: Request) => {
 	const get = (k: string) => String(data[k] ?? "");
 	const permalink = (get("permalink") || get("product_permalink")).split("/").pop() ?? "";
 	const dlc = PRODUCTS[get("product_id")] ?? PRODUCTS[permalink];
-	if (!dlc) return new Response("unknown product", { status: 200 });
+	const coins = COIN_PACKS[get("product_id")] ?? COIN_PACKS[permalink] ?? 0;
+	if (!dlc && !coins) return new Response("unknown product", { status: 200 });
 
 	const email = get("email").trim().toLowerCase();
 	const saleId = get("sale_id");
@@ -51,6 +57,30 @@ Deno.serve(async (req: Request) => {
 	if (email === "" || saleId === "") return new Response("missing data", { status: 400 });
 
 	const db = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey());
+
+	// ── érmecsomag: jóváírás a vevő e-mail-címére (a fiókhoz a játék első vásárlásakor kötjük) ──
+	if (coins) {
+		// hány darabot vett egyszerre
+		const qty = Math.max(1, parseInt(get("quantity") || "1", 10) || 1);
+		if (cancelled) {
+			// visszatérítés: az egészet levonjuk (egyszer)
+			const { data: back } = await db.from("coin_tx").select("id").eq("sale_id", saleId + "-vissza").maybeSingle();
+			if (back) return new Response("ok");
+			const { data: orig } = await db.from("coin_tx").select("amount, user_id, email").eq("sale_id", saleId).maybeSingle();
+			if (!orig) return new Response("ok");
+			await db.from("coin_tx").insert({
+				user_id: orig.user_id, email: orig.email, amount: -orig.amount,
+				reason: "visszateritve", sale_id: saleId + "-vissza",
+			});
+			return new Response("refunded");
+		}
+		const { error } = await db.from("coin_tx").upsert(
+			{ email, amount: coins * qty, reason: "gumroad", sale_id: saleId },
+			{ onConflict: "sale_id" },
+		);
+		if (error) return new Response("db error: " + error.message, { status: 500 });
+		return new Response("coins ok");
+	}
 
 	if (cancelled) {
 		await db.from("entitlements").update({ revoked: true }).eq("sale_id", saleId);
