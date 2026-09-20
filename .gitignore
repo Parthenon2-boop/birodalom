@@ -12,3 +12,7 @@ build/
 # Ideiglenes
 *.tmp
 
+
+_epulet_shots/
+docs/*.import
+docs/kepek/*.import
