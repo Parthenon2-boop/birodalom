@@ -1153,6 +1153,36 @@ func _acc_store_session(data: Dictionary) -> void:
 	var user: Dictionary = data.get("user", {}) if data.get("user") is Dictionary else {}
 	if user.has("email"): cfg.set_value("account", "email", str(user["email"]))
 	cfg.save(CFG_PATH)
+	_write_game_session()
+
+# A fiókot átadjuk azoknak a játékoknak, amelyeknek szükségük van rá (Kard és Mágia: bolt, érmék).
+# A játék adatmappájába írunk egy kis fájlt; kijelentkezéskor töröljük.
+const SESSION_GAMES := {"kard_es_magia": "Kard és Mágia"}
+
+func _game_session_path(user_dir: String) -> String:
+	return OS.get_user_data_dir().get_base_dir().path_join(user_dir).path_join("fiok.json")
+
+func _write_game_session() -> void:
+	if not _acc_logged_in(): return
+	var payload := {
+		"url": ACCOUNT_URL, "anon": ACCOUNT_ANON_KEY,
+		"email": _acc_email(),
+		"access_token": acc_token,
+		"refresh_token": str(cfg.get_value("account", "refresh_token", "")),
+		"mentve": int(Time.get_unix_time_from_system()),
+	}
+	for key in SESSION_GAMES:
+		var p := _game_session_path(str(SESSION_GAMES[key]))
+		DirAccess.make_dir_recursive_absolute(p.get_base_dir())
+		var f := FileAccess.open(p, FileAccess.WRITE)
+		if f != null:
+			f.store_string(JSON.stringify(payload))
+			f.close()
+
+func _clear_game_session() -> void:
+	for key in SESSION_GAMES:
+		var p := _game_session_path(str(SESSION_GAMES[key]))
+		if FileAccess.file_exists(p): DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
 
 # Induláskor: a mentett munkamenet frissítése, és a fiók kiegészítőinek betöltése
 func _acc_refresh() -> void:
@@ -1245,6 +1275,7 @@ func _acc_forgot() -> void:
 func _acc_logout(silent: bool = false) -> void:
 	acc_token = ""
 	cfg.set_value("account", "refresh_token", "")
+	_clear_game_session()
 	for game_key in DLCS:
 		for d in DLCS[game_key]:
 			if str(cfg.get_value("dlc:" + str(d["key"]), "license", "")) == ACC_LICENSE:
