@@ -119,6 +119,16 @@
 	.langs button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 5px; padding: 2px 7px; font: 13px "EB Garamond", serif; cursor: pointer; letter-spacing: .04em; }
 	.langs button:hover { color: var(--gold-2); border-color: var(--gold); }
 	.langs button.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
+	.supform { max-width: 640px; display: flex; flex-direction: column; gap: 12px; }
+	.supform .row2 { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
+	.supform label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 16px; }
+	.supform input, .supform select, .supform textarea { width: 100%; padding: 10px 12px; border-radius: 6px;
+		border: 1px solid var(--line); background: #171009; color: var(--text); font: 17px "EB Garamond", serif; }
+	.supform textarea { resize: vertical; min-height: 110px; }
+	.supform button { align-self: flex-start; cursor: pointer; border: 1px solid var(--gold); }
+	.supform .msg { margin: 0; font-size: 16px; }
+	.supform .msg.ok { color: #9fcf7a; }
+	.supform .msg.err { color: #f08a74; }
 	footer { border-top: 1px solid var(--line); padding: 26px 0 40px; color: var(--muted); font-size: 15px; text-align: center; }
 
 	@media (max-width: 560px) {
@@ -143,6 +153,7 @@
 			<a href="#kiegeszitok" data-i18n="nav.dlc">Kiegészítők</a>
 			<a href="#kepek" data-i18n="nav.shots">Képek</a>
 			<a href="#hirek" data-i18n="nav.news">Hírek</a>
+			<a href="#tamogatas" data-i18n="nav.contact">Kapcsolat</a>
 			<a href="fiok.html" class="navbtn" data-i18n="nav.register">Regisztráció</a>
 			<span class="langs" id="langs"></span>
 		</nav>
@@ -231,6 +242,31 @@
 		</div>
 	</section>
 
+	<section id="tamogatas">
+		<div class="wrap">
+			<h2 data-i18n="sup.title">Írj nekünk</h2>
+			<p class="sub" data-i18n="sup.sub">Hibát találtál, elakadtál egy vásárlással, vagy van egy ötleted? Írj bátran – ugyanaz az ember olvassa, aki a játékokat készíti.</p>
+			<form id="support" class="supform" novalidate>
+				<div class="row2">
+					<label><span data-i18n="sup.name">Neved (nem kötelező)</span><input type="text" name="nev" maxlength="120"></label>
+					<label><span data-i18n="sup.email">E-mail-címed</span><input type="email" name="email" required maxlength="200"></label>
+				</div>
+				<label><span data-i18n="sup.topic">Miről van szó?</span>
+					<select name="targy">
+						<option data-i18n="sup.t1">Általános kérdés</option>
+						<option data-i18n="sup.t2">Hiba a játékban</option>
+						<option data-i18n="sup.t3">Vásárlás, kiegészítő, érme</option>
+						<option data-i18n="sup.t4">Fiók és bejelentkezés</option>
+						<option data-i18n="sup.t5">Ötlet, javaslat</option>
+					</select>
+				</label>
+				<label><span data-i18n="sup.msg">Üzenet</span><textarea name="uzenet" rows="5" required maxlength="4000"></textarea></label>
+				<button class="buy" type="submit" data-i18n="sup.send">Küldés</button>
+				<p class="msg" role="status"></p>
+			</form>
+		</div>
+	</section>
+
 	<section id="kezdes">
 		<div class="wrap">
 			<h2 data-i18n="start.title">Így kezdj neki</h2>
@@ -256,6 +292,13 @@
 	const I18N = {
 		hu: {},   // a magyar szöveg magában a lapban van
 		en: {
+			"nav.download": "Download", "nav.games": "Games", "nav.contact": "Contact",
+			"sup.title": "Contact us", "sup.sub": "Found a bug, stuck with a purchase, or have an idea? Write – the person who makes the games reads it.",
+			"sup.name": "Your name (optional)", "sup.email": "Your e-mail address", "sup.topic": "What is it about?",
+			"sup.t1": "General question", "sup.t2": "A bug in a game", "sup.t3": "Purchase, add-on, coins", "sup.t4": "Account and sign-in", "sup.t5": "Idea, suggestion",
+			"sup.msg": "Message", "sup.send": "Send", "sup.sent": "Thanks, the message arrived. We reply to the address you gave.",
+			"sup.err": "It did not go through. Please try again later.", "sup.bademail": "Please enter a valid e-mail address.",
+			"sup.short": "Please write at least a few sentences.", "sup.many": "Too many messages in a short time. Please wait a few minutes.",
 			"meta.title": "ParthLauncher – Birodalom, Heptarchia and Kard és Mágia", "meta.desc": "Three free games in one launcher: Anglo-Saxon grand strategy, real-time empire building and a roguelike adventure. Windows and macOS.", "nav.dlc": "Add-ons", "nav.shots": "Screenshots",
 			"nav.news": "News", "nav.register": "Sign up",
 			"hero.lead": "One launcher for three games. It installs and updates <b>Birodalom</b>, <b>Heptarchia</b> and <b>Kard és Mágia</b>, and manages the add-ons you bought.",
@@ -287,6 +330,13 @@
 			"news.tagNews": "News",
 		},
 		de: {
+			"nav.download": "Download", "nav.games": "Spiele", "nav.contact": "Kontakt",
+			"sup.title": "Schreib uns", "sup.sub": "Fehler gefunden, beim Kauf hängen geblieben oder eine Idee? Schreib ruhig – es liest dieselbe Person, die die Spiele macht.",
+			"sup.name": "Dein Name (freiwillig)", "sup.email": "Deine E-Mail-Adresse", "sup.topic": "Worum geht es?",
+			"sup.t1": "Allgemeine Frage", "sup.t2": "Ein Fehler im Spiel", "sup.t3": "Kauf, Erweiterung, Münzen", "sup.t4": "Konto und Anmeldung", "sup.t5": "Idee, Vorschlag",
+			"sup.msg": "Nachricht", "sup.send": "Senden", "sup.sent": "Danke, die Nachricht ist angekommen. Wir antworten an die angegebene Adresse.",
+			"sup.err": "Es hat nicht geklappt. Bitte versuche es später erneut.", "sup.bademail": "Bitte gib eine gültige E-Mail-Adresse ein.",
+			"sup.short": "Bitte schreibe mindestens ein paar Sätze.", "sup.many": "Zu viele Nachrichten in kurzer Zeit. Bitte warte ein paar Minuten.",
 			"meta.title": "ParthLauncher – Birodalom, Heptarchia und Kard és Mágia", "meta.desc": "Drei kostenlose Spiele in einem Starter: angelsächsische Großstrategie, Echtzeit-Aufbaustrategie und ein Roguelike-Abenteuer. Windows und macOS.", "nav.dlc": "Erweiterungen", "nav.shots": "Bilder",
 			"nav.news": "Neues", "nav.register": "Registrieren",
 			"hero.lead": "Ein Starter für drei Spiele. Er installiert und aktualisiert <b>Birodalom</b>, <b>Heptarchia</b> und <b>Kard és Mágia</b> und verwaltet die gekauften Erweiterungen.",
@@ -319,6 +369,8 @@
 		},
 	};
 	const HU_DEFAULTS = {
+		"sup.sent": "Köszönjük, az üzenet megérkezett. A megadott címre válaszolunk.", "sup.err": "Nem sikerült elküldeni. Próbáld újra később.", "sup.bademail": "Adj meg egy érvényes e-mail-címet.", "sup.short": "Írj legalább néhány mondatot.", "sup.many": "Túl sok üzenet rövid időn belül. Várj pár percet.",
+
 		"dlc.buy": "Megvásárlás", "dlc.addon": "Heptarchia-kiegészítő", "ver.latest": "Legújabb: ",
 		"ver.viaLauncher": "Letölthető a launcherrel", "news.none": "Még nincsenek hírek.", "news.tagNews": "Hír",
 	};
@@ -474,6 +526,33 @@
 		all = items.sort((a, b) => new Date(b.date) - new Date(a.date));
 		render();
 	});
+
+	// ── Támogatás: az üzenet a szerverre megy, onnan e-mailben is továbbmegy ──
+	const SUP_URL = "https://gxvepswtairfqvosdcpb.supabase.co/functions/v1/support";
+	const supForm = document.getElementById("support");
+	if (supForm) supForm.onsubmit = async e => {
+		e.preventDefault();
+		const m = supForm.querySelector(".msg");
+		const say = (t, ok) => { m.textContent = t; m.className = "msg " + (ok ? "ok" : "err"); };
+		const email = supForm.email.value.trim(), uzenet = supForm.uzenet.value.trim();
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return say(T("sup.bademail"));
+		if (uzenet.length < 10) return say(T("sup.short"));
+		const btn = supForm.querySelector("button");
+		btn.disabled = true;
+		try {
+			const r = await fetch(SUP_URL, {
+				method: "POST", headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ email, uzenet, nev: supForm.nev.value.trim(), targy: supForm.targy.value, hova: "weboldal (" + lang + ")" }),
+			});
+			const d = await r.json().catch(() => ({}));
+			if (r.ok && d.ok) { supForm.reset(); say(T("sup.sent"), true); }
+			else if (r.status === 429 || d.error === "tul_sok") say(T("sup.many"));
+			else if (d.error === "rossz_email") say(T("sup.bademail"));
+			else if (d.error === "rovid_uzenet") say(T("sup.short"));
+			else say(T("sup.err"));
+		} catch (err) { say(T("sup.err")); }
+		btn.disabled = false;
+	};
 
 	applyLang();
 </script>
