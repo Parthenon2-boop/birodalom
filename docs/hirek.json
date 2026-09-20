@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-20",
+		"cim": "Kard és Mágia 3.3 – él a katakomba",
+		"cimke": "Kard és Mágia",
+		"szoveg": "A szörnyek mostantól akkor is lépnek, ha te épp állsz: aki sokáig tétovázik, azt utolérik. Így minden mozdulat számít, a harc pedig sokkal feszültebb. Az indítóban új borítót kapott a játék: a mostani rajzokkal, és minden hős neve a saját alakja alatt áll.",
+		"cim_en": "Kard és Mágia 3.3 – the catacombs are alive",
+		"szoveg_en": "Monsters now keep moving even while you stand still: hesitate too long and they will reach you. Every move counts, and fights are far more tense. The game also has a new cover in the launcher, drawn with the current art, each hero's name under its own figure.",
+		"cim_de": "Kard és Mágia 3.3 – die Katakomben leben",
+		"szoveg_de": "Die Monster ziehen jetzt auch weiter, während du stehen bleibst: Wer zu lange zögert, wird eingeholt. Jeder Zug zählt, und die Kämpfe werden viel spannender. Im Launcher hat das Spiel außerdem ein neues Titelbild bekommen – mit den aktuellen Zeichnungen und dem Namen jedes Helden unter seiner eigenen Figur.",
+		"cimke_en": "Kard és Mágia",
+		"cimke_de": "Kard és Mágia"
+	},
+	{
+		"datum": "2026-09-20",
 		"cim": "ParthLauncher 1.32 – „Bejelentkezve maradok”",
 		"cimke": "ParthLauncher",
 		"szoveg": "Mostantól nem kell minden indításnál belépni: a fiókablakban bepipálhatod a „Bejelentkezve maradok ezen a gépen” lehetőséget, és az indító magától megújítja a belépésedet. Ha kikapcsolod, a kilépés után újra kéri a jelszót. Javítottuk azt is, amikor a launcher és a Kard és Mágia egyszerre újította meg a munkamenetet, és emiatt néha kiléptetett.",
