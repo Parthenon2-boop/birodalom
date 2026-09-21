@@ -147,7 +147,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 30
+const LAUNCHER_BUILD := 31
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -724,7 +724,7 @@ func _refresh_cover() -> void:
 func _refresh_acc_btn() -> void:
 	if acc_top_btn == null or not is_instance_valid(acc_top_btn): return
 	acc_top_btn.visible = _acc_enabled()
-	acc_top_btn.text = ("👤  " + _acc_email()) if _acc_logged_in() else "Bejelentkezés / Regisztráció"
+	acc_top_btn.text = ("👤  " + _acc_nev()) if _acc_logged_in() else "Bejelentkezés / Regisztráció"
 
 # Váltás a két játék között: a mostani állapotot elmentjük, a másikét betöltjük.
 func _switch_game(idx: int) -> void:
@@ -1111,6 +1111,7 @@ func _draw_dlc_icon(c: Control, owned: bool) -> void:
 
 var acc_token := ""              # a belépés rövid életű tokenje (csak memóriában)
 var acc_popup: PopupPanel
+var acc_user_edit: LineEdit
 var acc_email_edit: LineEdit
 var acc_pass_edit: LineEdit
 var acc_status: Label
@@ -1123,6 +1124,20 @@ func _acc_enabled() -> bool:
 
 func _acc_email() -> String:
 	return str(cfg.get_value("account", "email", ""))
+
+func _acc_user() -> String:
+	return str(cfg.get_value("account", "fioknev", ""))
+
+# Így szólítjuk meg: ha van fiókneve, azzal – különben az e-mail-címével
+func _acc_nev() -> String:
+	return _acc_user() if _acc_user() != "" else _acc_email()
+
+# Fióknév: 3–20 karakter, betű / szám / aláhúzás / kötőjel (ékezet is mehet).
+# Ugyanez a szabály a weboldalon és az adatbázisban is.
+func _acc_user_ok(nev: String) -> bool:
+	if nev.length() < 3 or nev.length() > 20: return false
+	var re := RegEx.create_from_string("^[\\p{L}\\p{N}_-]+$")
+	return re != null and re.search(nev) != null
 
 func _acc_logged_in() -> bool:
 	# belépve vagyunk, ha van mentett kulcs, vagy ha a mostani futásban léptünk be
@@ -1158,19 +1173,29 @@ func _acc_stay_on() -> bool:
 func _acc_store_session(data: Dictionary) -> void:
 	acc_token = str(data.get("access_token", ""))
 	if str(data.get("refresh_token", "")) != "": acc_refresh_mem = str(data["refresh_token"])
+	var user: Dictionary = data.get("user", {}) if data.get("user") is Dictionary else {}
 	if not _acc_stay_on():
 		# csak a mostani futásra: a kulcs nem kerül a beállításfájlba
 		cfg.set_value("account", "refresh_token", "")
-		if data.has("user") and data["user"] is Dictionary and (data["user"] as Dictionary).has("email"):
-			cfg.set_value("account", "email", str((data["user"] as Dictionary)["email"]))
-		cfg.save(CFG_PATH)
+		_acc_store_user(user)
 		_write_game_session()
 		return
 	cfg.set_value("account", "refresh_token", str(data.get("refresh_token", "")))
-	var user: Dictionary = data.get("user", {}) if data.get("user") is Dictionary else {}
-	if user.has("email"): cfg.set_value("account", "email", str(user["email"]))
-	cfg.save(CFG_PATH)
+	_acc_store_user(user)
 	_write_game_session()
+
+# A belépés válaszában jön a fiók e-mail-címe és a fiókneve (user_metadata.username)
+func _acc_store_user(user: Dictionary) -> void:
+	# a „Bejelentkezve maradok” kapcsoló fiók nélkül is idehív: olyankor nincs mit frissíteni
+	if user.is_empty():
+		cfg.save(CFG_PATH)
+		return
+	if user.has("email"): cfg.set_value("account", "email", str(user["email"]))
+	# A fióknév a fiók adatlapjáról jön. Ha nincs (régi, név nélküli fiók), a
+	# korábbi név se maradjon ott – különben más fiókjának a nevét mutatnánk.
+	var meta: Dictionary = user.get("user_metadata", {}) if user.get("user_metadata") is Dictionary else {}
+	cfg.set_value("account", "fioknev", str(meta.get("username", "")))
+	cfg.save(CFG_PATH)
 
 # A fiókot átadjuk azoknak a játékoknak, amelyeknek szükségük van rá (Kard és Mágia: bolt, érmék).
 # A játék adatmappájába írunk egy kis fájlt; kijelentkezéskor töröljük.
@@ -1184,6 +1209,7 @@ func _write_game_session() -> void:
 	var payload := {
 		"url": ACCOUNT_URL, "anon": ACCOUNT_ANON_KEY,
 		"email": _acc_email(),
+		"fioknev": _acc_user(),
 		"access_token": acc_token,
 		"refresh_token": acc_refresh_mem if acc_refresh_mem != "" else str(cfg.get_value("account", "refresh_token", "")),
 		"mentve": int(Time.get_unix_time_from_system()),
@@ -1260,7 +1286,7 @@ func _acc_sync() -> void:
 	var atkerult := await _acc_migrate_local_keys(owned)
 	if atkerult > 0:
 		_status("%d korábban ezen a gépen beváltott kulcsot átkötöttünk a fiókodhoz (%s) – mostantól minden gépeden megjelenik."
-			% [atkerult, _acc_email()], S.GREEN)
+			% [atkerult, _acc_nev()], S.GREEN)
 	for game_key in DLCS:
 		for d in DLCS[game_key]:
 			var sect := "dlc:" + str(d["key"])
@@ -1305,17 +1331,56 @@ func _acc_migrate_local_keys(owned: Dictionary) -> int:
 	return atkerult
 
 func _acc_login(signup: bool) -> void:
+	var user := acc_user_edit.text.strip_edges()
 	var email := acc_email_edit.text.strip_edges()
 	var pw := acc_pass_edit.text
-	if email == "" or pw == "":
-		acc_status.text = "Add meg az e-mail-címet és a jelszót."
-		return
-	if signup and pw.length() < 8:
-		acc_status.text = "A jelszó legalább 8 karakter legyen."
-		return
+	if signup:
+		if user == "" or email == "" or pw == "":
+			acc_status.text = "A regisztrációhoz mindhárom mező kell: fióknév, e-mail-cím és jelszó."
+			return
+		if not _acc_user_ok(user):
+			acc_status.text = "A fióknév 3–20 karakter legyen, és csak betűt, számot, aláhúzást vagy kötőjelet tartalmazzon."
+			return
+		if not ("@" in email and "." in email):
+			acc_status.text = "Az e-mail-cím nem jónak tűnik. Ide küldjük a megerősítő levelet."
+			return
+		if pw.length() < 8:
+			acc_status.text = "A jelszó legalább 8 karakter legyen."
+			return
+	else:
+		# Belépéshez a fióknév kell. A régi fiókoknak nincs nevük: nekik a felső
+		# mezőbe az e-mail-címük is jó – ha üresen hagyják, az e-mail mezőt nézzük.
+		if user == "" and email != "": user = email
+		if user == "" or pw == "":
+			acc_status.text = "Add meg a fióknevedet és a jelszavadat."
+			return
+	if signup:
+		# A nevet előbb megnézzük: a regisztráció úgyis elbukna foglalt néven,
+		# de akkor a levelet is hiába küldenénk ki.
+		acc_status.text = "Fióknév ellenőrzése…"
+		var sz := await _acc_call(HTTPClient.METHOD_POST, "/rest/v1/rpc/fioknev_szabad", {"nev": user})
+		if int(sz[0]) == 200 and sz[1] is bool and not bool(sz[1]):
+			acc_status.text = "Ezt a fióknevet már valaki használja. Válassz másikat."
+			return
 	acc_status.text = "Regisztráció…" if signup else "Belépés…"
-	var path := "/auth/v1/signup" if signup else "/auth/v1/token?grant_type=password"
-	var r := await _acc_call(HTTPClient.METHOD_POST, path, {"email": email, "password": pw})
+	var r: Array
+	if signup:
+		r = await _acc_call(HTTPClient.METHOD_POST, "/auth/v1/signup",
+			{"email": email, "password": pw, "data": {"username": user}})
+	else:
+		# A fióknévhez tartozó e-mail-címet csak a szerver tudja kikeresni
+		r = await _acc_call(HTTPClient.METHOD_POST, "/functions/v1/login-nev",
+			{"nev": user, "password": pw})
+		# Ha a fióknévvel belépő függvény még nincs telepítve a szerverre, senki
+		# ne rekedjen kint: e-mail-címmel a régi úton is beengedjük.
+		if int(r[0]) == 404:
+			if "@" in user:
+				r = await _acc_call(HTTPClient.METHOD_POST, "/auth/v1/token?grant_type=password",
+					{"email": user, "password": pw})
+			else:
+				acc_pass_edit.text = ""
+				acc_status.text = "A fióknévvel belépés most nem érhető el. Írd be a fiókod e-mail-címét a felső mezőbe, és azzal lépj be."
+				return
 	var code := int(r[0])
 	var data: Dictionary = r[1] if r[1] is Dictionary else {}
 	acc_pass_edit.text = ""
@@ -1323,28 +1388,38 @@ func _acc_login(signup: bool) -> void:
 		acc_status.text = "Nem sikerült elérni a szervert. Van internet?"
 		return
 	if code >= 400:
+		var hiba := str(data.get("error", ""))
 		var msg := str(data.get("msg", data.get("error_description", data.get("message", ""))))
-		if msg.to_lower().contains("confirm"):
+		if hiba == "nincs_megerositve" or msg.to_lower().contains("confirm"):
 			acc_status.text = "Előbb erősítsd meg az e-mail-címedet (nézd meg a leveleidet – a Spam / Levélszemét mappát is)."
 		elif msg.to_lower().contains("already"):
 			acc_status.text = "Ezzel az e-mail-címmel már van fiók – lépj be."
+		elif msg.to_lower().contains("duplicate") or msg.to_lower().contains("profiles"):
+			acc_status.text = "Ezt a fióknevet már valaki használja. Válassz másikat."
+		elif signup:
+			acc_status.text = "A regisztráció nem sikerült. Nézd meg az e-mail-címet és a jelszót, aztán próbáld újra."
 		else:
-			acc_status.text = "Nem sikerült: hibás e-mail-cím vagy jelszó. Ha elfelejtetted, kattints az „Elfelejtett jelszó” gombra."
+			acc_status.text = "Nem sikerült: hibás fióknév vagy jelszó. Ha a jelszavadat elfelejtetted, írd be az e-mail-címedet, és kattints az „Elfelejtett jelszó” gombra."
 		return
 	if data.has("access_token"):
 		_acc_store_session(data)
 		acc_status.text = ""
 		acc_popup.hide()
-		_status("Belépve: %s. A fiókodhoz tartozó kiegészítők betöltése…" % _acc_email(), S.GREEN)
+		_status("Belépve: %s. A fiókodhoz tartozó kiegészítők betöltése…" % _acc_nev(), S.GREEN)
 		await _acc_sync()
 		_refresh_account_ui()
 	else:
 		# regisztráció e-mail-megerősítéssel
-		acc_status.text = "Elküldtük a megerősítő levelet a(z) %s címre. Kattints a benne lévő linkre, aztán lépj be.\nHa nem látod, nézd meg a Spam / Levélszemét mappát is – a levél a ParthLaunchertől jön." % email
+		cfg.set_value("account", "fioknev", user)
+		cfg.set_value("account", "email", email)
+		cfg.save(CFG_PATH)
+		acc_status.text = "Kész: a fiókneved „%s”. Elküldtük a megerősítő levelet a(z) %s címre – kattints a benne lévő linkre, aztán lépj be a fiókneveddel.\nHa nem látod, nézd meg a Spam / Levélszemét mappát is – a levél a ParthLaunchertől jön." % [user, email]
 
 # Elfelejtett jelszó: a szerver levelet küld, amelynek linkje a weboldalra visz (ott adható meg az új jelszó)
 func _acc_forgot() -> void:
 	var email := acc_email_edit.text.strip_edges()
+	# ha az e-mail-címet a felső mezőbe írta (régi fiók), az is jó
+	if email == "" and "@" in acc_user_edit.text: email = acc_user_edit.text.strip_edges()
 	if not ("@" in email and "." in email):
 		acc_status.text = "Írd be fent az e-mail-címedet, aztán kattints újra az „Elfelejtett jelszó” gombra."
 		return
@@ -1383,7 +1458,7 @@ func _build_account_popup() -> void:
 	acc_popup.add_child(v)
 	v.add_child(S.make_title("Fiók", 24, S.GOLD_LIGHT))
 	var info := Label.new()
-	info.text = "Egy fiók mindegyik játékhoz. A megvásárolt kiegészítők és a boltban vett részek a fiókodhoz kötődnek: bármelyik gépen belépve megjelennek. Vásárláskor ugyanazt az e-mail-címet add meg a Gumroadon."
+	info.text = "Egy fiók mindegyik játékhoz. Belépni a fiókneveddel és a jelszavaddal lehet. A megvásárolt kiegészítők és a boltban vett részek a fiókodhoz kötődnek: bármelyik gépen belépve megjelennek. Vásárláskor ugyanazt az e-mail-címet add meg a Gumroadon."
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	info.custom_minimum_size = Vector2(520, 0)
 	info.add_theme_color_override("font_color", S.GOLD_LIGHT if S.skin == "heptarchia" else S.TEXT)
@@ -1392,8 +1467,17 @@ func _build_account_popup() -> void:
 	login.add_theme_constant_override("separation", 6)
 	v.add_child(login)
 	acc_login_box = login
+	# Belépni FIÓKNÉVVEL lehet. Az e-mail-cím a regisztrációhoz és az elfelejtett
+	# jelszóhoz kell – a régi, fióknév nélküli fiókok a felső mezőbe az
+	# e-mail-címüket írva ugyanúgy be tudnak lépni.
+	acc_user_edit = LineEdit.new()
+	acc_user_edit.placeholder_text = "fióknév (ezzel lépsz be)"
+	acc_user_edit.custom_minimum_size = Vector2(0, 36)
+	acc_user_edit.add_theme_color_override("font_placeholder_color", Color(0.42, 0.32, 0.22))
+	acc_user_edit.text_submitted.connect(func(_t): _acc_login(false))
+	login.add_child(acc_user_edit)
 	acc_email_edit = LineEdit.new()
-	acc_email_edit.placeholder_text = "e-mail-cím"
+	acc_email_edit.placeholder_text = "e-mail-cím (regisztrációhoz, elfelejtett jelszóhoz)"
 	acc_email_edit.custom_minimum_size = Vector2(0, 36)
 	acc_email_edit.add_theme_color_override("font_placeholder_color", Color(0.42, 0.32, 0.22))
 	login.add_child(acc_email_edit)
@@ -1456,19 +1540,20 @@ func _build_account_popup() -> void:
 func _open_account() -> void:
 	if acc_popup == null: _build_account_popup()
 	acc_status.text = ""
+	acc_user_edit.text = _acc_user()
 	acc_email_edit.text = _acc_email()
 	_refresh_account_ui()
 	# a tartalomhoz igazodó méret (a rejtett rész ne hagyjon üres helyet)
 	acc_popup.size = Vector2i(560, 0)
 	acc_popup.reset_size()
 	acc_popup.popup_centered()
-	if not _acc_logged_in(): acc_email_edit.grab_focus()
+	if not _acc_logged_in(): acc_user_edit.grab_focus()
 
 func _refresh_account_ui() -> void:
 	if acc_popup != null:
 		acc_login_box.visible = not _acc_logged_in()
 		acc_out_box.visible = _acc_logged_in()
-		acc_who.text = "Belépve: " + _acc_email()
+		acc_who.text = "Belépve: " + _acc_nev()
 	_refresh_dlc()
 	_refresh_labels()   # a nagy gomb: belépés előtt „Bejelentkezés”, utána „Indítás”
 
@@ -1496,7 +1581,7 @@ func _acc_claim(key: String) -> void:
 	match int(r[0]):
 		200:
 			license_popup.hide()
-			_status("Köszönjük! A(z) %s a fiókodhoz került (%s)." % [str(lic_dlc["name"]), _acc_email()], S.GREEN)
+			_status("Köszönjük! A(z) %s a fiókodhoz került (%s)." % [str(lic_dlc["name"]), _acc_nev()], S.GREEN)
 			await _acc_sync()
 		0:
 			lic_status.text = "Nem sikerült elérni a szervert. Van internet?"

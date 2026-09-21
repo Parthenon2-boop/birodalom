@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-21",
+		"cim": "Mostantól fióknévvel lépsz be",
+		"cimke": "ParthLauncher",
+		"szoveg": "Eddig a belépéshez az e-mail-címedet kellett beírni. Mostantól a regisztrációnál választasz magadnak egy fióknevet (3–20 karakter, betű, szám, aláhúzás vagy kötőjel), és a launcherben ezzel meg a jelszavaddal lépsz be – az e-mail-cím csak a megerősítő levélhez és az elfelejtett jelszóhoz kell. A név egyedi: a regisztrációs űrlap már gépelés után megmondja, ha foglalt. A címedet a szerver sosem adja ki: a fióknévhez tartozó fiókot ő keresi ki. Akinek régi fiókja van, annak nem kell semmit tennie – a belépőmezőbe az e-mail-címét írva ugyanúgy bejut.",
+		"cim_en": "From now on you sign in with an account name",
+		"szoveg_en": "Until now signing in meant typing your e-mail address. From this version you pick an account name when you register (3–20 characters, letters, digits, underscore or hyphen), and that name plus your password is what you sign in with in the launcher – the e-mail address is only needed for the confirmation message and for a forgotten password. Names are unique: the sign-up form tells you right away if one is taken. Your address is never handed out: the server looks up the account behind the name. If you already have an account, you need do nothing – typing your e-mail address into the sign-in field still works.",
+		"cim_de": "Ab sofort meldest du dich mit einem Kontonamen an",
+		"szoveg_de": "Bisher musste man zur Anmeldung seine E-Mail-Adresse eingeben. Ab dieser Fassung wählst du bei der Registrierung einen Kontonamen (3–20 Zeichen, Buchstaben, Ziffern, Unterstrich oder Bindestrich), und mit diesem Namen und deinem Passwort meldest du dich im Launcher an – die E-Mail-Adresse wird nur noch für die Bestätigungsmail und das vergessene Passwort gebraucht. Namen sind eindeutig: Das Registrierungsformular sagt dir sofort, wenn einer vergeben ist. Deine Adresse wird nie herausgegeben: Der Server sucht das Konto zum Namen selbst heraus. Wer bereits ein Konto hat, muss nichts tun – mit der E-Mail-Adresse im Anmeldefeld klappt es weiterhin.",
+		"cimke_en": "ParthLauncher",
+		"cimke_de": "ParthLauncher"
+	},
+	{
+		"datum": "2026-09-21",
 		"cim": "Heptarchia 1.32 – a békekötésből alku lett",
 		"cimke": "Heptarchia",
 		"szoveg": "A szomszéd királyok eddig csak ritkán kértek békét, és mindig ugyanazt a sima fegyverszünetet ajánlották – akár egy tartományuk maradt, akár tizenöt. Mostantól a béke alku. Aki vesztésre áll, annál gyakrabban keres téged, minél rosszabbul áll, és fizet is érte: előbb ezüst sarcot a kincstárából, a végén pedig egy határ menti tartományát ajánlja fel. Aki viszont nyerésre áll, az elkéri a maga árát: területet kér a békéért. Az ajánlat szövegében pontosan látod a feltételt, mielőtt döntesz. Két dolgot senki nem ad oda: az utolsó tartományát és a székhelyét – a béke nem szüntethet meg egy királyságot.",
