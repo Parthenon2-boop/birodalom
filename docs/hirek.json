@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-21",
+		"cim": "Kard és Mágia 3.4 – a gyógyital végre megtartja, amit ad",
+		"cimke": "Kard és Mágia",
+		"szoveg": "Három bosszantó hiba tűnt el. A mágus varázsgömbje eddig ott maradt a célpontja fölött a mélység végéig – most szépen elhalványul a becsapódás után. A gyógyital látszólag nem töltött semmit: valójában töltött, csak az élő katakomba óta állva is pereg körülbelül másodpercenként egy kör, és a méreg velük együtt marta le, amit az ital adott. Mostantól a várakozó körökben a szörnyek lépnek, de a méreg és a regeneráció nem fut le – a saját köreidben minden a régi. Végül a szörnyek megkerülik a falat: eddig ha a feléd vezető lépés zárva volt, egyszerűen megálltak, ezért a folyosókon úgy tűnt, meg sem mozdulnak.",
+		"cim_en": "Kard és Mágia 3.4 – healing potions finally keep what they give",
+		"szoveg_en": "Three irritating bugs are gone. The mage's orb used to hang over its target until the end of the depth – now it fades after impact. Healing potions seemed to restore nothing: they always did, but since the living catacombs update a turn passes roughly every second even while you stand still, and poison ate away exactly what the potion had given. From now on monsters still move during those waiting turns, but poison and regeneration do not tick – in your own turns everything works as before. Finally, monsters now step around walls: previously, if the move towards you was blocked they simply stopped, which made them look frozen in corridors.",
+		"cim_de": "Kard és Mágia 3.4 – Heiltränke behalten endlich, was sie geben",
+		"szoveg_de": "Drei ärgerliche Fehler sind behoben. Die Kugel des Magiers blieb bisher bis zum Ende der Tiefe über ihrem Ziel stehen – jetzt verblasst sie nach dem Einschlag. Heiltränke schienen nichts zu heilen: Sie taten es immer, aber seit den lebendigen Katakomben vergeht auch im Stehen etwa jede Sekunde eine Runde, und das Gift fraß genau das auf, was der Trank gegeben hatte. Ab jetzt ziehen die Monster in diesen Warterunden weiterhin, aber Gift und Regeneration laufen nicht mit – in deinen eigenen Runden bleibt alles wie zuvor. Und die Monster umgehen nun Wände: War der Schritt zu dir versperrt, blieben sie bisher einfach stehen und wirkten in Gängen wie erstarrt.",
+		"cimke_en": "Kard és Mágia",
+		"cimke_de": "Kard és Mágia"
+	},
+	{
+		"datum": "2026-09-21",
 		"cim": "A megvásárolt kiegészítők mostantól minden gépeden megjelennek",
 		"cimke": "ParthLauncher",
 		"szoveg": "Ha a kiegészítő kulcsát még a fiókrendszer előtt váltottad be, az csak abba az egy gépbe került be: másik gépen, ugyanabba a fiókba belépve hiába kerested, nem jelent meg. A launcher mostantól magától észreveszi az ilyen kulcsokat, és a fiókodhoz köti őket – utána minden gépen előjönnek, ahol belépsz. Ehhez egyszer indítsd el a launchert azon a gépen, ahol annak idején beváltottad a kulcsot. Ha a lekérdezés valamiért elakad, a launcher már megmondja, mi az akadály (nincs kapcsolat, lejárt belépés), és a Fiók ablakban van egy új „Kiegészítők frissítése a fiókból” gomb is.",
