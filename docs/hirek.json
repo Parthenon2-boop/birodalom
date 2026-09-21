@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-21",
+		"cim": "Heptarchia 1.30 – a szomszéd királyok végre támadnak, és hajón kelnek át",
+		"cimke": "Heptarchia",
+		"szoveg": "A gépi királyok eddig hatalmas hadat gyűjtöttek, de alig indítottak rohamot. A frankok különösen: minden provinciájuk a tengeren túl van, a játék viszont 1035 előtt feltétel nélkül kihagyta a tengeri rohamukat – vagyis hiába álltál hadban velük, soha nem támadtak. Ezen felül a sereg a belső földeken ült ahelyett, hogy a határra vonult volna. Mindkettő javítva: mérve a frankok 240 kör alatt nulla helyett harminchat provinciát szereztek. A menetelés is látványosabb lett: ahol a sereg vizet szel át – a Temze-torkolatnál, az Ír-tengeren, a Lorn-szorosnál –, ott hajó látszik a pajzs helyett, és minden népnek saját hajója van: az óészakiaknak sárkányorrú hosszúhajó, az íreknek curragh, a normannoknak nef, az angolszászoknak keel. Az uralkodó neve alá pedig kis arckép került, kultúránként más koronával vagy sisakkal.",
+		"cim_en": "Heptarchia 1.30 – neighbouring kings finally attack, and cross by ship",
+		"szoveg_en": "The computer kings used to gather huge armies yet hardly ever attacked. The Franks especially: all their provinces lie overseas, but before 1035 the game skipped their seaborne assault unconditionally – so however long you were at war with them, they never came. On top of that their armies sat in the interior instead of marching to the border. Both are fixed: measured over 240 turns, the Franks took thirty-six provinces instead of none. Marching looks better too: where an army crosses water – the Thames estuary, the Irish Sea, the Firth of Lorn – a ship is shown instead of the shield, and every people has its own: a dragon-prowed longship for the Norse, a curragh for the Irish, a nef for the Normans, a keel for the English. And a small portrait now sits under the ruler's name, with a different crown or helmet for each culture.",
+		"cim_de": "Heptarchia 1.30 – die Nachbarkönige greifen endlich an und setzen mit Schiffen über",
+		"szoveg_de": "Die Computerkönige sammelten bisher gewaltige Heere und griffen doch kaum an. Besonders die Franken: Alle ihre Provinzen liegen jenseits des Meeres, doch vor 1035 übersprang das Spiel ihren Seeangriff bedingungslos – wie lange du auch mit ihnen im Krieg warst, sie kamen nie. Zudem saßen ihre Heere im Landesinneren, statt an die Grenze zu ziehen. Beides ist behoben: gemessen über 240 Runden nahmen die Franken statt keiner nun sechsunddreißig Provinzen. Auch das Marschieren sieht besser aus: Wo ein Heer Wasser quert – Themsemündung, Irische See, Firth of Lorn –, erscheint statt des Schildes ein Schiff, und jedes Volk hat sein eigenes: ein Drachenschiff für die Nordleute, ein Curragh für die Iren, eine Nef für die Normannen, ein Keel für die Angelsachsen. Und unter dem Namen des Herrschers steht nun ein kleines Bildnis, je nach Kultur mit anderer Krone oder anderem Helm.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-21",
 		"cim": "Kard és Mágia 3.4 – a gyógyital végre megtartja, amit ad",
 		"cimke": "Kard és Mágia",
 		"szoveg": "Három bosszantó hiba tűnt el. A mágus varázsgömbje eddig ott maradt a célpontja fölött a mélység végéig – most szépen elhalványul a becsapódás után. A gyógyital látszólag nem töltött semmit: valójában töltött, csak az élő katakomba óta állva is pereg körülbelül másodpercenként egy kör, és a méreg velük együtt marta le, amit az ital adott. Mostantól a várakozó körökben a szörnyek lépnek, de a méreg és a regeneráció nem fut le – a saját köreidben minden a régi. Végül a szörnyek megkerülik a falat: eddig ha a feléd vezető lépés zárva volt, egyszerűen megálltak, ezért a folyosókon úgy tűnt, meg sem mozdulnak.",
