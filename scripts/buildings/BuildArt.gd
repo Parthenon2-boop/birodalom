@@ -126,13 +126,50 @@ static func _tonus(c: Color, age: int) -> Color:
 	return Color(clampf(c.r * t.r, 0.0, 1.0), clampf(c.g * t.g, 0.0, 1.0),
 		clampf(c.b * t.b, 0.0, 1.0), c.a)
 
-static func fal_szin(mat: String, age: int) -> Color:
+# --- NEMZETI ÉPÍTÉSZET ---
+#
+# Mennyire látszik, hogy kinek a faluja. A késő középkori házon még végig a
+# helyi mester keze nyoma van; a 20. századra a beton és a hullámlemez
+# mindenhol egyforma. A tető erősebben árulkodik, mint a fal — messziről is
+# az látszik először.
+const NEMZET_ERO_FAL  := [0.34, 0.30, 0.21, 0.11]
+const NEMZET_ERO_TETO := [0.46, 0.42, 0.30, 0.15]
+
+## Az anyagszínt elhúzza a nemzeti szín felé, DE megtartja az anyag eredeti
+## világosságát. Enélkül a nemzeti szín szétverné az anyagkönyvtárat: a kő
+## vörössé válna, a pala zölddé. Így a kő kő marad, csak melegebb vagy
+## hidegebb tónussal — és a falu mégis felismerhetően magyar, német, orosz.
+static func nemzeti_arnyalat(c: Color, cel: Color, ero: float) -> Color:
+	if ero <= 0.0:
+		return c
+	var k := c.lerp(cel, ero)
+	var v0 := c.get_luminance()
+	var v1 := k.get_luminance()
+	if v1 > 0.001:
+		var arany := clampf(v0 / v1, 0.72, 1.35)
+		k = Color(clampf(k.r * arany, 0.0, 1.0), clampf(k.g * arany, 0.0, 1.0),
+			clampf(k.b * arany, 0.0, 1.0), c.a)
+	return k
+
+static func fal_szin(mat: String, age: int, nation := "") -> Color:
 	var c: Color = FAL_SZIN.get(mat, FAL_SZIN["patics"])
+	if nation != "":
+		c = nemzeti_arnyalat(c, Style.arch_color(nation, "wall"), NEMZET_ERO_FAL[clampi(age, 0, 3)])
 	return _tonus(c, age)
 
-static func teto_szin(mat: String, age: int) -> Color:
+static func teto_szin(mat: String, age: int, nation := "") -> Color:
 	var c: Color = TETO_SZIN.get(mat, TETO_SZIN["zsup"])
+	if nation != "":
+		c = nemzeti_arnyalat(c, Style.arch_color(nation, "roof"), NEMZET_ERO_TETO[clampi(age, 0, 3)])
 	return _tonus(c, age)
+
+## A díszítés színe: ajtókeret, ablakkeret, zászlórúd, gerendavég. Ez a
+## nemzeti paletta legerősebben megmutatkozó eleme, mert kis felületen ül.
+static func disz_szin(age: int, nation := "") -> Color:
+	var alap := Color(0.545, 0.447, 0.239)     # kopott aranysárga alapértelmezés
+	if nation != "":
+		alap = alap.lerp(Style.arch_color(nation, "trim"), 0.7)
+	return _tonus(alap, age)
 
 # ============================================================================
 #  ANYAGMINTÁK — kódból rajzolt, ISMÉTELHETŐ textúrák
@@ -143,16 +180,18 @@ static func teto_szin(mat: String, age: int) -> Color:
 # ============================================================================
 static var _tex_cache: Dictionary = {}
 
-static func anyag_tex(mat: String, age: int) -> Texture2D:
-	var kulcs := "%s|%d" % [mat, clampi(age, 0, 3)]
+static func anyag_tex(mat: String, age: int, nation := "") -> Texture2D:
+	# A nemzet is a kulcs része: egy játszmában így is csak néhány minta készül
+	# el (annyi, ahány nemzet és anyag valóban szerepel a pályán).
+	var kulcs := "%s|%d|%s" % [mat, clampi(age, 0, 3), nation]
 	if _tex_cache.has(kulcs):
 		return _tex_cache[kulcs]
-	var t := _keszit(mat, clampi(age, 0, 3))
+	var t := _keszit(mat, clampi(age, 0, 3), nation)
 	_tex_cache[kulcs] = t
 	return t
 
-static func _keszit(mat: String, age: int) -> Texture2D:
-	var alap := fal_szin(mat, age)
+static func _keszit(mat: String, age: int, nation := "") -> Texture2D:
+	var alap := fal_szin(mat, age, nation)
 	var rng := RandomNumberGenerator.new()
 	# Rögzített mag: minden gépen ugyanaz a minta (hálózati játszmában is).
 	rng.seed = hash(mat) * 31 + age
@@ -280,11 +319,11 @@ static func vetett_arnyek(ci: CanvasItem, foot: Rect2, magas: float) -> void:
 		Color(ARNY.r, ARNY.g, ARNY.b, 0.22))
 
 # Homlokzat: tömör alapszín, rá az ismételhető anyagminta, végül a fény.
-static func homlokzat(ci: CanvasItem, r: Rect2, mat: String, age: int) -> void:
+static func homlokzat(ci: CanvasItem, r: Rect2, mat: String, age: int, nation := "") -> void:
 	if r.size.x <= 0.0 or r.size.y <= 0.0: return
-	var alap := fal_szin(mat, age)
+	var alap := fal_szin(mat, age, nation)
 	ci.draw_rect(r, alap, true)
-	var t := anyag_tex(mat, age)
+	var t := anyag_tex(mat, age, nation)
 	if t != null:
 		ci.draw_texture_rect(t, r, true)
 	# 2. SZABÁLY — a fény bal felülről jön.
@@ -340,10 +379,15 @@ static func labazat(ci: CanvasItem, r: Rect2, age: int) -> void:
 #   also_y  / also_w  — az eresz
 #   vagas             — efölött még nem áll a tető (építkezés)
 static func teto(ci: CanvasItem, felso_y: float, felso_w: float,
-		also_y: float, also_w: float, mat: String, age: int) -> void:
+		also_y: float, also_w: float, mat: String, age: int, nation := "",
+		arnyalat := 0.0) -> void:
 	var h := also_y - felso_y
 	if h <= 0.5 or also_w <= 0.0: return
-	var alap := teto_szin(mat, age)
+	var alap := teto_szin(mat, age, nation)
+	# Példányonkénti apró eltérés: két egyforma ház tetője se legyen betűre
+	# azonos (a hívó a saját azonosítójából adja az `arnyalat` értéket).
+	if arnyalat != 0.0:
+		alap = alap.lightened(arnyalat) if arnyalat > 0.0 else alap.darkened(-arnyalat)
 	var sotet := alap.darkened(0.40)
 	var rh: float = TETO_SOR.get(mat, 5.0)
 	var n := clampi(int(ceil(h / rh)), 2, 22)

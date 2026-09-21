@@ -184,12 +184,15 @@ func _lista(mi: String, mienk: bool) -> Array:
 # Mit ad az épület? Elöl a termelés, mert a városban az számít.
 func _hozam(d: Dictionary) -> String:
 	var age := GameState.get_age()
-	if d.has("food"):
-		return "+%.1f %s" % [float(d["food"][age]), Lang.t("elelem")]
-	if d.has("gold"):
-		return "+%.1f %s" % [float(d["gold"]), Lang.t("arany")]
-	if d.has("rum"):
-		return "+%.1f %s" % [float(d["rum"]), Lang.t("rum")]
+	# A hozamok korszakonkénti tömbök (a ház adója is), ezért egy helyen
+	# olvassuk ki őket — a régi, egyetlen számot adó alak is belefér.
+	for kulcs in ["food", "gold", "rum"]:
+		if not d.has(kulcs):
+			continue
+		var m = d[kulcs]
+		var ertek: float = float(m[clampi(age, 0, 3)]) if m is Array else float(m)
+		var nev := "elelem" if kulcs == "food" else ("arany" if kulcs == "gold" else "rum")
+		return "+%.1f %s" % [ertek, Lang.t(nev)]
 	if d.has("pop"):
 		return "+%d %s" % [int(d["pop"]), Lang.t("pm_keret")]
 	if d.has("heal"):

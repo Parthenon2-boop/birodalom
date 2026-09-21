@@ -157,7 +157,9 @@ func _ready() -> void:
 				hud.visible = false
 				set_process(false)
 				return
-	hud.theme = Style.make_theme(GameState.get_age())
+	# A felület a KORSZAK és a NEMZET színeit viseli: a magyar játék meleg
+	# barna, a francia kékes, az osztrák homokszínű panelekkel fut.
+	hud.theme = Style.make_theme(GameState.get_age(), GameState.nation)
 	GameState.era_changed.connect(_on_era_changed)
 	GameState.royal_fleet.connect(_on_royal_fleet)
 	# A projekt főjelenete a Main.tscn; ha még nem indult játék, a főmenü
@@ -396,9 +398,61 @@ func _show_menu() -> void:
 # saját dallama van.
 func _on_era_changed(owner_id: int, new_age: int) -> void:
 	if owner_id != GameState.en_id: return
-	hud.theme = Style.make_theme(new_age)
+	hud.theme = Style.make_theme(new_age, GameState.nation)
 	SFX.play("age")
 	SFX.play_era_music(new_age)
+	_korszak_unnep(new_age)
+
+# KORSZAKVÁLTÁS — a játék legnagyobb pillanata.
+#
+# Eddig csak a zene váltott, a képen semmi nem történt: a játékos sokszor
+# észre sem vette, hogy megérkezett az új század. Most a kép aranyba borul
+# egy pillanatra, és nagy betűkkel kiírjuk, hová értünk. Két másodperc,
+# aztán magától eltűnik — a játékmenetet nem állítja meg.
+func _korszak_unnep(new_age: int) -> void:
+	var a := clampi(new_age, 0, 3)
+	var gold := Style.nation_ui(GameState.nation, a, "gold", 0.45)
+
+	var villanas := ColorRect.new()
+	villanas.color = Color(gold.r, gold.g, gold.b, 0.0)
+	villanas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	villanas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	$UILayer.add_child(villanas)
+
+	var doboz := VBoxContainer.new()
+	doboz.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	doboz.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	doboz.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	doboz.grow_vertical = Control.GROW_DIRECTION_BOTH
+	doboz.add_theme_constant_override("separation", 2)
+	doboz.modulate.a = 0.0
+	$UILayer.add_child(doboz)
+
+	# A nemzet saját korszakneve ("Magyar Királyság", "Osztrák–Magyar
+	# Monarchia"), alatta a század — ettől lesz a pillanat személyes.
+	var nemzeti := Style.nation_era(GameState.nation, a)
+	for sor in [[nemzeti, 34, gold], [Style.ERA_NAME[a] + " · " + Style.ERA_SUB[a], 18, Style.INK]]:
+		var l := Label.new()
+		l.text = str(sor[0])
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		l.add_theme_font_size_override("font_size", int(sor[1]))
+		l.add_theme_color_override("font_color", sor[2])
+		l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
+		l.add_theme_constant_override("shadow_offset_x", 2)
+		l.add_theme_constant_override("shadow_offset_y", 2)
+		doboz.add_child(l)
+
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(villanas, "color:a", 0.30, 0.25)
+	tw.tween_property(doboz, "modulate:a", 1.0, 0.35)
+	tw.chain().tween_property(villanas, "color:a", 0.0, 0.9)
+	tw.chain().tween_interval(1.1)
+	tw.chain().tween_property(doboz, "modulate:a", 0.0, 0.7)
+	tw.chain().tween_callback(func() -> void:
+		if is_instance_valid(villanas): villanas.queue_free()
+		if is_instance_valid(doboz): doboz.queue_free())
 
 func _setup_water() -> void:
 	# A víz egyetlen, a világot lefedő sprite, saját shaderrel.

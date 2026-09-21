@@ -406,6 +406,11 @@ func _ready() -> void:
 	_make_grass_tex()
 	_setup_land_sprite()
 	GameState.era_changed.connect(_on_era_changed)
+	# Az aljnövényzet csak a látómezőben készül el, ezért a kamera mozgását
+	# figyelni kell (lásd `_process`). Alacsony részletességen nincs dísz,
+	# tehát figyelni sincs mit.
+	set_process(Settings.detail >= 1)
+	Settings.changed.connect(_on_settings_changed)
 	land_region = NavigationRegion2D.new()
 	land_region.name = "LandNav"
 	land_region.navigation_layers = 1
@@ -860,6 +865,40 @@ func _extract_rects(want: bool) -> Array[Rect2]:
 	return out
 
 # --- Rajzolás ---
+#
+# EGY KÉZ, EGY STÍLUS. A táj ugyanabból a szabálykönyvből rajzolódik, mint
+# az épületek (BuildArt): a nap BAL FELÜLRŐL süt (BuildArt.NAP), tehát az
+# árnyék jobbra-le dől, a bal felső foltok világosabbak, a sziluettet
+# pedig a tus felé sötétített alapszín zárja le (BuildArt.INK).
+#
+# NEM MÁSOLT-BEILLESZTETT. Minden fa és minden szikla a SAJÁT HELYÉBŐL
+# vetett véletlent kap — pontosan úgy, ahogy a lelőhelyek (`ResNode._rng`).
+# Ettől mind más, de mentés/betöltés után és a hálózat másik gépén is
+# ugyanaz marad, mert a hely nem változik.
+
+# Korszakonkénti LOMBSZÍN. Két árnyalat: fánként keverünk közöttük, ettől
+# lesz egy erdőfolt tarka. 0 = tavasz, 1 = nyár, 2 = ősz, 3 = tél.
+const LOMB_SZIN := [
+	Color(0.30, 0.53, 0.21),   # tavasz — friss, sárgás zöld
+	TREE_LEAF,                 # nyár   — mély zöld
+	Color(0.66, 0.45, 0.13),   # ősz    — arany
+	Color(0.34, 0.38, 0.35),   # tél    — fakó (csak a hóhoz kell)
+]
+const LOMB_ALT := [
+	Color(0.45, 0.63, 0.25),   # tavasz — halvány rügyzöld
+	Color(0.21, 0.42, 0.17),   # nyár   — árnyékos zöld
+	Color(0.72, 0.28, 0.12),   # ősz    — rozsdavörös
+	Color(0.43, 0.45, 0.41),   # tél
+]
+const HO := Color(0.93, 0.95, 0.97, 0.78)
+
+# A korszak vadvirágai: két-két szín, a fű mellé egy-egy pötty.
+const VIRAG_SZIN := [
+	[Color(0.96, 0.94, 0.86), Color(0.96, 0.82, 0.28)],   # tavasz: fehér, sárga
+	[Color(0.52, 0.56, 0.86), Color(0.86, 0.40, 0.52)],   # nyár:   kék, rózsa
+	[Color(0.84, 0.46, 0.16), Color(0.74, 0.28, 0.18)],   # ősz:    rozsda
+	[Color(0.90, 0.92, 0.95), Color(0.78, 0.80, 0.84)],   # tél:    dér
+]
 
 func _draw() -> void:
 	# A vizet és a talajt (a homokos parttal együtt) a két shader rajzolja
@@ -867,36 +906,248 @@ func _draw() -> void:
 	# szükség: a homoksáv maga a part.
 	var a := clampi(_age, 0, 3)
 	var winter := a == 3
-	var leaf: Color = TREE_LEAF
-	if a == 2: leaf = Color(0.55, 0.40, 0.16)                # ősz
-	elif winter: leaf = Color(0.30, 0.36, 0.31)
+	var leaf: Color = LOMB_SZIN[a]
+	var leaf2: Color = LOMB_ALT[a]
+	# Az aljnövényzet megy LEGALULRA, hogy a fák és a sziklák ráüljenek.
+	_draw_aljnovenyzet(a)
 	for p in rocks:
 		_draw_rock(p, winter)
 	for p in trees:
-		_draw_tree(p, leaf, winter)
+		_draw_tree(p, leaf, leaf2, winter)
 
+# --- Egyetlen fa ---
+#
 # A szikla és a fa a KATONÁHOZ mérve: egy fa magasabb egy embernél
-# (~46 px), egy szikla nagyjából derékig ér.
-func _draw_rock(p: Vector2, winter: bool) -> void:
-	draw_circle(p + Vector2(3, 4), 13.0, Color(0, 0, 0, 0.22))
-	draw_circle(p + Vector2(-5, 2), 9.0, ROCK_SHADE)
-	draw_circle(p + Vector2(6, 3), 8.0, ROCK_SHADE)
-	draw_circle(p, 13.0, ROCK_COLOR)
-	draw_circle(p + Vector2(-3, -4), 6.5, ROCK_COLOR.lightened(0.22))
+# (~46 px), egy szikla nagyjából derékig ér. Ettől a mérettől tér el
+# fánként a helyből vetett véletlen.
+func _draw_tree(p: Vector2, leaf: Color, leaf2: Color, winter: bool) -> void:
+	var g := RandomNumberGenerator.new()
+	g.seed = hash(Vector2i(int(p.x), int(p.y)))
+	# A fák zöme átlagos termetű, de az erdő nem faiskola: ~12% facsemete,
+	# ~8% öreg, terebélyes óriás.
+	var m := g.randf_range(0.88, 1.12)
+	var sors := g.randf()
+	if sors < 0.12:      m *= 0.60          # facsemete
+	elif sors < 0.20:    m *= 1.30          # öreg fa
+	var h := 16.0 * m                        # törzsmagasság
+	var vast := g.randf_range(2.3, 3.7) * m  # a törzs fél vastagsága
+	var dol := g.randf_range(-0.18, 0.18)    # enyhe dőlés
+	var cr := 15.0 * m * g.randf_range(0.82, 1.18)   # lombsugár, ±18%
+	# Fánként más árnyalat: ősszel az arany és a rozsdavörös között.
+	var sz := leaf.lerp(leaf2, g.randf())
+	var vil := g.randf_range(-0.13, 0.13)
+	sz = sz.lightened(vil) if vil > 0.0 else sz.darkened(-vil)
+	# 1) Vetett árnyék: a nap bal felülről süt, az árnyék jobbra-le dől.
+	draw_circle(p + BuildArt.NAP * (h + cr) * 0.55,
+		cr * g.randf_range(0.68, 0.92), Color(0, 0, 0, 0.20))
+	# 2) Törzs: lefelé szélesedő, a korona felé dőlő.
+	var csucs := p + Vector2(dol * h, -h)    # a törzs teteje
+	draw_colored_polygon(PackedVector2Array([
+		p + Vector2(-vast, 2.0), p + Vector2(vast, 2.0),
+		csucs + Vector2(vast * 0.60, 0.0), csucs + Vector2(-vast * 0.60, 0.0)]),
+		TREE_TRUNK)
+	# A bal oldalára esik a fény (2. szabály).
+	draw_line(p + Vector2(-vast * 0.55, 0.0), csucs + Vector2(-vast * 0.34, 0.0),
+		TREE_TRUNK.lightened(0.22), 1.0)
 	if winter:
-		draw_circle(p + Vector2(-2, -5), 5.5, Color(0.92, 0.94, 0.96, 0.75))
+		_draw_teli_ag(csucs, cr, vast, g)
+		return
+	# 3) Lomb: 3–5 gömb, szabálytalan koszorúban. A legalsó, legsötétebb
+	#    gömb zárja le a sziluettet — ez a "tus" a körvonalon (3. szabály).
+	var kp := csucs + Vector2(0.0, -cr * 0.52)
+	draw_circle(kp + Vector2(0.0, cr * 0.32), cr * 1.02,
+		sz.darkened(0.34).lerp(BuildArt.INK, 0.14))
+	var db := 3 + (g.randi() % 3)
+	for i in range(db):
+		var a := TAU * float(i) / float(db) + g.randf_range(-0.40, 0.40)
+		var d := cr * g.randf_range(0.16, 0.46)
+		var q := kp + Vector2(cos(a) * d, sin(a) * d * 0.72)
+		# Minél inkább bal felül van a gömb, annál világosabb.
+		var t := clampf(0.5 - (q.x - kp.x + q.y - kp.y) / (cr * 1.6), 0.0, 1.0)
+		draw_circle(q, cr * g.randf_range(0.50, 0.80),
+			sz.darkened(0.16).lerp(sz.lightened(0.24), t))
+	# 4) Fénypötty bal felül: egyetlen hívás, de ettől lesz gömbölyű.
+	draw_circle(kp + Vector2(-cr * 0.36, -cr * 0.40), cr * 0.32, sz.lightened(0.28))
 
-func _draw_tree(p: Vector2, leaf: Color, winter: bool) -> void:
-	# Vetett árnyék a talajon
-	draw_circle(p + Vector2(5, 3), 12.0, Color(0, 0, 0, 0.20))
-	# Törzs
-	draw_rect(Rect2(p.x - 3.0, p.y - 14.0, 6.0, 16.0), TREE_TRUNK, true)
-	draw_rect(Rect2(p.x + 1.0, p.y - 14.0, 2.0, 16.0), TREE_TRUNK.darkened(0.25), true)
-	# Lombkorona három rétegben, hogy legyen mélysége
-	draw_circle(p + Vector2(0, -20), 15.0, leaf.darkened(0.22))
-	draw_circle(p + Vector2(-4, -25), 12.0, leaf)
-	draw_circle(p + Vector2(5, -23), 10.0, leaf.darkened(0.10))
-	draw_circle(p + Vector2(-6, -29), 6.5, leaf.lightened(0.18))
+# TÉL: a lombhullató fa KOPÁR. Néhány szétágazó ág, a tetejükön hóval —
+# ez a leglátványosabb különbség a korszakváltáskor.
+func _draw_teli_ag(csucs: Vector2, cr: float, vast: float,
+		g: RandomNumberGenerator) -> void:
+	var agak := 3 + (g.randi() % 2)
+	for i in range(agak):
+		var a := -PI * 0.5 + (float(i) - float(agak - 1) * 0.5) * 0.66 \
+			+ g.randf_range(-0.14, 0.14)
+		var vege := csucs + Vector2(cos(a), sin(a)) * cr * g.randf_range(0.70, 1.05)
+		draw_line(csucs, vege, TREE_TRUNK.darkened(0.08), maxf(1.0, vast * 0.50))
+		# Hó ül az ág tetején.
+		draw_line(csucs + Vector2(0.0, -1.2), vege + Vector2(0.0, -1.2),
+			Color(HO.r, HO.g, HO.b, 0.50), 1.0)
+	draw_circle(csucs + Vector2(-cr * 0.12, -cr * 0.30), cr * 0.34, HO)
+
+# --- Egyetlen szikla ---
+#
+# Nem négy egyforma kör: 2–5 kőtömb, tömbönként más mérettel, hidegebb
+# (kékes) vagy melegebb (barnás) szürkével, néhánynál kaviccsal a tövében.
+func _draw_rock(p: Vector2, winter: bool) -> void:
+	var g := RandomNumberGenerator.new()
+	g.seed = hash(Vector2i(int(p.x), int(p.y)))
+	var m := g.randf_range(0.76, 1.24)
+	# A szürke sosem semleges: a kőzet vagy kékesen hideg, vagy barnásan meleg.
+	var meleg := g.randf_range(-1.0, 1.0)
+	var alap := ROCK_COLOR.lerp(
+		Color(0.53, 0.48, 0.41) if meleg > 0.0 else Color(0.40, 0.43, 0.51),
+		absf(meleg) * 0.55)
+	var sotet := ROCK_SHADE.lerp(alap.darkened(0.30), 0.5)
+	# Vetett árnyék — jobbra-le, mint minden másé.
+	draw_circle(p + BuildArt.NAP * 18.0 * m, 12.5 * m, Color(0, 0, 0, 0.22))
+	# A hátsó tömbök: a fő tömb köré szórva, sötétebben.
+	var db := 2 + (g.randi() % 4)
+	for i in range(db):
+		var a := TAU * float(i) / float(db) + g.randf_range(-0.45, 0.45)
+		var d := 8.0 * m * g.randf_range(0.20, 1.0)
+		draw_circle(p + Vector2(cos(a) * d, sin(a) * d * 0.62),
+			13.0 * m * g.randf_range(0.42, 0.78), sotet)
+	# A fő tömb és a megvilágított lapja.
+	draw_circle(p, 13.0 * m * g.randf_range(0.86, 1.0), alap)
+	draw_circle(p + Vector2(-3.4, -4.2) * m, 6.5 * m, alap.lightened(0.24))
+	# Kavicsok a kő tövében — csak minden második-harmadik sziklánál.
+	if g.randf() < 0.55:
+		for _i in range(1 + (g.randi() % 2)):
+			var a2 := g.randf_range(0.0, PI)     # előre, a kő elé
+			draw_circle(p + Vector2(cos(a2) * 15.0 * m, 4.0 + sin(a2) * 6.0 * m),
+				g.randf_range(1.6, 3.0) * m, sotet)
 	if winter:
-		draw_circle(p + Vector2(-5, -28), 7.0, Color(0.92, 0.94, 0.96, 0.8))
-		draw_circle(p + Vector2(4, -24), 5.0, Color(0.92, 0.94, 0.96, 0.6))
+		draw_circle(p + Vector2(-2.0, -5.0) * m, 5.5 * m, HO)
+
+# --- ALJNÖVÉNYZET ---
+#
+# A talaj nem csupasz szőnyeg: fűcsomók, apró bokrok és elvétve vadvirág
+# tarkítja. A díszeket NEM tároljuk — egy képzeletbeli RÁCS adja őket,
+# cellánként legfeljebb egyet, a cella koordinátájából vetett véletlennel.
+# Így minden újraindításkor (és minden gépen) ugyanott állnak, memóriát
+# viszont nem visznek.
+#
+# TELJESÍTMÉNY (Intel HD 630!):
+#   - csak a kamera dobozában lévő cellákat járjuk be,
+#   - egy dísz legfeljebb 2-3 rajzhívás,
+#   - a sűrűség a részletességhez kötött: 0-n egyáltalán nincs,
+#   - kizoomolva elmarad (úgysem látszana, viszont ezrével kellene).
+const ALJ_CELLA := 46                        # ekkora rácsban áll egy dísz
+const ALJ_SURUSEG := [0.0, 0.16, 0.34]       # Settings.detail szerinti esély
+const ALJ_LEPES := 64.0                      # ennyi kameramozgás után újrarajz
+const ALJ_PEREM := 80.0                      # ennyivel rajzolunk a kép mellé
+const ALJ_ZOOM_MIN := 0.55                   # ez alatt nincs aljnövényzet
+
+var _main: Node = null
+var _kam_volt := Vector2(-1e9, -1e9)
+var _kam_zoom := -1.0
+var _kam_t: float = 0.0
+
+# A kamera látómezeje világkoordinátákban (a Scars/Wildlife mintájára).
+# Üres téglalapot ad, ha nincs kamera (fejlesztői/headless futás) vagy
+# túlságosan ki van zoomolva — ilyenkor dísz sem készül.
+func _kamera_doboz() -> Rect2:
+	if _main == null: _main = get_tree().get_first_node_in_group("main")
+	if _main == null or _main.camera == null: return Rect2()
+	if _main.camera.zoom.x < ALJ_ZOOM_MIN: return Rect2()
+	var meret := get_viewport_rect().size / maxf(_main.camera.zoom.x, 0.05)
+	return Rect2(_main.camera.global_position - meret * 0.5, meret).grow(ALJ_PEREM)
+
+# A dísz csak a látómezőben készül el, ezért a kamera elmozdulására újra
+# kell rajzolni — de NEM képkockánként: csak ha egy jókora lépésköznél
+# többet haladt (a perem éppen ezt a lépésközt fedezi). Így panning közben
+# sem épül fel újra és újra a teljes rajzparancs-lista.
+func _process(delta: float) -> void:
+	_kam_t += delta
+	if _kam_t < 0.12: return
+	_kam_t = 0.0
+	if _main == null: _main = get_tree().get_first_node_in_group("main")
+	if _main == null or _main.camera == null: return
+	var p: Vector2 = _main.camera.global_position
+	var z: float = _main.camera.zoom.x
+	if p.distance_to(_kam_volt) < ALJ_LEPES and is_equal_approx(z, _kam_zoom):
+		return
+	_kam_volt = p
+	_kam_zoom = z
+	queue_redraw()
+
+# A részletesség menet közben is átállítható: ilyenkor az aljnövényzet
+# megjelenik vagy eltűnik.
+func _on_settings_changed() -> void:
+	set_process(Settings.detail >= 1)
+	_kam_volt = Vector2(-1e9, -1e9)
+	queue_redraw()
+
+func _draw_aljnovenyzet(a: int) -> void:
+	var esely: float = ALJ_SURUSEG[clampi(Settings.detail, 0, 2)]
+	if esely <= 0.0: return
+	var doboz := _kamera_doboz()
+	if doboz.size.x <= 0.0: return
+	# A fű színe a KORSZAK talajpalettájából jön (ugyanabból, amiből a
+	# fűcsempe készül), így a korszakváltás az aljnövényzeten is látszik.
+	var fu := (LAND_COLORS[a] as Color).darkened(0.20)
+	var fu2 := (LAND_ALTS[a] as Color).lightened(0.08)
+	var g := RandomNumberGenerator.new()     # egy darab, cellánként újravetve
+	var x0 := int(floor(doboz.position.x / ALJ_CELLA))
+	var y0 := int(floor(doboz.position.y / ALJ_CELLA))
+	var x1 := int(ceil(doboz.end.x / ALJ_CELLA))
+	var y1 := int(ceil(doboz.end.y / ALJ_CELLA))
+	for cy in range(y0, y1):
+		for cx in range(x0, x1):
+			g.seed = hash(Vector2i(cx, cy)) ^ 0x5EED
+			if g.randf() >= esely: continue
+			var p := Vector2(
+				(float(cx) + g.randf_range(0.15, 0.85)) * ALJ_CELLA,
+				(float(cy) + g.randf_range(0.15, 0.85)) * ALJ_CELLA)
+			# Vízre és a homokos partra nem nő semmi. (Az épületek úgyis
+			# a terep FÖLÉ rajzolódnak, ezért azokkal nem kell törődni.)
+			if is_water(p) or on_shore(p): continue
+			_draw_disz(p, g, a, fu, fu2)
+
+# Egy dísz a talajon. Mindegyik legfeljebb 3 rajzhívás.
+func _draw_disz(p: Vector2, g: RandomNumberGenerator, a: int,
+		fu: Color, fu2: Color) -> void:
+	var fajta := g.randf()
+	var m := g.randf_range(0.75, 1.25)
+	if a == 3:
+		# TÉL: hófoltok, köztük kilátszó, száraz fűcsomók.
+		if fajta < 0.60:
+			draw_circle(p, 4.2 * m, Color(HO.r, HO.g, HO.b, 0.55))
+			draw_circle(p + Vector2(-1.3, -1.1) * m, 2.2 * m,
+				Color(0.99, 1.0, 1.0, 0.45))
+		else:
+			_fucsomo(p, g, m * 0.8, Color(0.54, 0.52, 0.44))
+		return
+	if fajta < 0.62:
+		_fucsomo(p, g, m, fu.lerp(fu2, g.randf()))
+	elif fajta < 0.90:
+		_bokor(p, g, m, fu.darkened(0.16))
+	else:
+		_vadvirag(p, g, m, fu.darkened(0.08), a)
+
+# Fűcsomó: egyetlen elkeskenyedő szálköteg, rajta a bal oldali fénycsík.
+func _fucsomo(p: Vector2, g: RandomNumberGenerator, m: float, c: Color) -> void:
+	var w := 3.6 * m
+	var h := 6.5 * m * g.randf_range(0.8, 1.3)
+	var dol := g.randf_range(-0.35, 0.35)          # merre hajlik a szél
+	draw_colored_polygon(PackedVector2Array([
+		p + Vector2(-w, 0.0), p + Vector2(w, 0.0),
+		p + Vector2(w * 0.45 + dol * h, -h),
+		p + Vector2(-w * 0.15 + dol * h, -h * 0.72)]), c.darkened(0.18))
+	draw_line(p + Vector2(-w * 0.5, 0.0),
+		p + Vector2(-w * 0.1 + dol * h, -h * 0.95), c.lightened(0.28), 1.0)
+
+# Apró bokor: tus felé sötétített alap + megvilágított folt bal felül.
+func _bokor(p: Vector2, g: RandomNumberGenerator, m: float, c: Color) -> void:
+	var r := 5.0 * m * g.randf_range(0.8, 1.25)
+	draw_circle(p + Vector2(0.0, -r * 0.45), r, c.lerp(BuildArt.INK, 0.20))
+	draw_circle(p + Vector2(-r * 0.30, -r * 0.78), r * 0.55, c.lightened(0.26))
+
+# Vadvirág: szár és szirompötty. A szín a korszakhoz igazodik.
+func _vadvirag(p: Vector2, g: RandomNumberGenerator, m: float, szar: Color,
+		a: int) -> void:
+	var cs := p + Vector2(g.randf_range(-1.8, 1.8) * m, -7.0 * m)
+	draw_line(p, cs, szar.darkened(0.12), 1.0)
+	var szirom: Color = VIRAG_SZIN[clampi(a, 0, 3)][g.randi() % 2]
+	draw_circle(cs, 2.2 * m, szirom)
+	draw_circle(cs + Vector2(-0.7, -0.7) * m, 1.0 * m, szirom.lightened(0.35))

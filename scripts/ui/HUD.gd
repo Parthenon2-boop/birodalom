@@ -16,6 +16,7 @@ extends Control
 @onready var sel_hp        := %SelHPBar       as ProgressBar
 @onready var sel_info      := %SelInfo        as Label
 @onready var action_btns   := %ActionButtons  as HBoxContainer
+@onready var build_box     := %BuildBox       as PanelContainer
 @onready var build_panel   := %BuildPanel     as VBoxContainer
 @onready var pause_overlay := %PauseOverlay   as ColorRect
 @onready var move_btn      := %MoveBtn        as Button
@@ -53,6 +54,23 @@ extends Control
 @onready var settings_host := %SettingsHost   as VBoxContainer
 @onready var settings_back := %SettingsBack   as Button
 
+# --- BETŰMÉRETEK ---
+#
+# Az alapméretet a téma adja (Style.make_theme -> default_font_size = 13).
+# Ettől csak ott térünk el, ahol tényleg muszáj, és akkor is ezekkel a
+# nevekkel — beégetett szám ne maradjon a felület kódjában.
+const BETU_APRO  := 10   # a flottasáv rakományszáma: csak kiegészítő adat
+const BETU_KICSI := 11   # szűk gombok (állás, alakzat, töltet) és sorfeliratok
+const BETU_NAGY  := 17   # a képernyő közepén megjelenő rövid üzenet
+
+# --- GOMBMÉRETEK ---
+#
+# Az építő- és a képzési gomb ugyanaz a fajta gomb, ezért ugyanakkora is:
+# egy sor szöveg, előtte egy kis rajz. Az ikon a gomb bal szélén ül.
+const GOMB_MERET := Vector2(158, 32)
+const IKON_HELY  := Vector2(5, 3)
+const IKON_MERET := Vector2(26, 26)
+
 # A megjeleníthető szövegek az assets/lang/*.json fájlokban vannak, itt
 # csak a kulcsok szerepelnek. Így egy új nyelvhez nem kell kódot írni.
 const BUILDABLE := ["farm", "house", "barracks", "stable", "smith", "academy",
@@ -82,7 +100,7 @@ func _ready() -> void:
 	GameState.resources_changed.connect(_update_resources)
 	GameState.era_changed.connect(_update_era)
 	sel_panel.visible = false
-	build_panel.visible = false
+	_show_build(false)
 	train_panel.visible = false
 	pause_overlay.visible = false
 	over_overlay.visible = false
@@ -171,28 +189,37 @@ func _setup_icons() -> void:
 		box.remove_child(old)
 		old.queue_free()
 
-# A felső sáv nem sima fekete csík: sötétből világosabb felé futó
-# faragott panel, alul aranyszínű hajszálvonallal, a nyersanyagok között
-# függőleges elválasztóval. Így a HUD is a játék világához tartozik.
+# A felső sáv UGYANAZ a panel, mint a többi (Style.panel_box): azonos
+# háttér, azonos vetett árnyék. Csak a széle más, mert a sáv a képernyő
+# pereméhez simul: oldalt-felül nincs kerete, alul viszont aranyszínű
+# hajszálvonal választja el a pályától. A nyersanyagcsoportok közé
+# függőleges elválasztó kerül.
 func _style_top_bar() -> void:
 	var bar := get_node_or_null("TopBar") as PanelContainer
 	if bar == null: return
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color("1c1610")
-	sb.set_border_width(SIDE_BOTTOM, 2)
-	sb.border_color = Style.age_gold(GameState.get_age()).darkened(0.25)
+	var age := GameState.get_age()
+	var sb := Style.panel_box(age)
+	sb.set_corner_radius_all(0)          # a sáv a képernyő széléig ér
+	sb.border_width_left = 0
+	sb.border_width_right = 0
+	sb.border_width_top = 0
+	sb.border_width_bottom = 2
+	sb.border_color = Style.age_gold(age).darkened(0.25)
+	# A sáv alacsony (40 képpont), ezért szűkebb belső margó kell, mint a
+	# nagy paneleknél — különben a nyersanyagikonok nem férnének el benne.
 	sb.content_margin_left = 14.0
 	sb.content_margin_right = 8.0
 	sb.content_margin_top = 4.0
 	sb.content_margin_bottom = 4.0
-	sb.shadow_color = Color(0, 0, 0, 0.45)
-	sb.shadow_size = 6
-	sb.shadow_offset = Vector2(0, 3)
 	bar.add_theme_stylebox_override("panel", sb)
 	# Elválasztó a nyersanyagcsoportok között.
 	var box := bar.get_node_or_null("HBoxContainer") as HBoxContainer
 	if box == null: return
 	box.add_theme_constant_override("separation", 10)
+	# Korszakváltáskor a sáv újraszíneződik, de az elválasztók már állnak:
+	# másodszor nem rakjuk le őket.
+	for gyerek in box.get_children():
+		if gyerek is VSeparator: return
 	for name2 in ICON_BOXES:
 		var group := box.get_node_or_null(name2) as Control
 		if group == null: continue
@@ -211,6 +238,107 @@ class BldIcon extends Control:
 
 	func _draw() -> void:
 		BuildArt.ikon(self, tipus, age, Rect2(Vector2.ZERO, size))
+
+# --- KIS EGYSÉGRAJZ A KÉPZÉSI GOMBOKRA ---
+#
+# Az építőgombon régóta ott a ház rajza, a képzési gombon viszont nem volt
+# semmi. Új grafikát nem találunk ki: ugyanarról a lapról vágunk ki egy
+# szemből álló kockát, amiről a pályán az UnitSprite dolgozik. Így a gombon
+# pontosan az az alak áll, amit kiképzel — és mivel a lap korszakonként más,
+# a korszakváltás a gombokon is meglátszik.
+#
+# A lapkiosztást (melyik szerep melyik rajzról jön) nem másoljuk le: magát
+# az UnitSprite táblázatait olvassuk, hogy a kettő ne csúszhasson szét.
+const EgysegLap := preload("res://scripts/units/UnitSprite.gd")
+
+# Egy kocka mérete a lapokon, és a "szemből" néző irány a sorrendekben.
+const KOCKA    := 64.0
+const IRANY_DEL := 1      # 0=Kelet, 1=Dél, 2=Nyugat, 3=Észak
+
+# A már kivágott ikonokat eltesszük: a képzési panel minden kijelöléskor
+# újraépül, fölösleges újra és újra AtlasTexture-t gyártani.
+static var _egyseg_ikonok: Dictionary = {}
+
+# A szerephez tartozó kis kép, vagy null, ha nincs hozzá lap.
+static func egyseg_ikon(role: String, age: int) -> Texture2D:
+	var kulcs := "%s/%d" % [role, age]
+	if _egyseg_ikonok.has(kulcs): return _egyseg_ikonok[kulcs]
+	var tex := _egyseg_ikon_keszit(role, age)
+	_egyseg_ikonok[kulcs] = tex
+	return tex
+
+static func _egyseg_ikon_keszit(role: String, age: int) -> Texture2D:
+	# A hajó és a repülő EGYETLEN oldalnézeti kép, nincs kockákra osztva:
+	# az egészet használjuk. (A 20. századi acélhajót a pályán rajzoljuk,
+	# de a gombon a vitorlás képe is elmondja, miféle hajó lesz belőle.)
+	if role in EgysegLap.NAVAL_ROLES:
+		return _lap("res://assets/sprites/ship/%s.png" % role)
+	if role in EgysegLap.AIR_ROLES:
+		return _lap("res://assets/sprites/air/%s.png" % role)
+	if role == "cav":
+		var lo := _lap("res://assets/sprites/horse.png")
+		if lo == null: return null
+		# A ló lapján oldalnézet van: a 3. sor 1. kockája az álló ló.
+		return _kivag(lo, Rect2(KOCKA, 3.0 * KOCKA + 8.0, KOCKA, 38.0))
+	# Gyalogos: a korszak lapja. 0 = LPC vitézek, 1-2 = napóleoni
+	# vonalgyalogság, 3 = világháborús katona — ugyanaz a rend, mint az
+	# UnitSprite.setup()-ban.
+	var kulcs := ""
+	var ut := ""
+	var sor := 0
+	if age >= 3:
+		kulcs = "ww2"
+		ut = "res://assets/sprites/ww2/ally.png"
+		sor = int(EgysegLap.ROWS_WW2[IRANY_DEL])
+	elif age >= 1:
+		var lap: String = str(EgysegLap.NAP_FOR.get(role, "melee"))
+		kulcs = "napoleon/" + lap
+		ut = "res://assets/sprites/napoleon/%s.png" % lap
+		sor = int(EgysegLap.ROWS_LPC[IRANY_DEL])
+	if ut == "" or not ResourceLoader.exists(ut):
+		var lap2: String = str(EgysegLap.LPC_FOR.get(role, "melee"))
+		kulcs = "lpc/" + lap2
+		ut = "res://assets/sprites/lpc/%s.png" % lap2
+		sor = int(EgysegLap.ROWS_LPC[IRANY_DEL])
+	var t := _lap(ut)
+	if t == null: return null
+	# Az alak nem tölti ki a 64x64-es kockát: az UnitSprite méréseiből
+	# tudjuk, milyen magas és hol van a talpa. Szorosan köré vágunk, hogy
+	# a 26 képpontos ikonon ne csak egy pontnyi emberke látszódjon.
+	var m: Array = EgysegLap.SHEET_METRICS.get(kulcs, [46.0, 61.0])
+	var magas: float = float(m[0])
+	var talp: float = float(m[1])
+	return _kivag(t, Rect2(0.5 * (KOCKA - magas),
+		float(sor) * KOCKA + talp - magas, magas, magas))
+
+static func _lap(ut: String) -> Texture2D:
+	if not ResourceLoader.exists(ut): return null
+	return load(ut) as Texture2D
+
+static func _kivag(t: Texture2D, r: Rect2) -> Texture2D:
+	var at := AtlasTexture.new()
+	at.atlas = t
+	at.region = r
+	return at
+
+# A kis rajz a gomb bal szélére kerül — ugyanoda és ugyanakkorára, mint az
+# építőgombokon a ház rajza (IKON_HELY, IKON_MERET). Ha a szerephez nem
+# találunk lapot, a gomb egyszerűen ikon nélkül marad.
+func _egyseg_ikon_gombra(btn: Button, role: String, age: int) -> void:
+	var tex := egyseg_ikon(role, age)
+	if tex == null: return
+	var kep := TextureRect.new()
+	# FIGYELEM a sorrendre: amíg az expand_mode nem IGNORE_SIZE, a TextureRect
+	# legkisebb mérete a TEXTÚRA mérete, és a `size` nem tud alá menni — így
+	# az ikon a gombnál nagyobbra nőtt, és kilógott a panelből.
+	kep.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	kep.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	kep.custom_minimum_size = IKON_MERET
+	kep.texture = tex
+	kep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(kep)
+	kep.position = IKON_HELY
+	kep.size = IKON_MERET
 
 # Kis rajzolt ikonok a nyersanyagokhoz.
 class ResIcon extends Control:
@@ -391,7 +519,7 @@ func _build_build_panel() -> void:
 			continue
 		var btn := Button.new()
 		btn.text = build_name(t)
-		btn.custom_minimum_size = Vector2(158, 32)
+		btn.custom_minimum_size = GOMB_MERET
 		if main != null:
 			btn.tooltip_text = _cost_text(main.build_cost(GameState.en_id, t))
 		btn.pressed.connect(func() -> void: _on_build_pressed(t))
@@ -402,11 +530,17 @@ func _build_build_panel() -> void:
 		var ico := BldIcon.new()
 		ico.tipus = t
 		ico.age = age
-		ico.position = Vector2(5, 3)
-		ico.size = Vector2(26, 26)
+		ico.position = IKON_HELY
+		ico.size = IKON_MERET
 		ico.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(ico)
 		build_panel.add_child(btn)
+
+# Az építőmenü a keretével (BuildBox) együtt jelenik meg és tűnik el —
+# különben üres panel maradna a képernyőn.
+func _show_build(on: bool) -> void:
+	build_box.visible = on
+	build_panel.visible = on
 
 func _on_build_pressed(tipus: String) -> void:
 	var main := get_tree().get_first_node_in_group("main")
@@ -443,6 +577,9 @@ func _update_era(_owner_id: int, new_age: int) -> void:
 	else:
 		era_bar.text = era_label(new_age)
 	_update_flag()
+	# A korszak a paneleken is látszik: a téma új aranyszínt kap, és a
+	# felső sáv alsó vonala vele együtt vált.
+	_style_top_bar()
 	_build_build_panel()
 	if is_instance_valid(_bld): select_building(_bld)
 
@@ -623,7 +760,7 @@ func show_toast(text: String, seconds: float = 4.0) -> void:
 		# és a doboz elég magas hozzá.
 		_toast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_toast.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-		_toast.add_theme_font_size_override("font_size", 17)
+		_toast.add_theme_font_size_override("font_size", BETU_NAGY)
 		_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(_toast)
 	_toast.text = text
@@ -668,7 +805,7 @@ func update_selection(units: Array) -> void:
 		select_building(null)
 		select_resource(null)
 	sel_panel.visible = not units.is_empty()
-	build_panel.visible = _has_worker(units)
+	_show_build(_has_worker(units))
 	if units.is_empty(): return
 	sel_hp.visible = true
 	action_btns.visible = true
@@ -711,7 +848,7 @@ func _build_tactics() -> void:
 		var allas: String = a
 		var b := Button.new()
 		b.custom_minimum_size = Vector2(84, 24)
-		b.add_theme_font_size_override("font_size", 11)
+		b.add_theme_font_size_override("font_size", BETU_KICSI)
 		b.pressed.connect(func() -> void: _on_stance(allas))
 		_stance_row.add_child(b)
 		_stance_btns[allas] = b
@@ -723,7 +860,7 @@ func _build_tactics() -> void:
 		var alak: String = f
 		var b2 := Button.new()
 		b2.custom_minimum_size = Vector2(84, 24)
-		b2.add_theme_font_size_override("font_size", 11)
+		b2.add_theme_font_size_override("font_size", BETU_KICSI)
 		b2.pressed.connect(func() -> void: _send("form", [alak]))
 		_form_row.add_child(b2)
 		_form_btns[alak] = b2
@@ -736,7 +873,7 @@ func _build_tactics() -> void:
 		var fajta: String = a2
 		var b3 := Button.new()
 		b3.custom_minimum_size = Vector2(84, 24)
-		b3.add_theme_font_size_override("font_size", 11)
+		b3.add_theme_font_size_override("font_size", BETU_KICSI)
 		b3.pressed.connect(func() -> void: _send("ammo", [fajta]))
 		_ammo_row.add_child(b3)
 		_ammo_btns[fajta] = b3
@@ -944,7 +1081,7 @@ func _fleet_row(u: Node) -> Control:
 	sor.add_child(box)
 	var nev := Label.new()
 	nev.text = Lang.t(str(HAJO_NEV.get(str(u.role), "u_" + str(u.role))))
-	nev.add_theme_font_size_override("font_size", 11)
+	nev.add_theme_font_size_override("font_size", BETU_KICSI)
 	nev.custom_minimum_size = Vector2(52, 0)
 	box.add_child(nev)
 	var arany: float = clampf(float(u.hp) / maxf(float(u.max_hp), 1.0), 0.0, 1.0)
@@ -955,14 +1092,15 @@ func _fleet_row(u: Node) -> Control:
 	sav.max_value = 1.0
 	sav.value = arany
 	var kitolt := StyleBoxFlat.new()
-	# zöld -> sárga -> vörös, ahogy fogy az élet
-	kitolt.bg_color = Color("6fae52") if arany >= 0.7 \
-		else (Color("c98b3a") if arany >= 0.35 else Color("c04a3a"))
+	# zöld -> arany -> vörös, ahogy fogy az élet. A három szín a Style-é:
+	# ugyanaz a zöld és ugyanaz a vörös, mint mindenhol máshol a felületen.
+	kitolt.bg_color = Style.OK if arany >= 0.7 \
+		else (Style.GOLD if arany >= 0.35 else Style.BAD)
 	sav.add_theme_stylebox_override("fill", kitolt)
 	box.add_child(sav)
 	var fo := Label.new()
 	fo.text = "%d %s" % [u.cargo.size(), Lang.t("pm_fo")]
-	fo.add_theme_font_size_override("font_size", 10)
+	fo.add_theme_font_size_override("font_size", BETU_APRO)
 	fo.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	fo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(fo)
@@ -1001,7 +1139,7 @@ func select_resource(node: Node) -> void:
 		return
 	_selected = []
 	select_building(null)
-	build_panel.visible = false
+	_show_build(false)
 	action_btns.visible = false      # lelőhelynek nincs parancsa
 	sel_panel.visible = true
 	sel_hp.visible = true
@@ -1041,7 +1179,7 @@ func select_building(b: Node) -> void:
 		return
 	_selected = []
 	_res = null
-	build_panel.visible = false
+	_show_build(false)
 	# Épületnek nincs értelme a Mozgás/Támadás/Megáll gomb, ezért az
 	# egység-panel nem jelenik meg. Az életerő oda kerül, ahol toborzol:
 	# a képzési panel tetejére.
@@ -1060,13 +1198,16 @@ func select_building(b: Node) -> void:
 	for c in train_btns.get_children():
 		train_btns.remove_child(c)
 		c.queue_free()
+	var age := GameState.get_age()
 	for role in roles:
 		var r: String = role
 		var btn := Button.new()
 		btn.text = unit_name(r)
 		btn.tooltip_text = _cost_text(Building.train_cost(GameState.en_id, r))
-		btn.custom_minimum_size = Vector2(120, 28)
+		btn.custom_minimum_size = GOMB_MERET
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.pressed.connect(func() -> void: _on_train_pressed(r))
+		_egyseg_ikon_gombra(btn, r, age)
 		train_btns.add_child(btn)
 	# A kovácsműhely és az akadémia nemcsak (vagy egyáltalán nem) képez,
 	# hanem KUTAT: ugyanide kerülnek a fejlesztés-gombok.
@@ -1175,7 +1316,8 @@ func _add_research_buttons(tipus: String) -> void:
 		var lv := Upgrades.level(me, k)
 		var btn := Button.new()
 		btn.text = "%s %d/%d" % [Lang.t("upg_" + k), lv, Upgrades.max_level(k)]
-		btn.custom_minimum_size = Vector2(120, 28)
+		btn.custom_minimum_size = GOMB_MERET
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if not Upgrades.available(me, k):
 			btn.disabled = true
 			# Két külön ok, és a játékosnak tudnia kell, melyikről van szó.

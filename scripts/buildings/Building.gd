@@ -11,14 +11,14 @@ const BUILD_STATS := {
 	"stable":   {"hp": [620, 720, 860, 1050],    "trains": ["cav"]},
 	"farm":     {"hp": [300, 340, 400, 470],     "food": [0.85, 1.05, 1.35, 1.75]},
 	"tower":    {"hp": [540, 680, 850, 1050],    "dmg": [14, 20, 27, 28], "range": [155, 180, 205, 200]},
-	"house":    {"hp": [320, 420, 520, 700],     "pop": 5, "max": 10},
+	"house":    {"hp": [320, 420, 520, 700],     "pop": 5, "max": 10, "gold": [0.10, 0.16, 0.24, 0.32]},
 	"harbor":   {"hp": [540, 660, 800, 960],     "trains": ["fisher", "warship", "galleon", "transport"], "shore": true, "drop": true},
 	"temple":   {"hp": [560, 690, 830, 990],     "trains": ["priest"]},
-	"goldmine": {"hp": [420, 520, 640, 780],     "gold": 0.8},
+	"goldmine": {"hp": [420, 520, 640, 780],     "gold": [0.8, 1.15, 1.6, 2.1]},
 	"airfield": {"hp": [1, 1, 1, 1150],          "trains": ["fighter", "bomber"], "minAge": 3},
 	# Cukornád-ültetvény: ebből lesz a rum, a kalózok fizetsége. A magyar
 	# alföldön semmi keresnivalója, ezért csak a kalózvilágban építhető.
-	"sugar":    {"hp": [380, 470, 580, 700],     "rum": 0.9, "pirateOnly": true},
+	"sugar":    {"hp": [380, 470, 580, 700],     "rum": [0.9, 1.2, 1.55, 1.9], "pirateOnly": true},
 	# Piac: a kereskedő álruhája a legrégibb fedősztori — itt toborozható
 	# a kém. (A nyersanyagcsere még nincs meg, az a piac másik fele.)
 	"market":   {"hp": [480, 600, 740, 900],     "trains": ["spy"]},
@@ -184,6 +184,8 @@ var _tower_cd    : float   = 0.0
 # A fal és a tető anyaga (BuildArt kulcsok) — a korszak ezeken látszik.
 var _fal_mat     : String    = "patics"
 var _teto_mat    : String    = "zsup"
+# A gazdája nemzete — ebből jön az építészet (tető, fal, díszítés árnyalata).
+var _nemzet      : String    = ""
 var _flag_tex    : Texture2D = null
 var team_color   : Color   = Color.WHITE
 var team_accent  : Color   = Color.WHITE
@@ -339,12 +341,15 @@ func hit_radius() -> float:
 func _tick_resources(delta: float) -> void:
 	var st: Dictionary = BUILD_STATS.get(tipus, {})
 	var a := clampi(age, 0, 3)
-	if st.has("food"):
-		GameState.add_res(owner_id, "food", float(st["food"][a]) * delta)
-	if st.has("gold"):
-		GameState.add_res(owner_id, "gold", float(st["gold"]) * delta)
-	if st.has("rum"):
-		GameState.add_res(owner_id, "rum", float(st["rum"]) * delta)
+	# A hozam KORSZAKONKÉNT nő. Korábban a bánya és a cukornád fix ütemben
+	# termelt, ezért a késői játék gazdasága elsorvadt: a 20. századi tárna
+	# ugyanannyit adott, mint egy 15. századi kézi vájat.
+	for kulcs in ["food", "gold", "rum"]:
+		if not st.has(kulcs):
+			continue
+		var m = st[kulcs]
+		var ertek: float = float(m[a]) if m is Array else float(m)
+		GameState.add_res(owner_id, kulcs, ertek * delta)
 
 func _tick_tower(delta: float) -> void:
 	var st: Dictionary = BUILD_STATS.get(tipus, {})
@@ -577,6 +582,10 @@ static func pop_bonus(t: String) -> int:
 func _load_sprite() -> void:
 	_fal_mat  = BuildArt.fal_anyag(tipus, age)
 	_teto_mat = BuildArt.teto_anyag(tipus, age)
+	# A gazdája nemzete adja az építészetet: a magyar falu vörös tetős és
+	# sárga vakolatú, a német szürke palás, az orosz zöld tetős. Egy pályán
+	# így ránézésre meg lehet mondani, kinek a földjén jársz.
+	_nemzet = GameState.nation_of(owner_id)
 	if tipus == "hq":
 		var fp := Style.flag_path(
 			GameState.nation if owner_id == GameState.en_id else "de", age)
@@ -587,10 +596,17 @@ func _load_sprite() -> void:
 # sisak, tetőablak, saroktorony) ebből származtatják a maguk árnyalatát,
 # így azok is együtt öregszenek az épülettel.
 func _roof_base() -> Color:
-	return BuildArt.teto_szin(_teto_mat, age)
+	var c := BuildArt.teto_szin(_teto_mat, age, _nemzet)
+	var j := _teto_jitter()
+	return c.lightened(j) if j > 0.0 else c.darkened(-j)
 
 func _wall_base() -> Color:
-	return BuildArt.fal_szin(_fal_mat, age)
+	return BuildArt.fal_szin(_fal_mat, age, _nemzet)
+
+# Példányonkénti apró tetőárnyalat (−4%..+4%): két szomszédos ház tetője ne
+# legyen betűre azonos. Az azonosítóból jön, tehát hálózatban is egyezik.
+func _teto_jitter() -> float:
+	return (float(absi(nid * 2246822519) % 9) - 4.0) * 0.01
 
 # --- ARÁNYOK: EGY NÉZŐPONT MINDEN HÁZON ---
 #
@@ -750,7 +766,7 @@ func _draw_house(foot: Rect2, reveal: float) -> void:
 
 	# 1. Homlokzat: anyagminta, gerendaváz (ha patics), kőlábazat.
 	if wall.size.y > 0.0:
-		BuildArt.homlokzat(self, wall, _fal_mat, age)
+		BuildArt.homlokzat(self, wall, _fal_mat, age, _nemzet)
 		if _fal_mat == "patics":
 			BuildArt.gerendavaz(self, wall)
 		BuildArt.labazat(self, wall, age)
@@ -760,7 +776,8 @@ func _draw_house(foot: Rect2, reveal: float) -> void:
 		var vis_top := maxf(rr.position.y, reveal)
 		var t := (vis_top - rr.position.y) / maxf(rr.size.y, 0.001)
 		var vis_w := lerpf(top_w, bot_w, t)
-		BuildArt.teto(self, vis_top, vis_w, rr.end.y, bot_w, _teto_mat, age)
+		BuildArt.teto(self, vis_top, vis_w, rr.end.y, bot_w, _teto_mat, age,
+			_nemzet, _teto_jitter())
 
 	# 3. Közös körvonal: a fal és a tető egy testként olvasódik.
 	if wall.size.y > 0.0:
@@ -843,9 +860,9 @@ func _chimney_rect() -> Rect2:
 
 func _draw_chimney(_rr: Rect2) -> void:
 	var r := _chimney_rect()
-	var tegla := BuildArt.fal_szin("tegla", age)
+	var tegla := BuildArt.fal_szin("tegla", age, _nemzet)
 	draw_rect(r, tegla, true)
-	var tt := BuildArt.anyag_tex("tegla", age)
+	var tt := BuildArt.anyag_tex("tegla", age, _nemzet)
 	if tt != null:
 		draw_texture_rect(tt, r, true)
 	draw_rect(Rect2(r.position.x, r.position.y, r.size.x * 0.32, r.size.y),
@@ -877,6 +894,10 @@ func _draw_openings(foot: Rect2) -> void:
 			Color(0.78, 0.66, 0.30))
 		draw_rect(Rect2(door.position.x - 3.0, door.end.y - 2.0,
 			door.size.x + 6.0, 2.0), BuildArt.LABAZAT.darkened(0.12), true)
+		# Festett szemöldökfa a nemzet színében: kis felület, de messziről ez
+		# mondja meg, kinek a háza (a böngészős eredeti „trim” színe).
+		draw_rect(Rect2(door.position.x - 2.0, door.position.y - 2.5,
+			door.size.x + 4.0, 2.5), BuildArt.disz_szin(age, _nemzet), true)
 		draw_rect(door, BuildArt.INK, false, 1.0)
 		# Ablakok az ajtó két oldalán: keret, keresztfa, párkány és a
 		# bentről kiszűrődő fény.
@@ -1012,7 +1033,7 @@ func _sig_temple(foot: Rect2, wall: Rect2, rr: Rect2) -> void:
 	# A harangtorony a HÁZ falából épül, nem a tetejéből: korábban a
 	# tetőszínt kapta, ezért rózsaszín kőnek látszott.
 	draw_rect(torony, _wall_base(), true)
-	var tt := BuildArt.anyag_tex(_fal_mat, age)
+	var tt := BuildArt.anyag_tex(_fal_mat, age, _nemzet)
 	if tt != null:
 		draw_texture_rect(tt, torony, true)
 	draw_rect(Rect2(torony.end.x - torony.size.x * 0.28, torony.position.y,
@@ -1270,7 +1291,7 @@ func _sig_hq(wall: Rect2, rr: Rect2) -> void:
 		# A saroktorony is KŐBŐL van, mint a fal — nem a tető színéből.
 		var ko := _wall_base()
 		draw_rect(t, ko, true)
-		var tx2 := BuildArt.anyag_tex(_fal_mat, age)
+		var tx2 := BuildArt.anyag_tex(_fal_mat, age, _nemzet)
 		if tx2 != null:
 			draw_texture_rect(tx2, t, true)
 		draw_rect(Rect2(t.end.x - t.size.x * 0.3, t.position.y,

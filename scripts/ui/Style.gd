@@ -47,6 +47,70 @@ const ERA_COST := [
 	{},
 ]
 
+# NEMZETI ÉPÍTÉSZET ÉS FELÜLET
+#
+# A böngészős eredetiben minden nemzetnek saját `arch` (tető/fal/díszítés) és
+# `ui` (panel) palettája volt: a magyar falu vörös tetős és sárga vakolatú, a
+# német szürke palás, az orosz zöld tetős okker fal. Ez a Godot-portból
+# kimaradt, ezért minden nemzet ugyanolyan barna faluban lakott.
+#
+# Az `arch` nem írja FELÜL a BuildArt anyagszíneit — csak elhúzza feléjük a
+# tónust (lásd BuildArt.nemzeti_arnyalat). Így a kő kő marad, a tégla tégla,
+# de a falu ránézésre megmondja, kié.
+const ARCH := {
+	"hu": {"roof": "93372a", "wall": "d9bc82", "trim": "c9a227"},
+	"es": {"roof": "b8562e", "wall": "efe0c2", "trim": "d8a33c"},
+	"at": {"roof": "5a4636", "wall": "f0e7cf", "trim": "dcb84e"},
+	"pl": {"roof": "a63a38", "wall": "ded5c4", "trim": "d8cfc0"},
+	"de": {"roof": "474c55", "wall": "a89d86", "trim": "c6a94b"},
+	"fr": {"roof": "5d6875", "wall": "e6dcbe", "trim": "c9b06a"},
+	"gb": {"roof": "6a3d33", "wall": "a86a52", "trim": "c2a24b"},
+	"ru": {"roof": "39705c", "wall": "c28a5c", "trim": "d3a83c"},
+	"ns": {"roof": "8a6a42", "wall": "d8c9a8", "trim": "c9a227"},
+	"bb": {"roof": "5a4436", "wall": "c0b49c", "trim": "a8863c"},
+	"sb": {"roof": "6a5a4a", "wall": "e0dccc", "trim": "c9b06a"},
+}
+
+# Nemzeti felületszínek (az eredeti `ui` mezője). A korszakpaletta (AGE_UI)
+# adja az alaphangot, ezt a nemzet árnyalja — így a saját színeidben játszol.
+const NATION_UI := {
+	"hu": {"gold": "f3cf72", "panel": "6b3c26", "panel2": "8c5133", "line": "b87a4a"},
+	"es": {"gold": "f0c04a", "panel": "6b2a1e", "panel2": "8c3a26", "line": "b8623a"},
+	"at": {"gold": "f7da7c", "panel": "57492f", "panel2": "736043", "line": "a08a5c"},
+	"pl": {"gold": "f7efe0", "panel": "6b2c37", "panel2": "8c3d4a", "line": "b3596a"},
+	"de": {"gold": "e9cb74", "panel": "374658", "panel2": "4a5d73", "line": "6d84a0"},
+	"fr": {"gold": "ead092", "panel": "2c3c6b", "panel2": "3d5290", "line": "5f79bd"},
+	"gb": {"gold": "e5c874", "panel": "2f4257", "panel2": "405872", "line": "63809e"},
+	"ru": {"gold": "f6cd5e", "panel": "6b3227", "panel2": "8c4331", "line": "b8654a"},
+	"ns": {"gold": "e8c96a", "panel": "3a2e22", "panel2": "4e3d2c", "line": "8a7048"},
+	"bb": {"gold": "d8b04a", "panel": "2a2420", "panel2": "3d332c", "line": "6e5c48"},
+	"sb": {"gold": "e0d0a0", "panel": "33384a", "panel2": "454c62", "line": "7a86a8"},
+}
+
+## A nemzet korszaknévi alakja ("Magyar Királyság", "Osztrák–Magyar
+## Monarchia"). A korszakváltás ünnepe és a ponttábla ezt írja ki.
+static func nation_era(nation: String, age: int) -> String:
+	var n: Dictionary = NATIONS.get(nation, PIRATES.get(nation, {}))
+	var lista: Array = n.get("eras", [])
+	if lista.is_empty():
+		return ERA_NAME[clampi(age, 0, 3)]
+	return str(lista[clampi(age, 0, lista.size() - 1)])
+
+## Egy nemzet építészeti színe ("roof" / "wall" / "trim"). Ismeretlen kulcsra
+## a magyar palettát adja, hogy sose maradjon szín nélkül egy ház.
+static func arch_color(nation: String, mit: String) -> Color:
+	var a: Dictionary = ARCH.get(nation, ARCH["hu"])
+	return Color(str(a.get(mit, "d9bc82")))
+
+## Nemzeti felületszín a korszakpaletta fölé keverve (0 = csak korszak,
+## 1 = csak nemzet). A HUD ebből kapja a saját arculatát.
+static func nation_ui(nation: String, age: int, mit: String, keveres := 0.55) -> Color:
+	var alap := Color(str(AGE_UI[clampi(age, 0, 3)].get(mit, "c9a227")))
+	if not NATION_UI.has(nation):
+		return alap
+	var nemzeti := Color(str(NATION_UI[nation].get(mit, "c9a227")))
+	return alap.lerp(nemzeti, clampf(keveres, 0.0, 1.0))
+
 # Játszható nemzetek — azok, amelyekhez zászló- és uralkodókép is van.
 const NATIONS := {
 	"hu": {"name": "Magyarország", "color": "C8102E", "accent": "1E7A3C",
@@ -239,11 +303,14 @@ static func ruler_path(key: String, age: int) -> String:
 # --- Panelek ---
 
 # A .panel osztály: függőleges átmenet panel2 -> panel, 1px keret, lekerekítés 2.
-static func panel_box(age: int = 0, accent_top: Color = Color(0, 0, 0, 0)) -> StyleBoxFlat:
-	var ui: Dictionary = AGE_UI[clampi(age, 0, 3)]
+static func panel_box(age: int = 0, accent_top: Color = Color(0, 0, 0, 0),
+		nation := "") -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(str(ui["panel"]))
-	sb.border_color = Color(str(ui["line"]))
+	# A korszak adja az alaphangot, a nemzet árnyalja: a magyar felület
+	# meleg barna, a francia kékes, az osztrák homokszín. Csak egy csipetnyit
+	# (0.22), hogy a sötét, korhű panel sötét és olvasható maradjon.
+	sb.bg_color = nation_ui(nation, age, "panel", 0.22)
+	sb.border_color = nation_ui(nation, age, "line", 0.35)
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(2)
 	sb.content_margin_left = 10
@@ -302,18 +369,20 @@ static func spaced_font(spacing: float) -> FontVariation:
 	return fv
 
 # A teljes felület témája. A Control-ok ezt öröklik.
-static func make_theme(age: int = 0) -> Theme:
+static func make_theme(age: int = 0, nation := "") -> Theme:
 	var ui: Dictionary = AGE_UI[clampi(age, 0, 3)]
 	var ink := Color(str(ui["ink"]))
-	var line := Color(str(ui["line"]))
-	var panel2 := Color(str(ui["panel2"]))
-	var gold := Color(str(ui["gold"]))
+	# A keret, a gombháttér és az arany a nemzet színeit is hordozza — a
+	# saját birodalmad színeiben játszol, ahogy a böngészős eredetiben.
+	var line := nation_ui(nation, age, "line", 0.35)
+	var panel2 := nation_ui(nation, age, "panel2", 0.28)
+	var gold := nation_ui(nation, age, "gold", 0.45)
 
 	var th := Theme.new()
 	th.default_font_size = 13
 
-	th.set_stylebox("panel", "PanelContainer", panel_box(age))
-	th.set_stylebox("panel", "Panel", panel_box(age))
+	th.set_stylebox("panel", "PanelContainer", panel_box(age, Color(0, 0, 0, 0), nation))
+	th.set_stylebox("panel", "Panel", panel_box(age, Color(0, 0, 0, 0), nation))
 
 	th.set_color("font_color", "Label", ink)
 

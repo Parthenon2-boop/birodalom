@@ -180,6 +180,13 @@ func get_side(id: int = -1) -> Dictionary:
 	var idx := en_id if id < 0 else id
 	return oldalak[idx] if idx >= 0 and idx < oldalak.size() else {}
 
+## Egy fél nemzete ("hu", "de", "ru"…). Az épületek ebből veszik az
+## építészetüket, a felület ebből a saját arculatát. Ha a fél még nem áll
+## fel (betöltés közben), a helyi játékos nemzetére esik vissza.
+func nation_of(owner_id: int) -> String:
+	var s := get_side(owner_id)
+	return str(s.get("nemzet", nation)) if not s.is_empty() else nation
+
 # --- Több fél egy pályán ---
 #
 # Az azonos csapatszámú oldalak SZÖVETSÉGESEK: nem támadják egymást, és
