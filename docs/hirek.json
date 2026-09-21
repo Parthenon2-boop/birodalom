@@ -1,5 +1,17 @@
 [
 	{
+		"datum": "2026-09-21",
+		"cim": "Birodalom 1.34 – ránézésre látszik, kinek a földjén jársz",
+		"cimke": "Birodalom",
+		"szoveg": "Eddig minden nemzet ugyanabban a barna faluban lakott. Mostantól mindegyiknek saját építészete van: a magyar falu vörös tetős és sárga vakolatú, a német szürke palás, az orosz zöld tetős okker falú, és az ajtó fölé a nemzet színében festett szemöldökfa kerül. A hatás a századokkal halványul – a 20. századra a beton mindenhol egyforma. A felület is a saját birodalmad színeit viseli, és korszakváltáskor a kép aranyba borul, miközben kiírjuk a nemzeted korszaknevét („Osztrák–Magyar Monarchia”). A ház, az aranybánya és a cukornád hozama mostantól korszakonként nő, így a késői játék gazdasága sem sorvad el. A táj is gazdagabb lett: facsemete és öreg fa, télen kopár ág hóval, aljnövényzet és vadvirág – és a képzési gombokon végre ott a kiképzendő egység kis rajza.",
+		"cim_en": "Birodalom 1.34 – you can see whose land you are walking on",
+		"szoveg_en": "Until now every nation lived in the same brown village. From this version each has its own architecture: the Hungarian village has red roofs and yellow plaster, the German slate grey, the Russian green roofs over ochre walls, and the lintel above each door is painted in the nation's colour. The effect fades with the centuries – by the 20th century concrete looks the same everywhere. The interface also wears your own empire's colours, and when an age turns the screen floods with gold while your nation's name for the era appears (“Austro-Hungarian Monarchy”). Houses, gold mines and sugar plantations now yield more with each age, so the late game no longer withers. The land is richer too: saplings and old trees, bare snow-laden branches in winter, undergrowth and wildflowers – and the training buttons finally show a small drawing of the unit you are about to train.",
+		"cim_de": "Birodalom 1.34 – man sieht, auf wessen Land man geht",
+		"szoveg_de": "Bisher wohnte jede Nation im selben braunen Dorf. Ab dieser Fassung hat jede ihre eigene Architektur: das ungarische Dorf rote Dächer und gelben Putz, das deutsche Schiefergrau, das russische grüne Dächer über ockerfarbenen Wänden, und der Türsturz ist in der Farbe der Nation bemalt. Die Wirkung verblasst mit den Jahrhunderten – im 20. Jahrhundert sieht Beton überall gleich aus. Auch die Oberfläche trägt die Farben deines Reiches, und beim Zeitalterwechsel flutet Gold über den Bildschirm, während der Epochenname deiner Nation erscheint („Österreichisch-Ungarische Monarchie“). Häuser, Goldminen und Zuckerrohrfelder liefern nun mit jedem Zeitalter mehr, damit das späte Spiel nicht verkümmert. Auch das Land ist reicher: junge und alte Bäume, im Winter kahle, schneebedeckte Äste, Unterholz und Wildblumen – und auf den Ausbildungsknöpfen steht endlich eine kleine Zeichnung der Einheit.",
+		"cimke_en": "Birodalom",
+		"cimke_de": "Birodalom"
+	},
+	{
 		"datum": "2026-09-20",
 		"cim": "Heptarchia 1.29 – kikötő és hajó a szigeteken is",
 		"cimke": "Heptarchia",
