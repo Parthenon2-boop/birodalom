@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-21",
+		"cim": "Heptarchia 1.32 – a békekötésből alku lett",
+		"cimke": "Heptarchia",
+		"szoveg": "A szomszéd királyok eddig csak ritkán kértek békét, és mindig ugyanazt a sima fegyverszünetet ajánlották – akár egy tartományuk maradt, akár tizenöt. Mostantól a béke alku. Aki vesztésre áll, annál gyakrabban keres téged, minél rosszabbul áll, és fizet is érte: előbb ezüst sarcot a kincstárából, a végén pedig egy határ menti tartományát ajánlja fel. Aki viszont nyerésre áll, az elkéri a maga árát: területet kér a békéért. Az ajánlat szövegében pontosan látod a feltételt, mielőtt döntesz. Két dolgot senki nem ad oda: az utolsó tartományát és a székhelyét – a béke nem szüntethet meg egy királyságot.",
+		"cim_en": "Heptarchia 1.32 – peace has become a bargain",
+		"szoveg_en": "Neighbouring kings used to sue for peace only rarely, and always offered the same plain truce – whether one province was left to them or fifteen. From now on peace is a bargain. A king who is losing comes to you the more often the worse he stands, and pays for it: first silver tribute from his treasury, and at the end he will offer up a border province. A king who is winning, by contrast, names his own price: he asks for land in return for peace. The wording of the offer tells you exactly what you are agreeing to. Two things nobody gives up: their last province and their seat – peace cannot end a kingdom.",
+		"cim_de": "Heptarchia 1.32 – aus dem Frieden wurde ein Handel",
+		"szoveg_de": "Die Nachbarkönige baten bisher nur selten um Frieden und boten stets denselben schlichten Waffenstillstand an – ob ihnen eine Provinz blieb oder fünfzehn. Von nun an ist Frieden ein Handel. Wer unterliegt, kommt umso häufiger auf dich zu, je schlechter er steht, und zahlt dafür: erst Silbertribut aus seiner Schatzkammer, am Ende bietet er eine Grenzprovinz an. Wer dagegen im Vorteil ist, nennt seinen eigenen Preis: Er verlangt Land für den Frieden. Im Wortlaut des Angebots siehst du genau, worauf du dich einlässt. Zweierlei gibt niemand her: die letzte Provinz und den eigenen Sitz – Frieden darf kein Königreich auslöschen.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-21",
 		"cim": "Heptarchia 1.31 – te döntöd el, honnan induljon a roham",
 		"cimke": "Heptarchia",
 		"szoveg": "Eddig a játék minden szomszédos tartományod helyőrségét bevetette, akár akartad, akár nem – és mind veszített is embert. Nem lehetett egy tartományt szándékosan kihagyni, például mert ott kellett a védelem. Mostantól a csataablakban ott a „Honnan induljon a roham?” lista: minden szomszédos tartományhoz és hajós kiinduláshoz egy jelölőnégyzet, rajta a neve, az ereje és a helyőrsége. Alapból mind be van jelölve, tehát aki nem törődik vele, pontosan a régi viselkedést kapja. A pipák változtatásakor azonnal újraszámolódik a támadóerő és a harcmodorok várható eredménye is – és a kint hagyott tartomány otthon marad, sértetlenül.",
