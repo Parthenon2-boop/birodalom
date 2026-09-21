@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-21",
+		"cim": "Heptarchia 1.31 – te döntöd el, honnan induljon a roham",
+		"cimke": "Heptarchia",
+		"szoveg": "Eddig a játék minden szomszédos tartományod helyőrségét bevetette, akár akartad, akár nem – és mind veszített is embert. Nem lehetett egy tartományt szándékosan kihagyni, például mert ott kellett a védelem. Mostantól a csataablakban ott a „Honnan induljon a roham?” lista: minden szomszédos tartományhoz és hajós kiinduláshoz egy jelölőnégyzet, rajta a neve, az ereje és a helyőrsége. Alapból mind be van jelölve, tehát aki nem törődik vele, pontosan a régi viselkedést kapja. A pipák változtatásakor azonnal újraszámolódik a támadóerő és a harcmodorok várható eredménye is – és a kint hagyott tartomány otthon marad, sértetlenül.",
+		"cim_en": "Heptarchia 1.31 – you decide where the assault comes from",
+		"szoveg_en": "Until now the game committed the garrison of every neighbouring province of yours, whether you wanted it or not – and every one of them took losses. You could not deliberately hold a province back, for instance because its defence was needed. From this version the battle window carries a “Where should the assault come from?” list: a checkbox for each neighbouring province and each seaborne starting point, with its name, its strength and its garrison. All are ticked by default, so anyone who does not care gets exactly the old behaviour. Changing the ticks immediately recalculates your strength and the likely outcome of each tactic – and a province left out stays home, untouched.",
+		"cim_de": "Heptarchia 1.31 – du entscheidest, von wo der Angriff ausgeht",
+		"szoveg_de": "Bisher setzte das Spiel die Besatzung jeder benachbarten Provinz ein, ob du wolltest oder nicht – und jede erlitt Verluste. Man konnte keine Provinz absichtlich zurückhalten, etwa weil ihre Verteidigung gebraucht wurde. Ab dieser Fassung steht im Schlachtfenster die Liste „Von wo soll der Angriff ausgehen?“: ein Kästchen für jede benachbarte Provinz und jeden Ausgangspunkt zu Schiff, mit Name, Stärke und Besatzung. Alle sind vorangekreuzt, wer sich also nicht darum kümmert, bekommt genau das alte Verhalten. Beim Ändern der Häkchen werden Angriffsstärke und der zu erwartende Ausgang jeder Taktik sofort neu berechnet – und eine ausgelassene Provinz bleibt unversehrt zu Hause.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-21",
 		"cim": "Heptarchia 1.30 – a szomszéd királyok végre támadnak, és hajón kelnek át",
 		"cimke": "Heptarchia",
 		"szoveg": "A gépi királyok eddig hatalmas hadat gyűjtöttek, de alig indítottak rohamot. A frankok különösen: minden provinciájuk a tengeren túl van, a játék viszont 1035 előtt feltétel nélkül kihagyta a tengeri rohamukat – vagyis hiába álltál hadban velük, soha nem támadtak. Ezen felül a sereg a belső földeken ült ahelyett, hogy a határra vonult volna. Mindkettő javítva: mérve a frankok 240 kör alatt nulla helyett harminchat provinciát szereztek. A menetelés is látványosabb lett: ahol a sereg vizet szel át – a Temze-torkolatnál, az Ír-tengeren, a Lorn-szorosnál –, ott hajó látszik a pajzs helyett, és minden népnek saját hajója van: az óészakiaknak sárkányorrú hosszúhajó, az íreknek curragh, a normannoknak nef, az angolszászoknak keel. Az uralkodó neve alá pedig kis arckép került, kultúránként más koronával vagy sisakkal.",
