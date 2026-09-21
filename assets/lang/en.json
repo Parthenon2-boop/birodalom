@@ -343,7 +343,7 @@
 	"net_kod_helyi": "Local code (same wifi)",
 	"net_upnp_keres": "Opening a port on the router…",
 	"net_upnp_kesz": "The router opened a port: anyone can join with the internet code.",
-	"net_upnp_nem": "The router did not open a port by itself. Either enable UPnP on it, or forward UDP port %d to this machine by hand — then your friend can join using your public IP and that port. If that is not possible, a VPN (Tailscale, ZeroTier, Hamachi) works too: type the VPN address instead.",
+	"net_upnp_nem": "The router did not open a port by itself. Either enable UPnP on it, or forward UDP port %d to this machine by hand — then your friend can join using your public IP and that port. If that is not possible, a VPN (ZeroTier, Hamachi, Tailscale, Radmin VPN) works too: type the VPN address instead.",
 	"net_te_vagy_hazigazda": "You are the host: the match runs on your machine and you start it.",
 	"net_hazigazda_indit": "Connected. The host starts the match.",
 	"net_nem_nyilt": "Could not open a room: the port is busy.",

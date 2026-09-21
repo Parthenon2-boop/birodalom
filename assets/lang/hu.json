@@ -343,7 +343,7 @@
 	"net_kod_helyi": "Helyi kód (ugyanaz a wifi)",
 	"net_upnp_keres": "Kapu nyitása a routeren…",
 	"net_upnp_kesz": "A router kaput nyitott: az internetes kóddal bárhonnan lehet csatlakozni.",
-	"net_upnp_nem": "A router nem nyitott kaput magától. Vagy kapcsold be rajta az UPnP-t, vagy irányítsd át kézzel a(z) %d-es UDP kaput erre a gépre — utána a barátod a nyilvános IP-címeddel és ezzel a kapuval tud csatlakozni. Ha ez nem megy, egy VPN (Tailscale, ZeroTier, Hamachi) is jó: ott a VPN-es címet írjátok be.",
+	"net_upnp_nem": "A router nem nyitott kaput magától. Vagy kapcsold be rajta az UPnP-t, vagy irányítsd át kézzel a(z) %d-es UDP kaput erre a gépre — utána a barátod a nyilvános IP-címeddel és ezzel a kapuval tud csatlakozni. Ha ez nem megy, egy VPN (ZeroTier, Hamachi, Tailscale, Radmin VPN) is jó: ott a VPN-es címet írjátok be.",
 	"net_te_vagy_hazigazda": "Te vagy a házigazda: a játszma a te gépeden fut, és te indítod.",
 	"net_hazigazda_indit": "Csatlakoztál. A játszmát a házigazda indítja.",
 	"net_nem_nyilt": "Nem sikerült szobát nyitni: a kapu foglalt.",

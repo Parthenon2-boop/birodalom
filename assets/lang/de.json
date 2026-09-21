@@ -343,7 +343,7 @@
 	"net_kod_helyi": "Lokaler Code (gleiches WLAN)",
 	"net_upnp_keres": "Port wird am Router geöffnet…",
 	"net_upnp_kesz": "Der Router hat einen Port geöffnet: mit dem Internet-Code kann man von überall beitreten.",
-	"net_upnp_nem": "Der Router hat von sich aus keinen Port geöffnet. Aktiviere dort UPnP, oder leite den UDP-Port %d von Hand auf diesen Rechner weiter — dann kann dein Freund über deine öffentliche IP und diesen Port beitreten. Geht das nicht, hilft ein VPN (Tailscale, ZeroTier, Hamachi): dort gebt ihr die VPN-Adresse ein.",
+	"net_upnp_nem": "Der Router hat von sich aus keinen Port geöffnet. Aktiviere dort UPnP, oder leite den UDP-Port %d von Hand auf diesen Rechner weiter — dann kann dein Freund über deine öffentliche IP und diesen Port beitreten. Geht das nicht, hilft ein VPN (ZeroTier, Hamachi, Tailscale, Radmin VPN): dort gebt ihr die VPN-Adresse ein.",
 	"net_te_vagy_hazigazda": "Du bist der Gastgeber: die Partie läuft auf deinem Rechner, und du startest sie.",
 	"net_hazigazda_indit": "Verbunden. Der Gastgeber startet die Partie.",
 	"net_nem_nyilt": "Raum konnte nicht geöffnet werden: der Port ist belegt.",
