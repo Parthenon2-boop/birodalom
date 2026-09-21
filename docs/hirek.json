@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-21",
+		"cim": "Heptarchia 1.33 – minden király mögött ott az élete",
+		"cimke": "Heptarchia",
+		"szoveg": "Eddig a bal panelen csak a király neve állt, alatta a kis arcképpel, és ha rávitted az egeret, egy általános magyarázat jött elő. Mostantól a névre vagy az arcképre mutatva ott a neve, alatta pedig négy sorban, hogy ki volt és miről volt nevezetes: Nagy Alfréd edingtoni győzelme, Æthelflæd tíz erődített városa, Macbeth tizenhét békés éve, Véres Erik stainmore-i vége. Ugyanez jön elő a diplomácia ablakban is, a másik ország uralkodójánál – így már a tárgyalás előtt tudod, kivel van dolgod. Mind a 218 uralkodó megkapta, magyarul, angolul és németül, és a kiegészítők királyai is: a svéd, izlandi és grönlandi vezetők, a rusz fejedelmek és a bizánci császárok.",
+		"cim_en": "Heptarchia 1.33 – every king now has a life behind him",
+		"szoveg_en": "Until now the left panel showed only the king's name with his small portrait below it, and hovering over it brought up a general explanation. From this version, pointing at the name or the portrait gives you his name and, beneath it, four lines on who he was and what he was known for: Alfred's victory at Edington, Æthelflæd's ten fortified towns, Macbeth's seventeen peaceful years, Eric Bloodaxe's end at Stainmore. The same appears in the diplomacy window for the other realm's ruler, so you know who you are dealing with before you talk. All 218 rulers have one, in Hungarian, English and German, and so do the kings of the add-ons: the Swedish, Icelandic and Greenlandic leaders, the princes of the Rus and the emperors of Byzantium.",
+		"cim_de": "Heptarchia 1.33 – hinter jedem König steht nun sein Leben",
+		"szoveg_de": "Bisher stand auf der linken Leiste nur der Name des Königs mit dem kleinen Bildnis darunter, und wer mit der Maus darüberfuhr, bekam eine allgemeine Erklärung. Ab dieser Fassung erscheint beim Zeigen auf Namen oder Bildnis sein Name und darunter in vier Zeilen, wer er war und wofür er bekannt war: Alfreds Sieg bei Edington, Æthelflæds zehn befestigte Städte, Macbeths siebzehn friedliche Jahre, Erik Blutaxts Ende bei Stainmore. Dasselbe zeigt sich im Diplomatiefenster beim Herrscher des anderen Reiches – so weißt du schon vor dem Gespräch, mit wem du es zu tun hast. Alle 218 Herrscher haben eines, auf Ungarisch, Englisch und Deutsch, und ebenso die Könige der Erweiterungen: die schwedischen, isländischen und grönländischen Anführer, die Fürsten der Rus und die Kaiser von Byzanz.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-21",
 		"cim": "Mostantól fióknévvel lépsz be",
 		"cimke": "ParthLauncher",
 		"szoveg": "Eddig a belépéshez az e-mail-címedet kellett beírni. Mostantól a regisztrációnál választasz magadnak egy fióknevet (3–20 karakter, betű, szám, aláhúzás vagy kötőjel), és a launcherben ezzel meg a jelszavaddal lépsz be – az e-mail-cím csak a megerősítő levélhez és az elfelejtett jelszóhoz kell. A név egyedi: a regisztrációs űrlap már gépelés után megmondja, ha foglalt. A címedet a szerver sosem adja ki: a fióknévhez tartozó fiókot ő keresi ki. Akinek régi fiókja van, annak nem kell semmit tennie – a belépőmezőbe az e-mail-címét írva ugyanúgy bejut.",
