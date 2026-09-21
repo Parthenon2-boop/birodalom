@@ -147,7 +147,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 29
+const LAUNCHER_BUILD := 30
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1241,10 +1241,26 @@ func _game_session_refresh_token() -> String:
 func _acc_sync() -> void:
 	if acc_token == "": return
 	var r := await _acc_call(HTTPClient.METHOD_GET, "/rest/v1/entitlements?select=dlc_key", null, acc_token)
-	if int(r[0]) != 200 or not r[1] is Array: return
+	# Némán nem térünk vissza: ha nem sikerül lekérdezni a fiók kiegészítőit, a
+	# játékos csak annyit látna, hogy „nincs semmim” – pedig lehet, hogy csak a
+	# hálózat vagy a lejárt belépés a baj.
+	if int(r[0]) == 0:
+		_status("A fiókod kiegészítőit most nem sikerült lekérdezni (nincs kapcsolat). A meglévők megmaradnak.", S.GOLD_LIGHT)
+		return
+	if int(r[0]) == 401 or int(r[0]) == 403:
+		_status("A belépésed lejárt, ezért a fiókod kiegészítői nem jelennek meg. Jelentkezz be újra.", S.GOLD_LIGHT)
+		return
+	if int(r[0]) != 200 or not r[1] is Array:
+		_status("A fiókod kiegészítőit nem sikerült lekérdezni (hiba %d)." % int(r[0]), S.GOLD_LIGHT)
+		return
 	var owned := {}
 	for row in r[1]:
 		if row is Dictionary: owned[str(row.get("dlc_key", ""))] = true
+	# A fiókrendszer előtt beváltott, GÉPHEZ kötött kulcsokat felküldjük a fiókba
+	var atkerult := await _acc_migrate_local_keys(owned)
+	if atkerult > 0:
+		_status("%d korábban ezen a gépen beváltott kulcsot átkötöttünk a fiókodhoz (%s) – mostantól minden gépeden megjelenik."
+			% [atkerult, _acc_email()], S.GREEN)
 	for game_key in DLCS:
 		for d in DLCS[game_key]:
 			var sect := "dlc:" + str(d["key"])
@@ -1256,6 +1272,37 @@ func _acc_sync() -> void:
 	cfg.save(CFG_PATH)
 	_refresh_dlc()
 	_check_dlc_updates()
+
+# Régi, GÉPHEZ kötött kulcsok átemelése a fiókba.
+#
+# A fiókrendszer (v1.24) előtt a „Van kulcsom” a kulcsot csak ebbe a gépbe írta be
+# (ParthLauncher.cfg → [dlc:<kulcs>] license), a szerver nem tudott róla. Ezért aki
+# akkor váltotta be a kulcsát, az másik gépen – ugyanabba a fiókba belépve is –
+# hiába kereste a kiegészítőt: nem jelent meg.
+#
+# Ha ilyen kulcsot találunk, csendben felküldjük a claim-license függvénynek.
+# Onnantól a fiókhoz tartozik, és minden gépen előjön. A `owned` szótárt is
+# frissítjük, hogy a hívó rögtön megvásároltnak lássa.
+func _acc_migrate_local_keys(owned: Dictionary) -> int:
+	var atkerult := 0
+	for game_key in DLCS:
+		for d in DLCS[game_key]:
+			var kulcs := str(d["key"])
+			if owned.has(kulcs): continue
+			var helyi := str(cfg.get_value("dlc:" + kulcs, "license", ""))
+			# üres = nincs; ACC_LICENSE = már a fiókból jön, nincs mit átkötni
+			if helyi == "" or helyi == ACC_LICENSE: continue
+			var r := await _acc_call(HTTPClient.METHOD_POST, "/functions/v1/claim-license",
+				{"dlc": kulcs, "license_key": helyi}, acc_token)
+			var code := int(r[0])
+			if code == 200:
+				owned[kulcs] = true
+				atkerult += 1
+			elif code == 409:
+				# a kulcs már egy MÁSIK fiókhoz tartozik: itt hagyjuk, de szólunk
+				_status("A(z) %s kulcsa egy másik fiókhoz van kötve, ezért ehhez a fiókhoz nem került át." % str(d["name"]),
+					S.GOLD_LIGHT)
+	return atkerult
 
 func _acc_login(signup: bool) -> void:
 	var email := acc_email_edit.text.strip_edges()
@@ -1389,6 +1436,13 @@ func _build_account_popup() -> void:
 	acc_who.custom_minimum_size = Vector2(520, 0)
 	acc_who.add_theme_color_override("font_color", S.GREEN)
 	out.add_child(acc_who)
+	# Kézi újralekérdezés: ha a fiók kiegészítői egyszer nem jöttek át (hálózat,
+	# lejárt belépés), ne kelljen újraindítani a launchert.
+	var ujra := _button(out, "Kiegészítők frissítése a fiókból", func():
+		acc_status.text = "Lekérdezés…"
+		await _acc_sync()
+		acc_status.text = "Kész. Ha valamit így sem látsz, írj nekünk a fiókod e-mail-címéről.")
+	ujra.tooltip_text = "Újra lekéri a fiókodhoz tartozó kiegészítőket, és a korábban ezen a gépen beváltott kulcsokat a fiókodhoz köti."
 	_button(out, "Kijelentkezés", func():
 		_acc_logout()
 		acc_popup.hide())
