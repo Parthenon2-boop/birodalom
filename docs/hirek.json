@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-21",
+		"cim": "A megvásárolt kiegészítők mostantól minden gépeden megjelennek",
+		"cimke": "ParthLauncher",
+		"szoveg": "Ha a kiegészítő kulcsát még a fiókrendszer előtt váltottad be, az csak abba az egy gépbe került be: másik gépen, ugyanabba a fiókba belépve hiába kerested, nem jelent meg. A launcher mostantól magától észreveszi az ilyen kulcsokat, és a fiókodhoz köti őket – utána minden gépen előjönnek, ahol belépsz. Ehhez egyszer indítsd el a launchert azon a gépen, ahol annak idején beváltottad a kulcsot. Ha a lekérdezés valamiért elakad, a launcher már megmondja, mi az akadály (nincs kapcsolat, lejárt belépés), és a Fiók ablakban van egy új „Kiegészítők frissítése a fiókból” gomb is.",
+		"cim_en": "Your add-ons now show up on every one of your machines",
+		"szoveg_en": "If you redeemed an add-on key before the account system existed, it was only stored on that one machine: on another computer, even signed into the same account, it simply did not appear. The launcher now spots such keys by itself and binds them to your account – after that they show up wherever you sign in. Just start the launcher once on the machine where you originally redeemed the key. If the lookup fails for any reason, the launcher now tells you why (no connection, expired sign-in), and there is a new “Refresh add-ons from account” button in the Account window.",
+		"cim_de": "Deine Erweiterungen erscheinen jetzt auf allen deinen Rechnern",
+		"szoveg_de": "Wenn du den Schlüssel einer Erweiterung noch vor dem Kontosystem eingelöst hast, lag er nur auf diesem einen Rechner: Auf einem anderen Computer erschien er selbst bei Anmeldung mit demselben Konto nicht. Der Launcher erkennt solche Schlüssel nun von selbst und bindet sie an dein Konto – danach erscheinen sie überall, wo du dich anmeldest. Starte dazu den Launcher einmal auf dem Rechner, auf dem du den Schlüssel damals eingelöst hast. Scheitert die Abfrage, nennt der Launcher jetzt den Grund (keine Verbindung, abgelaufene Anmeldung), und im Konto-Fenster gibt es eine neue Schaltfläche „Erweiterungen aus dem Konto aktualisieren“.",
+		"cimke_en": "ParthLauncher",
+		"cimke_de": "ParthLauncher"
+	},
+	{
+		"datum": "2026-09-21",
 		"cim": "Birodalom 1.34 – ránézésre látszik, kinek a földjén jársz",
 		"cimke": "Birodalom",
 		"szoveg": "Eddig minden nemzet ugyanabban a barna faluban lakott. Mostantól mindegyiknek saját építészete van: a magyar falu vörös tetős és sárga vakolatú, a német szürke palás, az orosz zöld tetős okker falú, és az ajtó fölé a nemzet színében festett szemöldökfa kerül. A hatás a századokkal halványul – a 20. századra a beton mindenhol egyforma. A felület is a saját birodalmad színeit viseli, és korszakváltáskor a kép aranyba borul, miközben kiírjuk a nemzeted korszaknevét („Osztrák–Magyar Monarchia”). A ház, az aranybánya és a cukornád hozama mostantól korszakonként nő, így a késői játék gazdasága sem sorvad el. A táj is gazdagabb lett: facsemete és öreg fa, télen kopár ág hóval, aljnövényzet és vadvirág – és a képzési gombokon végre ott a kiképzendő egység kis rajza.",
