@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-22",
+		"cim": "Heptarchia 1.35 – megjönnek a festett királyképek",
+		"cimke": "Heptarchia",
+		"szoveg": "A múlt heti nagyobb arckép után most az elsők meg is kapták a saját festett portréjukat: olajfestmény hatású mellképek, korona és prémgallér, mögöttük korhű, elmosott háttér – ugyanabban a stílusban, mint a Birodalom királyképei. Ebben a kiadásban harminc uralkodó képe van benne: Offa, Nagy Károly, Jámbor Lajos, Egbert, Coenwulf, Eardwulf, Eanred, Sigeric, Caradog ap Meirion, Donnchad Midi, Sigfred és Godfred dán királyok, a norvég kiskirályok és a többiek. Akinek még nincs festett képe, annál a megszokott, kódból rajzolt arckép marad – a kettő ugyanúgy néz ki méretben és formában, csak a részletességük más. A további királyok képei a következő kiadásokban érkeznek, amíg mind a 273 meg nem lesz.",
+		"cim_en": "Heptarchia 1.35 – the painted royal portraits begin to arrive",
+		"szoveg_en": "After last week's larger portrait frame, the first kings have now been given painted portraits of their own: oil-painting busts with crown and fur collar, set against a muted period background – the same style as the royal pictures in Birodalom. This release carries thirty of them: Offa, Charlemagne, Louis the Pious, Egbert, Coenwulf, Eardwulf, Eanred, Sigeric, Caradog ap Meirion, Donnchad Midi, the Danish kings Sigfred and Godfred, the petty kings of Norway and the rest. Any ruler without a painted portrait keeps the familiar code-drawn one – the two match in size and shape, they differ only in detail. More kings will follow in the coming releases until all 273 are done.",
+		"cim_de": "Heptarchia 1.35 – die gemalten Königsbildnisse treffen ein",
+		"szoveg_de": "Nach dem größeren Bildrahmen der vergangenen Woche haben die ersten Könige nun ihr eigenes gemaltes Bildnis erhalten: Brustbilder in Ölmalerei-Anmutung mit Krone und Pelzkragen vor gedämpftem, zeittypischem Hintergrund – im selben Stil wie die Königsbilder in Birodalom. Diese Fassung enthält dreißig davon: Offa, Karl der Große, Ludwig der Fromme, Egbert, Coenwulf, Eardwulf, Eanred, Sigeric, Caradog ap Meirion, Donnchad Midi, die Dänenkönige Sigfred und Godfred, die Kleinkönige Norwegens und die übrigen. Wer noch kein gemaltes Bildnis hat, behält das gewohnte, aus Code gezeichnete – beide stimmen in Größe und Form überein und unterscheiden sich nur in der Ausführung. Weitere Könige folgen in den nächsten Fassungen, bis alle 273 fertig sind.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-22",
 		"cim": "Heptarchia 1.34 – a királyok arcképe négyszer akkora lett",
 		"cimke": "Heptarchia",
 		"szoveg": "A király neve alatt eddig egy 44 pixeles kis érem állt: kör alakú keret, benne egy apró fej, amelyen alig lehetett kivenni bármit. Mostantól a Birodalom festett királyképeinek a mintájára készül, és négyszer akkora: 176 pixeles, négyzetes mellkép, amely kitölti a teljes felületet. A háttérben tompa belső tér boltívvel, középen a világos arc, alul a sötét palást – ugyanaz a hármas felépítés, mint a másik játékban. Végre látszik, hogy kit ábrázol: szem írisszel, szemöldök, orr, száj, arccsont, fülek, és ráncok az idősebb királyoknak. A palást aranyhímzést és ékköveket kapott, alatta prémgallér – a keresztény uralkodóknál hermelin, a jellegzetes fekete farkocskákkal –, a korona pedig öt levelet és három ékkövet. A sisak, a bizánci gyöngyös diadém és a szláv prémsüveg is kidolgozottabb. Az uralkodónőknek természetesen nincs szakálluk.",
