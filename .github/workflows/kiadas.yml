@@ -93,32 +93,71 @@ jobs:
           cp build/macos/ParthLauncher-macos.zip .
           ls -la *.zip
 
+      # Ellenőrzőösszeg minden fájlhoz. Azért kell, mert a telepítő nincs digitálisan
+      # aláírva: aki gyanakszik a Windows figyelmeztetése miatt, ezzel le tudja
+      # ellenőrizni, hogy tényleg azt töltötte le, amit mi kiadtunk.
+      - name: Ellenőrzőösszegek és a kiadás szövege
+        run: |
+          set -e
+          sha256sum ParthLauncher-Setup.exe Birodalom-windows.zip ParthLauncher-windows.zip \
+                    Birodalom-macos.zip ParthLauncher-macos.zip > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          cat > kiadas_szoveg.md <<EOF
+          Kész, telepítést nem igénylő változat Windowsra és macOS-re.
+
+          **Windows**
+          - **ParthLauncher-Setup.exe** – RENDES TELEPÍTŐ az indítóhoz: Start menü és asztali
+            parancsikon, eltávolító, rendszergazdai jog nélkül. Ez az ajánlott út — az indító
+            utána magától letölti és frissíti mindkét játékot.
+          - **Birodalom-windows.zip** – maga a játék (Birodalom.exe), telepítés nélkül.
+          - **ParthLauncher-windows.zip** – a közös indító telepítő nélkül (hordozható).
+
+          **macOS** (Intel és Apple Silicon, univerzális)
+          - **Birodalom-macos.zip** – a játék (Birodalom.app).
+          - **ParthLauncher-macos.zip** – a közös indító/frissítő.
+
+          Macen az első indításnál: jobb klikk az alkalmazáson → **Megnyitás** (az alkalmazás
+          nincs aláírva, ezért a rendszer rákérdez). Az indító a letöltött játékkal ezt magától elintézi.
+
+          Az indító magától a rendszerednek megfelelő csomagot tölti le.
+
+          ---
+
+          ### Ha a Windows figyelmeztet
+
+          A telepítő nincs digitálisan aláírva, ezért a SmartScreen kiírhatja, hogy
+          *„A Windows megvédte a számítógépét”*. **Ez nem vírusjelzés**: azt jelenti, hogy
+          a közzétevő ismeretlen, mert a kódaláíró tanúsítvány évi több száz euróba kerül,
+          és ez egy ingyenes hobbiprojekt. Továbblépés: **További információ → Futtatás mindenképp**.
+
+          Ezt a figyelmeztetést csak a telepítőnél látod. Az indító által letöltött játékoknál
+          nem jön elő.
+
+          Ha ellenőrizni szeretnéd, hogy tényleg a mi fájlunkat töltötted le, hasonlítsd össze
+          az alábbi összeget a sajátoddal – PowerShellben:
+
+          \`\`\`
+          Get-FileHash .\\ParthLauncher-Setup.exe -Algorithm SHA256
+          \`\`\`
+
+          ### Ellenőrzőösszegek (SHA-256)
+
+          \`\`\`
+          $(cat SHA256SUMS.txt)
+          \`\`\`
+          EOF
+          echo "── a kiadás szövege ──"; cat kiadas_szoveg.md
+
       - name: Kiadás közzététele
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.verzio || github.ref_name }}
           name: Birodalom ${{ github.event.inputs.verzio || github.ref_name }}
-          body: |
-            Kész, telepítést nem igénylő változat Windowsra és macOS-re.
-
-            **Windows**
-            - **ParthLauncher-Setup.exe** – RENDES TELEPÍTŐ az indítóhoz: Start menü és asztali
-              parancsikon, eltávolító, rendszergazdai jog nélkül. Ez az ajánlott út — az indító
-              utána magától letölti és frissíti mindkét játékot.
-            - **Birodalom-windows.zip** – maga a játék (Birodalom.exe), telepítés nélkül.
-            - **ParthLauncher-windows.zip** – a közös indító telepítő nélkül (hordozható).
-
-            **macOS** (Intel és Apple Silicon, univerzális)
-            - **Birodalom-macos.zip** – a játék (Birodalom.app).
-            - **ParthLauncher-macos.zip** – a közös indító/frissítő.
-
-            Macen az első indításnál: jobb klikk az alkalmazáson → **Megnyitás** (az alkalmazás
-            nincs aláírva, ezért a rendszer rákérdez). Az indító a letöltött játékkal ezt magától elintézi.
-
-            Az indító magától a rendszerednek megfelelő csomagot tölti le.
+          body_path: kiadas_szoveg.md
           files: |
             ParthLauncher-Setup.exe
             Birodalom-windows.zip
             ParthLauncher-windows.zip
             Birodalom-macos.zip
             ParthLauncher-macos.zip
+            SHA256SUMS.txt

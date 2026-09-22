@@ -6,7 +6,7 @@
 //
 // Beállítás:
 //   • „Verify JWT” KIKAPCSOLVA (bárki írhat, belépés nélkül is)
-//   • Secrets: GMAIL_USER (pl. parthenon841@gmail.com), GMAIL_APP_PASSWORD (Google alkalmazásjelszó),
+//   • Secrets: GMAIL_USER (a hivatalos cím: parthlauncher@gmail.com), GMAIL_APP_PASSWORD (Google alkalmazásjelszó),
 //     SUPPORT_TO (ide érkezzen a levél; ha nincs, akkor a GMAIL_USER címére megy)
 
 import { createClient } from "npm:@supabase/supabase-js@2";

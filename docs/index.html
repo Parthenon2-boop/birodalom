@@ -103,6 +103,10 @@
 	ol.steps { margin: 0; padding-left: 22px; }
 	ol.steps li { margin-bottom: 8px; }
 
+	/* parancsok (pl. az ellenőrzőösszeg lekérdezése) – telefonon se lógjon ki */
+	code { background: rgba(0,0,0,.35); border: 1px solid var(--line); border-radius: 6px;
+	       padding: 2px 7px; font-size: 14px; color: var(--gold-2); overflow-wrap: anywhere; }
+
 	.navbtn { border: 1px solid var(--gold); border-radius: 6px; padding: 2px 10px; color: var(--gold-2) !important; }
 	.shot { display: block; width: 100%; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #000; cursor: zoom-in; }
 	.shot img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 11; object-fit: cover; transition: transform .25s; }
@@ -174,7 +178,7 @@
 					<span data-i18n="hero.mac">Letöltés macOS-re</span><small data-i18n="hero.macsub">Intel és Apple Silicon</small>
 				</a>
 			</div>
-			<p class="note" data-i18n="hero.note" data-i18n-html="1">Windows: ha a SmartScreen figyelmeztet, válaszd a <i>További információ → Futtatás mindenképp</i> lehetőséget.<br>
+			<p class="note" data-i18n="hero.note" data-i18n-html="1">Windows: ha a SmartScreen figyelmeztet, válaszd a <i>További információ → Futtatás mindenképp</i> lehetőséget – <a href="#figyelmeztetes">miért van ez?</a><br>
 				Mac: első indításkor jobb klikk az alkalmazáson → <i>Megnyitás</i>.</p>
 		</div>
 	</div>
@@ -279,6 +283,20 @@
 			</ol>
 		</div>
 	</section>
+
+	<section id="figyelmeztetes">
+		<div class="wrap">
+			<h2 data-i18n="warn.title">Ha a Windows figyelmeztet</h2>
+			<p class="sub" data-i18n="warn.sub" data-i18n-html="1">Letöltés után a Windows kiírhatja, hogy <b>„A Windows megvédte a számítógépét”</b>. Ez nem vírusjelzés. Azt jelenti, hogy a közzétevő ismeretlen: a telepítő nincs digitálisan aláírva, mert a kódaláíró tanúsítvány évi több száz euróba kerül, ez pedig egy hobbiprojekt.</p>
+			<ol class="steps">
+				<li data-i18n="warn.s1" data-i18n-html="1">A figyelmeztető ablakban kattints a <b>További információ</b> szövegre.</li>
+				<li data-i18n="warn.s2" data-i18n-html="1">Majd a megjelenő <b>Futtatás mindenképp</b> gombra.</li>
+				<li data-i18n="warn.s3">Ezt csak a telepítőnél látod, egyetlen egyszer. Az indító által letöltött játékoknál nem jön elő.</li>
+			</ol>
+			<p class="sub" style="margin-top:22px" data-i18n="warn.hash" data-i18n-html="1">Szeretnéd ellenőrizni, hogy tényleg a mi fájlunkat töltötted le? Minden kiadáshoz közzétesszük a fájlok SHA-256 ellenőrzőösszegét – a <a href="https://github.com/Parthenon2-boop/birodalom/releases/latest">kiadás oldalán</a>, a <b>SHA256SUMS.txt</b> fájlban és a leírás alján. A sajátodat PowerShellben így kérdezheted le:</p>
+			<p><code>Get-FileHash .\ParthLauncher-Setup.exe -Algorithm SHA256</code></p>
+		</div>
+	</section>
 </main>
 
 <footer>
@@ -305,7 +323,7 @@
 			"hero.lead": "One launcher for three games. It installs and updates <b>Birodalom</b>, <b>Heptarchia</b> and <b>Kard és Mágia</b>, and manages the add-ons you bought.",
 			"hero.win": "Download for Windows", "hero.installer": "installer", "hero.mac": "Download for macOS",
 			"hero.macsub": "Intel and Apple Silicon",
-			"hero.note": "Windows: if SmartScreen warns you, choose <i>More info → Run anyway</i>.<br>Mac: on first launch right-click the app → <i>Open</i>.",
+			"hero.note": "Windows: if SmartScreen warns you, choose <i>More info → Run anyway</i> – <a href=\"#figyelmeztetes\">why is that?</a><br>Mac: on first launch right-click the app → <i>Open</i>.",
 			"games.title": "Games", "games.sub": "All free. The ParthLauncher downloads and updates them for you.",
 			"games.hep.tag": "Anglo-Saxon grand strategy, from 790",
 			"games.hep.desc": "Lead Wessex, Mercia or Northumbria – or the Scots, Picts and Irish. Diplomacy, the Witan, the church, population and recruitment, and the coming of the vikings.",
@@ -327,6 +345,12 @@
 			"start.s2": "Pick a game and click <b>Update</b> / <b>Play</b> – the download runs by itself.",
 			"start.s3": "Playing and add-ons need an account: <a href=\"fiok.html\">sign up here on the website</a> or in the launcher (<b>Sign in / Sign up</b>). Buy add-ons on Gumroad with <b>the same e-mail address</b>; if you received a key, you can redeem it with the <b>I have a key</b> button.",
 			"start.s4": "Forgot your password? <a href=\"fiok.html#elfelejtett\">Request a new one here</a>, or in the launcher's account window.",
+			"warn.title": "If Windows warns you",
+			"warn.sub": "After downloading, Windows may tell you that <b>\"Windows protected your PC\"</b>. This is not a virus alert. It means the publisher is unknown: the installer is not digitally signed, because a code signing certificate costs several hundred euros a year and this is a hobby project.",
+			"warn.s1": "In the warning window, click <b>More info</b>.",
+			"warn.s2": "Then click the <b>Run anyway</b> button that appears.",
+			"warn.s3": "You will see this only for the installer, only once. It does not appear for the games downloaded by the launcher.",
+			"warn.hash": "Want to check that you really downloaded our file? We publish a SHA-256 checksum for every release – on the <a href=\"https://github.com/Parthenon2-boop/birodalom/releases/latest\">release page</a>, in <b>SHA256SUMS.txt</b> and at the bottom of the description. You can look up your own in PowerShell:",
 			"dlc.buy": "Buy", "dlc.addon": "Heptarchia add-on", "ver.latest": "Latest: ", "ver.viaLauncher": "Get it with the launcher",
 			"news.tagNews": "News",
 		},
@@ -343,7 +367,7 @@
 			"hero.lead": "Ein Starter für drei Spiele. Er installiert und aktualisiert <b>Birodalom</b>, <b>Heptarchia</b> und <b>Kard és Mágia</b> und verwaltet die gekauften Erweiterungen.",
 			"hero.win": "Download für Windows", "hero.installer": "Installationsprogramm", "hero.mac": "Download für macOS",
 			"hero.macsub": "Intel und Apple Silicon",
-			"hero.note": "Windows: Wenn SmartScreen warnt, wähle <i>Weitere Informationen → Trotzdem ausführen</i>.<br>Mac: Beim ersten Start Rechtsklick auf die App → <i>Öffnen</i>.",
+			"hero.note": "Windows: Wenn SmartScreen warnt, wähle <i>Weitere Informationen → Trotzdem ausführen</i> – <a href=\"#figyelmeztetes\">warum?</a><br>Mac: Beim ersten Start Rechtsklick auf die App → <i>Öffnen</i>.",
 			"games.title": "Spiele", "games.sub": "Alle kostenlos. Der ParthLauncher lädt sie herunter und hält sie aktuell.",
 			"games.hep.tag": "Angelsächsische Großstrategie, ab 790",
 			"games.hep.desc": "Führe Wessex, Mercia oder Northumbria – oder die Schotten, Pikten und Iren. Diplomatie, Witan, Kirche, Bevölkerung und Aushebung sowie die Ankunft der Wikinger.",
@@ -365,6 +389,12 @@
 			"start.s2": "Wähle ein Spiel und klicke auf <b>Aktualisieren</b> / <b>Starten</b> – der Download läuft von selbst.",
 			"start.s3": "Zum Spielen und für Erweiterungen brauchst du ein Konto: <a href=\"fiok.html\">registriere dich hier auf der Website</a> oder im Launcher (<b>Anmelden / Registrieren</b>). Erweiterungen kaufst du auf Gumroad mit <b>derselben E-Mail-Adresse</b>; hast du einen Schlüssel erhalten, kannst du ihn mit <b>Ich habe einen Schlüssel</b> einlösen.",
 			"start.s4": "Passwort vergessen? <a href=\"fiok.html#elfelejtett\">Hier kannst du ein neues anfordern</a> oder im Kontofenster des Launchers.",
+			"warn.title": "Wenn Windows warnt",
+			"warn.sub": "Nach dem Herunterladen meldet Windows womöglich: <b>„Der Computer wurde durch Windows geschützt“</b>. Das ist keine Virenmeldung. Sie bedeutet, dass der Herausgeber unbekannt ist: Das Installationsprogramm ist nicht digital signiert, denn ein Codesignatur-Zertifikat kostet mehrere hundert Euro im Jahr – und dies ist ein Hobbyprojekt.",
+			"warn.s1": "Klicke im Warnfenster auf <b>Weitere Informationen</b>.",
+			"warn.s2": "Danach auf die erscheinende Schaltfläche <b>Trotzdem ausführen</b>.",
+			"warn.s3": "Das siehst du nur beim Installationsprogramm, ein einziges Mal. Bei den vom Launcher geladenen Spielen erscheint es nicht.",
+			"warn.hash": "Möchtest du prüfen, ob du wirklich unsere Datei geladen hast? Zu jeder Veröffentlichung geben wir eine SHA-256-Prüfsumme heraus – auf der <a href=\"https://github.com/Parthenon2-boop/birodalom/releases/latest\">Release-Seite</a>, in <b>SHA256SUMS.txt</b> und am Ende der Beschreibung. Deine eigene ermittelst du in der PowerShell so:",
 			"dlc.buy": "Kaufen", "dlc.addon": "Heptarchia-Erweiterung", "ver.latest": "Neueste: ", "ver.viaLauncher": "Mit dem Launcher erhältlich",
 			"news.tagNews": "Neues",
 		},
