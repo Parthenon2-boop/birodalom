@@ -1,6 +1,30 @@
 [
 	{
 		"datum": "2026-09-22",
+		"cim": "Kard és Mágia 3.5 – a szörnyek végre folyamatosan mozognak",
+		"cimke": "Kard és Mágia",
+		"szoveg": "A szörnyek eddig szaggatva jöttek feléd: villantak egy kockányit, aztán majdnem egy teljes másodpercig álltak. Ennek egyszerű oka volt – ugyanazzal a sebességgel siklottak, mint a hős, vagyis egy mezőt tizedmásodperc alatt tettek meg, a körök viszont másodpercenként peregtek. Mostantól a játék megméri, mennyi idő telik el két kör között, és a szörnyek pontosan ennyi idő alatt tesznek meg egy mezőt: ha állsz, lassan és egyenletesen kúsznak közelebb, ha rohansz, veled együtt gyorsulnak. A hős mozgása változatlanul pörgős maradt. Javítottunk egy bosszantó hibát is: teli életerőnél a gyógyital eddig elfogyott, kiírta a „+0 HP"-t, és a fiola eltűnt – érthető módon úgy tűnt, mintha az ital nem működne. Mostantól ilyenkor nem használódik el, és megmondja, miért.",
+		"cim_en": "Sword and Sorcery 3.5 – the monsters finally move smoothly",
+		"szoveg_en": "Monsters used to come at you in jerks: a flash of movement across one tile, then almost a full second of standing still. The reason was simple – they glided at the same speed as the hero, crossing a tile in a tenth of a second, while turns ticked by once a second. Now the game measures how long passes between turns, and a monster takes exactly that long to cross a tile: stand still and they creep closer slowly and evenly; run, and they speed up with you. The hero's own movement stays as brisk as before. We also fixed an irritating bug: at full health a healing potion used to be drunk anyway, print “+0 HP” and vanish – understandably it looked as if potions did nothing. From now on it is not used up, and it tells you why.",
+		"cim_de": "Schwert und Magie 3.5 – die Monster bewegen sich endlich flüssig",
+		"szoveg_de": "Die Monster kamen bisher ruckartig auf dich zu: ein Aufblitzen über ein Feld, dann fast eine ganze Sekunde Stillstand. Der Grund war einfach – sie glitten mit derselben Geschwindigkeit wie der Held, legten ein Feld also in einer Zehntelsekunde zurück, während die Runden im Sekundentakt abliefen. Jetzt misst das Spiel, wie viel Zeit zwischen zwei Runden vergeht, und ein Monster braucht genau so lange für ein Feld: Stehst du still, kriechen sie langsam und gleichmäßig näher; rennst du, werden sie mit dir schneller. Die Bewegung des Helden bleibt so flott wie zuvor. Außerdem haben wir einen ärgerlichen Fehler behoben: Bei voller Lebenskraft wurde ein Heiltrank bisher trotzdem geleert, meldete „+0 HP" und verschwand – verständlicherweise wirkte es, als täten Tränke nichts. Ab sofort wird er nicht verbraucht, und das Spiel sagt dir, warum.",
+		"cimke_en": "Sword and Sorcery",
+		"cimke_de": "Schwert und Magie"
+	},
+	{
+		"datum": "2026-09-22",
+		"cim": "Heptarchia 1.36 – rendes bálna úszik a tengeren",
+		"cimke": "Heptarchia",
+		"szoveg": "A térkép tengerén úszkáló bálna eddig inkább gyerekrajz volt: kerek, hordó alakú test, nagy fehér szem, mosolygó száj, a farokúszó helyén pedig egy szétesett forma. Most átrajzoltuk, a térkép metszet-stílusához illően: hosszan elkeskenyedő test, boltozatos homlok, ívelt állkapocs, és a végén egy rendes, vékony, hátrafelé söpört farokúszó, középen sekély bevágással. A nagy fehér pötty helyett apró, sötét szem szemhéjránccal, a szögletes csonk helyett keskeny, ívelt mellúszó, a háton és a farokszáron pedig metszetvonalak, hogy ne legyen lapos folt. A kifújt pára is új: V alakban szétnyíló, fölfelé elvékonyodó kettős permet a két egyforma rajzfilm-bukóív helyett.",
+		"cim_en": "Heptarchia 1.36 – a proper whale swims the sea",
+		"szoveg_en": "The whale swimming in the map's sea was rather a child's drawing until now: a round, barrel-shaped body, a big white eye, a smiling mouth, and something falling apart where the flukes should be. We have redrawn it to match the map's engraving style: a long tapering body, a domed brow, a curved jaw, and at the end a proper thin, swept-back fluke with a shallow notch in the middle. In place of the big white dot there is a small dark eye with a lid crease, in place of the angular stub a narrow curved flipper, and engraving lines along the back and tail stock so it is no longer a flat blot. The spout is new too: a double plume opening in a V and thinning upwards, instead of two identical cartoon arcs.",
+		"cim_de": "Heptarchia 1.36 – ein richtiger Wal zieht durchs Meer",
+		"szoveg_de": "Der Wal im Meer der Karte war bislang eher eine Kinderzeichnung: ein runder, fassförmiger Körper, ein großes weißes Auge, ein lächelnder Mund, und dort, wo die Fluke sein sollte, etwas Zerfallenes. Wir haben ihn im Stichstil der Karte neu gezeichnet: ein lang auslaufender Körper, eine gewölbte Stirn, ein geschwungener Kiefer und am Ende eine richtige, dünne, nach hinten gefegte Fluke mit flacher Kerbe in der Mitte. Statt des großen weißen Punkts ein kleines dunkles Auge mit Lidfalte, statt des kantigen Stummels eine schmale, geschwungene Brustflosse, dazu Stichlinien auf Rücken und Schwanzstiel, damit kein flacher Fleck bleibt. Auch der Blas ist neu: eine V-förmig auseinanderlaufende, nach oben dünner werdende Doppelfontäne statt zweier gleicher Comicbögen.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-22",
 		"cim": "Heptarchia 1.35 – megjönnek a festett királyképek",
 		"cimke": "Heptarchia",
 		"szoveg": "A múlt heti nagyobb arckép után most az elsők meg is kapták a saját festett portréjukat: olajfestmény hatású mellképek, korona és prémgallér, mögöttük korhű, elmosott háttér – ugyanabban a stílusban, mint a Birodalom királyképei. Ebben a kiadásban harminc uralkodó képe van benne: Offa, Nagy Károly, Jámbor Lajos, Egbert, Coenwulf, Eardwulf, Eanred, Sigeric, Caradog ap Meirion, Donnchad Midi, Sigfred és Godfred dán királyok, a norvég kiskirályok és a többiek. Akinek még nincs festett képe, annál a megszokott, kódból rajzolt arckép marad – a kettő ugyanúgy néz ki méretben és formában, csak a részletességük más. A további királyok képei a következő kiadásokban érkeznek, amíg mind a 273 meg nem lesz.",
