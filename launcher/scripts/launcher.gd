@@ -147,7 +147,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 32
+const LAUNCHER_BUILD := 33
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -217,6 +217,13 @@ var lic_edit: LineEdit
 var lic_status: Label
 var lic_title: Label
 var lic_dlc := {}                    # melyik kiegészítő kulcsát váltják be
+# Újdonságok (a kiegészítők fölött): a kiválasztott játék legutóbbi frissítései röviden
+const NEWS_FILE := "docs/hirek.json"  # a „home” tárolóban; ugyanez a weboldal hírfolyama
+const NEWS_MAX := 3                  # ennyi bejegyzés látszik
+var news_box: VBoxContainer
+var _main_box: VBoxContainer         # a felület fő oszlopa: ebből látszik, mennyi hely maradt
+var _news: Array = []                # a legutóbb letöltött hírek (a beállításfájlban is)
+var _news_seen := {}                 # játékkulcs -> a legutóbbi indításkor már látott legfrissebb dátum
 
 func _ready() -> void:
 	if _relaunch_without_console(): return
@@ -243,6 +250,7 @@ func _ready() -> void:
 	_show_notes(str(game()["key"]))   # a legutóbb látott leírás azonnal
 	check_latest()
 	_sweep_versions()             # mindkét játék változata a fülre
+	_fetch_news()                 # az újdonságok a kiegészítők fölé
 	# Ellenőrzéshez:  ParthLauncher -- --shot=<utvonal.png>
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--shot="): _capture_after(a.substr(7))
@@ -507,6 +515,7 @@ func _build_ui() -> void:
 	_ui.add_child(bg)
 
 	var box := VBoxContainer.new()
+	_main_box = box
 	box.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	box.offset_left = 44; box.offset_right = -44; box.offset_top = 32; box.offset_bottom = -34
 	box.add_theme_constant_override("separation", 8)
@@ -571,7 +580,7 @@ func _build_ui() -> void:
 	# a borítókép, alján a játék nevével
 	cover = Control.new()
 	cover.size_flags_vertical = SIZE_EXPAND_FILL
-	cover.custom_minimum_size = Vector2(0, 150)
+	cover.custom_minimum_size = Vector2(0, 110)
 	cover.clip_contents = true
 	cover.draw.connect(_draw_cover.bind(cover))
 	cover.resized.connect(cover.queue_redraw)
@@ -606,6 +615,11 @@ func _build_ui() -> void:
 	txt_notes.bbcode_enabled = true
 	txt_notes.visible = false
 	_ui.add_child(txt_notes)
+
+	# Újdonságok: mit hozott a kiválasztott játék legutóbbi néhány frissítése
+	news_box = VBoxContainer.new()
+	news_box.add_theme_constant_override("separation", 1)
+	mid.add_child(news_box)
 
 	# A kiválasztott játék megvásárolható kiegészítői (lakattal, amíg nincs meg)
 	dlc_scroll = ScrollContainer.new()
@@ -996,6 +1010,7 @@ func _refresh_dlc() -> void:
 		c.queue_free()
 	# a fiók gombja jobb felül van: minden játéknál látszik, egy fiók mindkét játékhoz
 	_refresh_acc_btn()
+	_show_news()
 	var list := _dlcs()
 	dlc_scroll.visible = not list.is_empty()
 	if list.is_empty(): return
@@ -1010,10 +1025,142 @@ func _refresh_dlc() -> void:
 		dlc_box.add_child(_dlc_card(d))
 	_fit_dlc.call_deferred()
 
-# A kártyák kerete akkora, mint a tartalma, de legfeljebb DLC_MAX_H (a többi görgethető)
+# A kártyák kerete akkora, mint a tartalma, de legfeljebb DLC_MAX_H, és nem több, mint
+# amennyi hely a borító, az újdonságok és az alsó sáv mellett marad (a többi görgethető)
 func _fit_dlc() -> void:
 	if dlc_scroll == null or not is_instance_valid(dlc_scroll): return
-	dlc_scroll.custom_minimum_size.y = minf(dlc_box.get_combined_minimum_size().y, DLC_MAX_H)
+	var h := minf(dlc_box.get_combined_minimum_size().y, DLC_MAX_H)
+	# A fő oszlop a tartalmával együtt nőne (és kilógna), ezért a rendelkezésre álló
+	# magasságot a teljes felületből számoljuk: ami a lista nélkül is kell, azt levonjuk.
+	if _main_box != null and is_instance_valid(_main_box) and _ui.size.y > 0.0:
+		if not _ui.resized.is_connected(_fit_dlc): _ui.resized.connect(_fit_dlc)
+		var hely := _ui.size.y - _main_box.offset_top + _main_box.offset_bottom
+		var tobbi := _main_box.get_combined_minimum_size().y - dlc_scroll.custom_minimum_size.y
+		h = minf(h, maxf(hely - tobbi, 90.0))
+	if not is_equal_approx(dlc_scroll.custom_minimum_size.y, h):
+		dlc_scroll.custom_minimum_size.y = h
+
+# ── Újdonságok ────────────────────────────────────────────────
+#
+# A kiegészítők fölött röviden: mit hozott a kiválasztott játék legutóbbi néhány
+# frissítése. A forrás a „home” tároló docs/hirek.json fájlja (a weboldal hírei);
+# a legutóbb letöltött változatot eltesszük, így hálózat nélkül is látszik.
+# Ami a legutóbbi indítás óta jelent meg, „ÚJ” jelet kap.
+
+func _fetch_news() -> void:
+	var home := {}
+	for g in GAMES:
+		if bool(g.get("home", false)): home = g
+	if home.is_empty(): return
+	var rr := _repo_of(home)
+	var text := await _fetch_text("https://raw.githubusercontent.com/%s/%s/%s/%s" % [rr[0], rr[1], rr[2], NEWS_FILE])
+	var data = JSON.parse_string(text) if text != "" else null
+	if typeof(data) != TYPE_ARRAY: return
+	_news = data
+	cfg.set_value("news", "json", text)
+	cfg.save(CFG_PATH)
+	_show_news()
+
+# A hír ehhez a játékhoz tartozik-e (a Heptarchiához a kiegészítőinek hírei is)
+func _news_of_game(h: Dictionary, g: Dictionary) -> bool:
+	var cimke := str(h.get("cimke", ""))
+	if cimke.begins_with(_label_of(g)): return true
+	for d in DLCS.get(str(g["key"]), []):
+		if cimke == str(d["name"]): return true
+	return false
+
+# A hír első mondata (legfeljebb ~170 betű): ennyi fér el egy-két sorban
+static func _news_excerpt(szoveg: String) -> String:
+	var s := szoveg.get_slice("\n", 0).strip_edges()
+	var vege := s.find(". ")
+	if vege > 0 and vege < 170: return s.substr(0, vege + 1)
+	return s if s.length() <= 170 else s.substr(0, 167).strip_edges() + "…"
+
+func _show_news() -> void:
+	if news_box == null or not is_instance_valid(news_box): return
+	for c in news_box.get_children():
+		news_box.remove_child(c)
+		c.queue_free()
+	var mentett_szoveg := str(cfg.get_value("news", "json", ""))
+	if _news.is_empty() and mentett_szoveg != "":
+		var mentett = JSON.parse_string(mentett_szoveg)
+		if typeof(mentett) == TYPE_ARRAY: _news = mentett
+	var g := game()
+	var key := str(g["key"])
+	var list: Array = []
+	for h in _news:
+		if typeof(h) == TYPE_DICTIONARY and _news_of_game(h, g): list.append(h)
+	list.sort_custom(func(a, b): return str(a.get("datum", "")) > str(b.get("datum", "")))
+	news_box.visible = not list.is_empty()
+	if list.is_empty(): return
+	# Az „ÚJ” jel az indításkor még nem látott híreknek jár; ugyanabban a munkamenetben megmarad.
+	if not _news_seen.has(key):
+		_news_seen[key] = str(cfg.get_value("news_seen", key, ""))
+		cfg.set_value("news_seen", key, str(list[0].get("datum", "")))
+		cfg.save(CFG_PATH)
+	var latott: String = _news_seen[key]
+
+	var head := Label.new()
+	head.text = "Újdonságok"
+	var tf := S.font_title()
+	if tf != null: head.add_theme_font_override("font", tf)
+	head.add_theme_font_size_override("font_size", 18)
+	head.add_theme_color_override("font_color", S.RED if S.skin == "heptarchia" else S.GOLD_LIGHT)
+	news_box.add_child(head)
+
+	var card := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = S.NOTES_BG
+	sb.border_color = Color(S.BORDER, 0.9)
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(4)
+	sb.content_margin_left = 10; sb.content_margin_right = 10
+	sb.content_margin_top = 5; sb.content_margin_bottom = 6
+	card.add_theme_stylebox_override("panel", sb)
+	news_box.add_child(card)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 1)
+	card.add_child(v)
+	for i in mini(list.size(), NEWS_MAX):
+		var h: Dictionary = list[i]
+		var datum := str(h.get("datum", ""))
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		v.add_child(row)
+		var d := Label.new()
+		d.text = datum.substr(5).replace("-", ". ") + "."    # „09. 23.”
+		d.custom_minimum_size.x = 52
+		d.add_theme_font_size_override("font_size", 14)
+		d.add_theme_color_override("font_color", S.TEXT_DIM)
+		row.add_child(d)
+		var t := Label.new()
+		t.text = str(h.get("cim", ""))
+		t.size_flags_horizontal = SIZE_EXPAND_FILL
+		t.clip_text = true
+		t.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		t.add_theme_font_size_override("font_size", 15)
+		t.tooltip_text = _news_excerpt(str(h.get("szoveg", "")))
+		t.mouse_filter = Control.MOUSE_FILTER_PASS
+		row.add_child(t)
+		if latott != "" and datum > latott:
+			var uj := Label.new()
+			uj.text = "ÚJ"
+			uj.add_theme_font_size_override("font_size", 13)
+			uj.add_theme_color_override("font_color", S.GREEN)
+			row.add_child(uj)
+		# a legfrissebbnél egy rövid kivonat is: mi a lényege
+		if i == 0:
+			var ex := Label.new()
+			ex.text = _news_excerpt(str(h.get("szoveg", "")))
+			ex.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			ex.max_lines_visible = 2
+			ex.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+			var itf := S.font_italic()
+			if itf != null: ex.add_theme_font_override("font", itf)
+			ex.add_theme_font_size_override("font_size", 13)
+			ex.add_theme_color_override("font_color", S.TEXT_DIM)
+			v.add_child(ex)
+	_fit_dlc.call_deferred()
 
 func _dlc_card(d: Dictionary) -> Control:
 	var owned := _dlc_license(d) != ""
