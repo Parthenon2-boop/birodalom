@@ -147,7 +147,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 31
+const LAUNCHER_BUILD := 32
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1057,6 +1057,16 @@ func _dlc_card(d: Dictionary) -> Control:
 	btns.alignment = BoxContainer.ALIGNMENT_END
 	btns.size_flags_vertical = SIZE_SHRINK_CENTER
 	row.add_child(btns)
+	# A változat sora: mi van telepítve, és van-e újabb. Eddig a kiegészítők
+	# csendben frissültek – most látszik, melyik hol tart.
+	if owned:
+		var ver := Label.new()
+		ver.add_theme_font_size_override("font_size", 12)
+		ver.text = _dlc_version_text(d)
+		ver.add_theme_color_override("font_color", _dlc_version_color(d))
+		ver.tooltip_text = "A kiegészítő telepített változata. Az indító magától letölti az újabbat, amikor frissítést keres."
+		ver.mouse_filter = Control.MOUSE_FILTER_PASS
+		texts.add_child(ver)
 	if owned:
 		if _dlc_installed(d):
 			# ki-be kapcsoló (a játékban is ugyanez: Beállítások → Kiegészítők)
@@ -1086,6 +1096,24 @@ func _dlc_card(d: Dictionary) -> Control:
 		var key_btn := _button(btns, "Van kulcsom", func(): _open_license(d))
 		key_btn.add_theme_font_size_override("font_size", 14)
 	return card
+
+# „Változat: vallas-v2 · naprakész” / „…· új változat: vallas-v3”
+func _dlc_version_text(d: Dictionary) -> String:
+	if not _dlc_installed(d): return "Még nincs letöltve"
+	var have := str(cfg.get_value("dlc:" + str(d["key"]), "version", ""))
+	var sor := "Változat: " + (have if have != "" else "ismeretlen")
+	var latest: Array = dlc_latest.get(str(d["key"]), [])
+	if latest.is_empty(): return sor
+	var ujabb := str(latest[0])
+	if have == "" or have == ujabb: return sor + " · naprakész"
+	return sor + " · új változat: " + ujabb
+
+func _dlc_version_color(d: Dictionary) -> Color:
+	if not _dlc_installed(d): return S.TEXT_DIM
+	var have := str(cfg.get_value("dlc:" + str(d["key"]), "version", ""))
+	var latest: Array = dlc_latest.get(str(d["key"]), [])
+	if latest.is_empty(): return S.TEXT_DIM
+	return S.GREEN if (have == "" or have == str(latest[0])) else S.GOLD_LIGHT
 
 func _draw_dlc_icon(c: Control, owned: bool) -> void:
 	var cx := c.size.x / 2.0
@@ -1742,9 +1770,17 @@ var _dlc_check_running := false
 func _restore_owned_dlcs() -> void:
 	_check_dlc_updates()
 
+# Mit tudunk a kiegészítők legfrissebb kiadásáról? kulcs -> [címke, letöltési cím].
+# A kártyák ebből írják ki, hogy naprakész-e vagy van újabb – enélkül a
+# frissítés csendben, láthatatlanul történt.
+var dlc_latest := {}
+
 func _check_dlc_updates() -> void:
 	if _dlc_check_running or dlc_busy: return
 	_dlc_check_running = true
+	# Előbb MINDEGYIKET megkérdezzük, és csak utána töltünk: így minden kártya
+	# tudja, hol tart, nem csak az, amelyiket épp frissítjük.
+	var letoltendo: Array = []          # [kiegészítő, cím, címke]
 	for game_key in DLCS:
 		for d in DLCS[game_key]:
 			if _dlc_license(d) == "": continue
@@ -1753,16 +1789,19 @@ func _check_dlc_updates() -> void:
 			if latest.is_empty():
 				# a kiadások nem érhetők el: legalább a hiányzó csomagot pótoljuk
 				if not _dlc_installed(d) and str(d["download_url"]) != "":
-					_dlc_check_running = false
-					_download_dlc(d)
-					return
+					letoltendo.append([d, str(d["download_url"]), ""])
 				continue
-			if _dlc_installed(d) and have == str(latest[0]): continue
-			_dlc_check_running = false
-			_status("A(z) %s új változata letöltés alatt (%s)…" % [str(d["name"]), str(latest[0])], S.GOLD_LIGHT)
-			_download_dlc(d, str(latest[1]), str(latest[0]))
-			return
+			dlc_latest[str(d["key"])] = latest
+			if not _dlc_installed(d) or have != str(latest[0]):
+				letoltendo.append([d, str(latest[1]), str(latest[0])])
 	_dlc_check_running = false
+	_refresh_dlc()                      # a kártyák kiírják, mi naprakész és mi nem
+	if letoltendo.is_empty(): return
+	var e: Array = letoltendo[0]
+	var cimke := str(e[2])
+	if cimke != "":
+		_status("A(z) %s új változata letöltés alatt (%s)…" % [str((e[0] as Dictionary)["name"]), cimke], S.GOLD_LIGHT)
+	_download_dlc(e[0], str(e[1]), cimke)
 
 # A csomag legújabb kiadása: [címke, letöltési cím], vagy [] ha nem sikerült lekérdezni
 func _latest_dlc_release(d: Dictionary) -> Array:
