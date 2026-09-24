@@ -147,7 +147,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 33
+const LAUNCHER_BUILD := 34
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -207,9 +207,14 @@ var set_fields := {}
 var chk_auto: CheckBox
 var chk_play: CheckBox
 # Kiegészítők
-var dlc_box: VBoxContainer           # a kiválasztott játék kiegészítő-kártyái
-var dlc_scroll: ScrollContainer      # a kártyák görgethető kerete: legfeljebb DLC_MAX_H magas, hogy semmi ne lógjon ki
-const DLC_MAX_H := 262.0             # a cím és négy kártya; ha több van, a lista görgethető
+var dlc_box: VBoxContainer           # a kiválasztott játék kiegészítő-kártyái (a „Kiegészítők” ablakban)
+var dlc_scroll: ScrollContainer      # csak akkor görget, ha a kártyák nem férnek ki az ablakban
+var dlc_popup: PopupPanel            # a „Kiegészítők” ablak (a fejléc gombjáról)
+var dlc_pop_title: Label
+var dlc_pop_status: Label            # a kiegészítő-műveletek visszajelzése az ablakon belül
+var btn_dlc: Button                  # fejléc: „Kiegészítők (1/4)”
+var btn_code: Button                 # fejléc: „Kód beváltása”
+var lic_found := {}                  # a kódbeváltás talált kiegészítője
 var http_dlc: HTTPRequest            # licencellenőrzés és a csomag letöltése (a játék letöltésétől külön)
 var dlc_busy := false
 var license_popup: PopupPanel
@@ -219,7 +224,7 @@ var lic_title: Label
 var lic_dlc := {}                    # melyik kiegészítő kulcsát váltják be
 # Újdonságok (a kiegészítők fölött): a kiválasztott játék legutóbbi frissítései röviden
 const NEWS_FILE := "docs/hirek.json"  # a „home” tárolóban; ugyanez a weboldal hírfolyama
-const NEWS_MAX := 3                  # ennyi bejegyzés látszik
+const NEWS_MAX := 5                  # ennyi bejegyzés látszik (a kiegészítők saját ablakban vannak, van hely)
 var news_box: VBoxContainer
 var _main_box: VBoxContainer         # a felület fő oszlopa: ebből látszik, mennyi hely maradt
 var _news: Array = []                # a legutóbb letöltött hírek (a beállításfájlban is)
@@ -244,6 +249,14 @@ func _ready() -> void:
 	add_child(http_dlc)
 	_apply_net_settings()
 	_refresh_dlc()
+	# képkészítéshez: hálózat nélkül (nem keres frissítést, nem tölt le semmit)
+	if "--halozat-nelkul" in OS.get_cmdline_user_args():
+		_refresh_labels()
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--shot="): _capture_after(a.substr(7))
+			if a == "--dlc-ablak": get_tree().create_timer(1.5).timeout.connect(_open_dlc_popup)
+			if a == "--kod-ablak": get_tree().create_timer(1.5).timeout.connect(func(): _open_license({}))
+		return
 	_restore_owned_dlcs()
 	if _acc_enabled(): _acc_refresh()
 	_refresh_labels()
@@ -254,6 +267,9 @@ func _ready() -> void:
 	# Ellenőrzéshez:  ParthLauncher -- --shot=<utvonal.png>
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--shot="): _capture_after(a.substr(7))
+		# a képhez a Kiegészítők / Kód beváltása ablak is megnyitható
+		if a == "--dlc-ablak": get_tree().create_timer(1.5).timeout.connect(_open_dlc_popup)
+		if a == "--kod-ablak": get_tree().create_timer(1.5).timeout.connect(func(): _open_license({}))
 
 # Ha az indító parancssorból indult – főleg egy régebbi frissítő szkriptből, amely „start”-tal futott, ezért
 # az ablaka a szkript után is nyitva marad –, a játék kimenete is oda kerülne. Ilyenkor bezárjuk a
@@ -540,6 +556,22 @@ func _build_ui() -> void:
 	var title := S.make_title("ParthLauncher", 30, S.RED if S.skin == "heptarchia" else S.GOLD_LIGHT)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	title_box.add_child(title)
+	title_box.size_flags_horizontal = SIZE_SHRINK_BEGIN
+	# A név mellett: a kiegészítők listája és a kódbeváltás saját ablakban nyílik –
+	# így a főoldalon nem kell görgetni a kártyák között.
+	btn_dlc = _button(head, "Kiegészítők", _open_dlc_popup)
+	btn_dlc.custom_minimum_size = Vector2(150, 38)
+	btn_dlc.size_flags_vertical = SIZE_SHRINK_CENTER
+	btn_dlc.add_theme_font_size_override("font_size", 15)
+	btn_dlc.tooltip_text = "A kiválasztott játék kiegészítői: vásárlás, letöltés, ki- és bekapcsolás."
+	btn_code = _button(head, "Kód beváltása", func(): _open_license({}))
+	btn_code.custom_minimum_size = Vector2(150, 38)
+	btn_code.size_flags_vertical = SIZE_SHRINK_CENTER
+	btn_code.add_theme_font_size_override("font_size", 15)
+	btn_code.tooltip_text = "Bármelyik kiegészítő licenckulcsa: az indító felismeri, melyikhez tartozik, és aktiválja."
+	var head_space := Control.new()
+	head_space.size_flags_horizontal = SIZE_EXPAND_FILL
+	head.add_child(head_space)
 	acc_top_btn = _button(head, "Bejelentkezés / Regisztráció", _open_account)
 	acc_top_btn.custom_minimum_size = Vector2(260, 38)
 	acc_top_btn.size_flags_vertical = SIZE_SHRINK_CENTER
@@ -621,15 +653,6 @@ func _build_ui() -> void:
 	news_box.add_theme_constant_override("separation", 1)
 	mid.add_child(news_box)
 
-	# A kiválasztott játék megvásárolható kiegészítői (lakattal, amíg nincs meg)
-	dlc_scroll = ScrollContainer.new()
-	dlc_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	mid.add_child(dlc_scroll)
-	dlc_box = VBoxContainer.new()
-	dlc_box.size_flags_horizontal = SIZE_EXPAND_FILL
-	dlc_box.add_theme_constant_override("separation", 4)
-	dlc_scroll.add_child(dlc_box)
-
 	lbl_installed = _info_label(mid)
 	lbl_installed.add_theme_font_size_override("font_size", 16)
 	lbl_latest = _info_label(mid)
@@ -668,6 +691,7 @@ func _build_ui() -> void:
 
 	_build_settings()
 	_build_license_popup()
+	_build_dlc_popup()
 
 func _section_label(text: String) -> Label:
 	var l := Label.new()
@@ -963,6 +987,10 @@ func _login_button_text() -> void:
 func _status(text: String, color: Color = S.TEXT) -> void:
 	lbl_status.text = text
 	lbl_status.add_theme_color_override("font_color", color)
+	# a nyitott Kiegészítők ablakban is látszódjon (különben a főoldalon, az ablak mögött maradna)
+	if dlc_popup != null and is_instance_valid(dlc_popup) and dlc_popup.visible:
+		dlc_pop_status.text = text
+		dlc_pop_status.add_theme_color_override("font_color", color)
 
 func _progress(value: float, text: String) -> void:
 	bar.value = clampf(value, 0.0, 100.0)
@@ -1012,33 +1040,78 @@ func _refresh_dlc() -> void:
 	_refresh_acc_btn()
 	_show_news()
 	var list := _dlcs()
-	dlc_scroll.visible = not list.is_empty()
-	if list.is_empty(): return
-	var head := Label.new()
-	head.text = "Kiegészítők"
-	var tf := S.font_title()
-	if tf != null: head.add_theme_font_override("font", tf)
-	head.add_theme_font_size_override("font_size", 18)
-	head.add_theme_color_override("font_color", S.RED if S.skin == "heptarchia" else S.GOLD_LIGHT)
-	dlc_box.add_child(head)
+	# a fejléc gombja: hány kiegészítő van, és ebből mennyi a tiéd
+	if btn_dlc != null and is_instance_valid(btn_dlc):
+		var megvan := 0
+		for d in list:
+			if _dlc_license(d) != "": megvan += 1
+		btn_dlc.visible = not list.is_empty()
+		btn_dlc.text = "Kiegészítők  %d/%d" % [megvan, list.size()]
+	if btn_code != null and is_instance_valid(btn_code): btn_code.visible = not _all_dlcs().is_empty()
+	if dlc_pop_title != null and is_instance_valid(dlc_pop_title):
+		dlc_pop_title.text = "Kiegészítők – %s" % _label_of(game())
 	for d in list:
 		dlc_box.add_child(_dlc_card(d))
+	if list.is_empty() and dlc_popup != null and dlc_popup.visible: dlc_popup.hide()
 	_fit_dlc.call_deferred()
 
-# A kártyák kerete akkora, mint a tartalma, de legfeljebb DLC_MAX_H, és nem több, mint
-# amennyi hely a borító, az újdonságok és az alsó sáv mellett marad (a többi görgethető)
+# Az ablak akkora, mint a kártyák; csak ha a képernyőre sem férnének ki, akkor görget
 func _fit_dlc() -> void:
 	if dlc_scroll == null or not is_instance_valid(dlc_scroll): return
-	var h := minf(dlc_box.get_combined_minimum_size().y, DLC_MAX_H)
-	# A fő oszlop a tartalmával együtt nőne (és kilógna), ezért a rendelkezésre álló
-	# magasságot a teljes felületből számoljuk: ami a lista nélkül is kell, azt levonjuk.
-	if _main_box != null and is_instance_valid(_main_box) and _ui.size.y > 0.0:
-		if not _ui.resized.is_connected(_fit_dlc): _ui.resized.connect(_fit_dlc)
-		var hely := _ui.size.y - _main_box.offset_top + _main_box.offset_bottom
-		var tobbi := _main_box.get_combined_minimum_size().y - dlc_scroll.custom_minimum_size.y
-		h = minf(h, maxf(hely - tobbi, 90.0))
+	var max_h := maxf(get_viewport().get_visible_rect().size.y * 0.72, 200.0)
+	var h := minf(dlc_box.get_combined_minimum_size().y, max_h)
 	if not is_equal_approx(dlc_scroll.custom_minimum_size.y, h):
 		dlc_scroll.custom_minimum_size.y = h
+		if dlc_popup != null and dlc_popup.visible:
+			dlc_popup.reset_size()
+			dlc_popup.popup_centered()
+
+# Minden játék minden kiegészítője (a kódbeváltás ezek közül keresi meg, melyiké a kulcs)
+func _all_dlcs() -> Array:
+	var r: Array = []
+	for g in GAMES:
+		for d in DLCS.get(str(g["key"]), []):
+			var dd: Dictionary = d.duplicate()
+			dd["_game"] = _label_of(g)
+			r.append(dd)
+	return r
+
+func _build_dlc_popup() -> void:
+	if dlc_popup != null and is_instance_valid(dlc_popup): dlc_popup.queue_free()
+	dlc_popup = PopupPanel.new()
+	add_child(dlc_popup)
+	var v := VBoxContainer.new()
+	v.custom_minimum_size = Vector2(820, 0)
+	v.add_theme_constant_override("separation", 8)
+	dlc_popup.add_child(v)
+	dlc_pop_title = S.make_title("Kiegészítők", 24, S.GOLD_LIGHT)
+	v.add_child(dlc_pop_title)
+	dlc_scroll = ScrollContainer.new()
+	dlc_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	v.add_child(dlc_scroll)
+	dlc_box = VBoxContainer.new()
+	dlc_box.size_flags_horizontal = SIZE_EXPAND_FILL
+	dlc_box.add_theme_constant_override("separation", 6)
+	dlc_scroll.add_child(dlc_box)
+	dlc_pop_status = Label.new()
+	dlc_pop_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	dlc_pop_status.custom_minimum_size.x = 820
+	dlc_pop_status.add_theme_font_size_override("font_size", 15)
+	v.add_child(dlc_pop_status)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	v.add_child(row)
+	_button(row, "Kód beváltása", func(): _open_license({})).size_flags_horizontal = SIZE_EXPAND_FILL
+	_button(row, "Bezárás", func(): dlc_popup.hide()).size_flags_horizontal = SIZE_EXPAND_FILL
+
+func _open_dlc_popup() -> void:
+	if _dlcs().is_empty(): return
+	dlc_pop_status.text = ""
+	_refresh_dlc()
+	await get_tree().process_frame
+	_fit_dlc()
+	dlc_popup.reset_size()
+	dlc_popup.popup_centered()
 
 # ── Újdonságok ────────────────────────────────────────────────
 #
@@ -1740,32 +1813,6 @@ func _need_login() -> bool:
 	_open_account()
 	return true
 
-# A kulcs beváltása a bejelentkezett fiókba (a szerver ellenőrzi a Gumroadnál, és a fiókhoz köti)
-func _acc_claim(key: String) -> void:
-	if not _acc_logged_in() or acc_token == "":
-		lic_status.text = "A kulcsot a fiókodhoz kötjük: előbb jelentkezz be (vagy regisztrálj)."
-		license_popup.hide()
-		_open_account()
-		return
-	dlc_busy = true
-	lic_status.text = "Ellenőrzés…"
-	var r := await _acc_call(HTTPClient.METHOD_POST, "/functions/v1/claim-license",
-		{"dlc": str(lic_dlc["key"]), "license_key": key}, acc_token)
-	dlc_busy = false
-	var data: Dictionary = r[1] if r[1] is Dictionary else {}
-	match int(r[0]):
-		200:
-			license_popup.hide()
-			_status("Köszönjük! A(z) %s a fiókodhoz került (%s)." % [str(lic_dlc["name"]), _acc_nev()], S.GREEN)
-			await _acc_sync()
-		0:
-			lic_status.text = "Nem sikerült elérni a szervert. Van internet?"
-		_:
-			match str(data.get("error", "")):
-				"key_taken": lic_status.text = "Ezt a kulcsot már egy másik fiókhoz kötötték."
-				"not_logged_in": lic_status.text = "A belépés lejárt – jelentkezz be újra."
-				_: lic_status.text = "Ez a kulcs nem érvényes ehhez a kiegészítőhöz. Ellenőrizd, hogy pontosan másoltad-e."
-
 func _buy_dlc(d: Dictionary) -> void:
 	var url := str(d["store_url"])
 	if url == "":
@@ -1787,6 +1834,7 @@ func _build_license_popup() -> void:
 	var l := Label.new()
 	l.text = "Írd be (vagy másold be) a vásárlás után e-mailben kapott licenckulcsot:"
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size.x = 560     # szélesség nélkül a sortörő címke túl magasnak méri magát
 	l.add_theme_color_override("font_color", S.GOLD_LIGHT if S.skin == "heptarchia" else S.TEXT)
 	v.add_child(l)
 	lic_edit = LineEdit.new()
@@ -1796,6 +1844,7 @@ func _build_license_popup() -> void:
 	v.add_child(lic_edit)
 	lic_status = Label.new()
 	lic_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lic_status.custom_minimum_size.x = 560
 	lic_status.add_theme_color_override("font_color", S.GOLD_LIGHT if S.skin == "heptarchia" else S.TEXT)
 	v.add_child(lic_status)
 	var row := HBoxContainer.new()
@@ -1804,63 +1853,107 @@ func _build_license_popup() -> void:
 	_button(row, "Beváltás", _redeem_license).size_flags_horizontal = SIZE_EXPAND_FILL
 	_button(row, "Mégse", func(): license_popup.hide()).size_flags_horizontal = SIZE_EXPAND_FILL
 
+## A kódbeváltó ablak. d: ha egy kártyáról nyílik, azzal a kiegészítővel kezdjük a próbát;
+## üresen (a fejléc gombjáról) bármelyik kiegészítő kulcsa jó – az indító kitalálja, melyiké.
 func _open_license(d: Dictionary) -> void:
 	lic_dlc = d
-	lic_title.text = "%s – licenckulcs" % str(d["name"])
+	lic_title.text = "Kód beváltása" if d.is_empty() else "%s – licenckulcs" % str(d["name"])
 	lic_edit.text = ""
-	lic_status.text = ""
+	lic_status.text = "Bármelyik kiegészítő kulcsa beírható: az indító felismeri, melyikhez tartozik." if d.is_empty() else ""
+	license_popup.reset_size()
 	license_popup.popup_centered()
 	lic_edit.grab_focus()
 
-# A kulcs ellenőrzése a Gumroad nyilvános licenc-szolgáltatásával (nem kell hozzá fiók vagy titkos kulcs)
+# A kipróbálandó kiegészítők sorrendje: a kártyáé (ha arról nyílt), aztán a kiválasztott játéké, aztán a többi
+func _license_candidates() -> Array:
+	var r: Array = []
+	var mind := _all_dlcs()
+	if not lic_dlc.is_empty():
+		for d in mind:
+			if str(d["key"]) == str(lic_dlc["key"]): r.append(d)
+	for d in mind:
+		if r.has(d): continue
+		for x in _dlcs():
+			if str(x["key"]) == str(d["key"]): r.append(d)
+	for d in mind:
+		if not r.has(d): r.append(d)
+	return r
+
 func _redeem_license() -> void:
 	var key := lic_edit.text.strip_edges()
 	if key == "" or dlc_busy: return
-	if _acc_enabled():
-		_acc_claim(key)
-		return
-	var pid := str(lic_dlc.get("gumroad_product_id", ""))
-	if pid == "":
-		lic_status.text = "A bolt még nincs beállítva, ezért most nem lehet kulcsot beváltani."
-		return
 	dlc_busy = true
 	lic_status.text = "Ellenőrzés…"
-	# a beváltás számít: a Gumroad számolja, hányszor használták a kulcsot (egy kulcs csak egyszer váltható be)
-	var body := "product_id=%s&license_key=%s&increment_uses_count=true" % [pid.uri_encode(), key.uri_encode()]
-	for c in http_dlc.request_completed.get_connections():
-		http_dlc.request_completed.disconnect(c["callable"])
-	http_dlc.request_completed.connect(_on_license_checked.bind(key), CONNECT_ONE_SHOT)
-	http_dlc.download_file = ""
-	var err := http_dlc.request(GUMROAD_VERIFY, ["User-Agent: ParthLauncher", "Content-Type: application/x-www-form-urlencoded"],
-		HTTPClient.METHOD_POST, body)
-	if err != OK:
-		dlc_busy = false
-		lic_status.text = "Nem sikerült kapcsolódni (%d). Van internet?" % err
-
-func _on_license_checked(result: int, code: int, _h: PackedStringArray, body: PackedByteArray, key: String) -> void:
+	var eredmeny: Dictionary
+	if _acc_enabled(): eredmeny = await _acc_claim_any(key)
+	else: eredmeny = await _gumroad_claim_any(key)
 	dlc_busy = false
-	if result != HTTPRequest.RESULT_SUCCESS:
-		lic_status.text = "Nem sikerült elérni az ellenőrző szervert (%s)." % _result_text(result)
-		return
-	var data = JSON.parse_string(body.get_string_from_utf8())
-	var purchase: Dictionary = data.get("purchase", {}) if data is Dictionary else {}
-	var ok: bool = data is Dictionary and bool(data.get("success", false)) and code < 400 \
-		and not bool(purchase.get("refunded", false)) and not bool(purchase.get("chargebacked", false)) \
-		and not bool(purchase.get("disputed", false))
-	if not ok:
-		lic_status.text = "Ez a kulcs nem érvényes ehhez a kiegészítőhöz. Ellenőrizd, hogy pontosan másoltad-e."
-		return
-	# (a Gumroad próbavásárlásának kulcsa – csak az eladó saját fiókjából – is beváltható, a teszteléshez)
-	# egy licenckulcs csak egyszer használható: ha ez már nem az első beváltás, elutasítjuk
-	if int(data.get("uses", 1)) > 1:
-		lic_status.text = "Ezt a kulcsot már beváltották. Egy licenckulcs csak egyszer használható – ha a tiéd, és új gépre telepítesz, írj nekünk."
-		return
-	cfg.set_value("dlc:" + str(lic_dlc["key"]), "license", key)
-	cfg.save(CFG_PATH)
-	license_popup.hide()
-	_status("Köszönjük a vásárlást! A(z) %s feloldva." % str(lic_dlc["name"]), S.GREEN)
-	_refresh_dlc()
-	_check_dlc_updates()
+	var d: Dictionary = eredmeny.get("dlc", {})
+	match str(eredmeny.get("status", "")):
+		"ok":
+			license_popup.hide()
+			var hol := " (%s)" % str(d.get("_game", "")) if str(d.get("_game", "")) != "" else ""
+			var fiok := " – a fiókodhoz került (%s)" % _acc_nev() if _acc_enabled() else ""
+			_status("Aktiválva: %s%s%s. Köszönjük a vásárlást!" % [str(d.get("name", "")), hol, fiok], S.GREEN)
+			if _acc_enabled(): await _acc_sync()
+			_refresh_dlc()
+			_check_dlc_updates()
+		"login":
+			lic_status.text = "A kulcsot a fiókodhoz kötjük: előbb jelentkezz be (vagy regisztrálj)."
+			license_popup.hide()
+			_open_account()
+		"expired": lic_status.text = "A belépés lejárt – jelentkezz be újra."
+		"taken": lic_status.text = "Ez a(z) %s kulcsa, de már egy másik fiókhoz kötötték." % str(d.get("name", ""))
+		"used": lic_status.text = "Ez a(z) %s kulcsa, de már beváltották. Egy licenckulcs csak egyszer használható – ha a tiéd, és új gépre telepítesz, írj nekünk." % str(d.get("name", ""))
+		"net": lic_status.text = "Nem sikerült elérni az ellenőrző szervert. Van internet?"
+		_: lic_status.text = "Ez a kulcs egyik kiegészítőhöz sem érvényes. Ellenőrizd, hogy pontosan másoltad-e."
+
+# Fiókkal: a szerver sorra ellenőrzi a kiegészítőkkel (a rossz párosítás csak „invalid_key”, nincs mellékhatása)
+func _acc_claim_any(key: String) -> Dictionary:
+	if not _acc_logged_in() or acc_token == "": return {"status": "login"}
+	for d in _license_candidates():
+		lic_status.text = "Ellenőrzés… (%s)" % str(d["name"])
+		var r := await _acc_call(HTTPClient.METHOD_POST, "/functions/v1/claim-license",
+			{"dlc": str(d["key"]), "license_key": key}, acc_token)
+		var data: Dictionary = r[1] if r[1] is Dictionary else {}
+		match int(r[0]):
+			200: return {"status": "ok", "dlc": d}
+			0: return {"status": "net"}
+			401: return {"status": "expired"}
+		match str(data.get("error", "")):
+			"key_taken": return {"status": "taken", "dlc": d}
+			"not_logged_in": return {"status": "expired"}
+	return {"status": "invalid"}
+
+# Fiók nélkül: a Gumroad nyilvános licenc-szolgáltatása, termékenként. Csak az érvényes
+# párosítás növeli a használatszámot (egy kulcs csak egyszer váltható be).
+func _gumroad_claim_any(key: String) -> Dictionary:
+	for d in _license_candidates():
+		var pid := str(d.get("gumroad_product_id", ""))
+		if pid == "": continue
+		lic_status.text = "Ellenőrzés… (%s)" % str(d["name"])
+		var req := HTTPRequest.new()
+		add_child(req)
+		var body := "product_id=%s&license_key=%s&increment_uses_count=true" % [pid.uri_encode(), key.uri_encode()]
+		if req.request(GUMROAD_VERIFY, ["User-Agent: ParthLauncher", "Content-Type: application/x-www-form-urlencoded"],
+				HTTPClient.METHOD_POST, body) != OK:
+			req.queue_free()
+			return {"status": "net"}
+		var v: Array = await req.request_completed
+		req.queue_free()
+		if int(v[0]) != HTTPRequest.RESULT_SUCCESS: return {"status": "net"}
+		var data = JSON.parse_string((v[3] as PackedByteArray).get_string_from_utf8())
+		var purchase: Dictionary = data.get("purchase", {}) if data is Dictionary else {}
+		var ok: bool = data is Dictionary and bool(data.get("success", false)) and int(v[1]) < 400 \
+			and not bool(purchase.get("refunded", false)) and not bool(purchase.get("chargebacked", false)) \
+			and not bool(purchase.get("disputed", false))
+		if not ok: continue
+		# (a Gumroad próbavásárlásának kulcsa – csak az eladó saját fiókjából – is beváltható, a teszteléshez)
+		if int(data.get("uses", 1)) > 1: return {"status": "used", "dlc": d}
+		cfg.set_value("dlc:" + str(d["key"]), "license", key)
+		cfg.save(CFG_PATH)
+		return {"status": "ok", "dlc": d}
+	return {"status": "invalid"}
 
 # A csomag letöltése a játék adatmappájába (a játék a következő indításkor betölti).
 # url / version: egy konkrét kiadás csomagja (a frissítés-ellenőrzés adja); üresen a legújabb.
