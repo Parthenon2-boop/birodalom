@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.47 – festett arckép minden uralkodónak",
+		"cimke": "Heptarchia",
+		"szoveg": "A térkép új népeinek mind a 277 uralkodója festett arcképet kapott – eddig náluk rajzolt arc jelent meg. A Karoling és Ottó-házi császárok, a bretonok, Strathclyde, a szászok, a lengyelek, a morvák és a csehek, mind a 34 pápa, Benevento, Asztúria és León, Córdoba emírjei és kalifái, a Rusztamidák és a Fátimidák, a bolgár kánok és cárok, a horvátok, az avarok, a magyarok Levedtől Szent Lászlóig, a besenyők, az Abbászidák és a szeldzsukok, a grúz királyok, a keleti szlávok, a baltiak, a kazárok, a volgai bolgárok és az Aglabidák – mindegyik a maga viseletében, a hazája tájával a háttérben.\\nKövér Sancho kövér, Szent István a Szent Koronát viseli, Krum kán a koponyaserleget emeli, a számi vének sámándobbal állnak.",
+		"cim_en": "Heptarchia 1.47 – a painted portrait for every ruler",
+		"szoveg_en": "All 277 rulers of the map's new peoples now have painted portraits – until now they showed a drawn face. The Carolingian and Ottonian emperors, the Bretons, Strathclyde, the Saxons, the Poles, Moravians and Czechs, all 34 popes, Benevento, Asturias and León, the emirs and caliphs of Córdoba, the Rustamids and Fatimids, the Bulgar khans and tsars, the Croats, the Avars, the Magyars from Levedi to Saint Ladislaus, the Pechenegs, the Abbasids and Seljuks, the Georgian kings, the East Slavs, the Balts, the Khazars, the Volga Bulgars and the Aghlabids – each in their own dress, with their homeland behind them.\\nSancho the Fat is fat, Saint Stephen wears the Holy Crown, Khan Krum raises his skull cup, the Sámi elders hold a shaman drum.",
+		"cim_de": "Heptarchia 1.47 – ein gemaltes Bildnis für jeden Herrscher",
+		"szoveg_de": "Alle 277 Herrscher der neuen Völker der Karte haben nun gemalte Bildnisse – bisher zeigten sie ein gezeichnetes Gesicht. Die karolingischen und ottonischen Kaiser, die Bretonen, Strathclyde, die Sachsen, die Polen, Mährer und Tschechen, alle 34 Päpste, Benevent, Asturien und León, die Emire und Kalifen von Córdoba, die Rustamiden und Fatimiden, die bulgarischen Khane und Zaren, die Kroaten, die Awaren, die Magyaren von Levedi bis zum heiligen Ladislaus, die Petschenegen, die Abbasiden und Seldschuken, die georgischen Könige, die Ostslawen, die Balten, die Chasaren, die Wolgabulgaren und die Aghlabiden – jeder in seiner eigenen Tracht, mit seiner Heimat im Hintergrund.\\nSancho der Dicke ist dick, der heilige Stephan trägt die Heilige Krone, Khan Krum hebt seinen Schädelbecher, die samischen Ältesten halten eine Schamanentrommel.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.46 – a béke-ajánlat ablaka kifér",
 		"cimke": "Heptarchia",
 		"szoveg": "Ha a Diplomáciában te ajánlottál békét, és sok feltételt szabtál (hadisarc, tartomány, hűbérség, szövetség felbontása), az esélyek listája annyira megnőtt, hogy az ablak alja a küldés gombbal együtt lelógott a képernyőről. Az ablak most két oszlopos: balra a feltételek, jobbra az esély tételes részletezése – minden kifér.",
