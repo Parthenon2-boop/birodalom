@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.54 – élő csatajelenet",
+		"cimke": "Heptarchia",
+		"szoveg": "A csata lejátszásakor a csík fölött a két sereg is megjelenik festett képeken: a nyílzápor alatt nyilak repülnek közöttük, a rohamnál egymásnak rontanak (rándulás, porfelhő), a közelharcban a csík határán tolakodnak, a végén a vesztes hátrál és eltűnik. Tengeri ütközetben két hosszúhajó ringatózik a hullámokon és döf egymásnak. A tengeri díszítés most közelről is tűéles.",
+		"cim_en": "Heptarchia 1.54 – a living battle scene",
+		"szoveg_en": "When a battle plays out, the two armies now appear in painted pictures above the bar: arrows fly between them during the volley, they crash together in the charge (with a jolt and dust), jostle at the edge of the bar in melee, and at the end the loser falls back and fades away. In sea battles two longships rock on the waves and ram each other. The sea decoration is now razor-sharp up close as well.",
+		"cim_de": "Heptarchia 1.54 – eine lebendige Schlachtszene",
+		"szoveg_de": "Beim Abspielen einer Schlacht erscheinen die beiden Heere jetzt als gemalte Bilder über dem Balken: im Pfeilhagel fliegen Pfeile zwischen ihnen, beim Ansturm prallen sie aufeinander (mit Ruck und Staubwolke), im Nahkampf drängen sie an der Grenze des Balkens, und am Ende weicht der Verlierer zurück und verblasst. In Seeschlachten schaukeln zwei Langschiffe auf den Wellen und rammen einander. Die Meeresverzierung ist jetzt auch aus der Nähe gestochen scharf.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.53 – tengeri ütközetek",
 		"cimke": "Heptarchia",
 		"szoveg": "Ha tengerről támadsz, és a célpont kikötőjében hajók állnak, előbb a két flotta csap össze, ugyanúgy, mint a szárazon: nyílzápor a fedélzetről, döfés, végül csáklyázás. Számít a hajók száma, a fedélzeten lévő harcosok, a harcmodor (a pajzsfal itt zárt hajórend, a roham nekirontás), az északiak hosszúhajói és a védő saját vizei. Csak a győztes flotta szállhat partra; a legyőzött flotta hajói odavesznek, néhányat zsákmányul ejtesz. A csataablak két oszlopban előre mutatja a tengeri ütközetet és a partraszállást, a csík előbb a tengeri csatát játssza le (hajóütközés hangjával), aztán a partraszállást.",
