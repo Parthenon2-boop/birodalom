@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.50 – minden évszaknak saját zenéje",
+		"cimke": "Heptarchia",
+		"szoveg": "Három új zenei tétel: tavasszal friss, fölfelé ívelő dallam szól könnyű keretdobbal, nyáron élénk, táncos darab, ősszel lassú, mélabús tétel ritka, tompa dobütésekkel – a téli zene megmaradt. Ugyanazok a hangszerek szólnak, mint eddig (pengetett líra, keretdob, bordun, kőtemplomi visszhang), és az új darabok hosszabbak, hogy egy hosszú játékban se ismétlődjenek hamar.\\nHáborúban nyáron szól a hadi zene – a korban nyáron folytak a hadjáratok –, a többi évszakban háborúban is az évszak zenéje. Az évszak váltásakor a zene lágyan átúszik a következőbe.",
+		"cim_en": "Heptarchia 1.50 – every season has its own music",
+		"szoveg_en": "Three new pieces: in spring a fresh, rising melody with a light frame drum, in summer a lively dance, in autumn a slow, wistful piece with sparse, muffled drumbeats – the winter music stays. The same instruments play as before (plucked lyre, frame drum, drone, stone-church echo), and the new pieces are longer so they do not repeat too soon in a long game.\\nAt war the war music plays in summer – the campaigning season of the age –, in the other seasons the season's music plays even at war. When the season changes, the music fades softly into the next.",
+		"cim_de": "Heptarchia 1.50 – jede Jahreszeit hat ihre eigene Musik",
+		"szoveg_de": "Drei neue Stücke: im Frühling eine frische, aufsteigende Melodie mit leichter Rahmentrommel, im Sommer ein lebhafter Tanz, im Herbst ein langsames, wehmütiges Stück mit seltenen, dumpfen Trommelschlägen – die Wintermusik bleibt. Es spielen dieselben Instrumente wie bisher (gezupfte Leier, Rahmentrommel, Bordun, Kirchenhall), und die neuen Stücke sind länger, damit sie sich in einem langen Spiel nicht zu bald wiederholen.\\nIm Krieg erklingt im Sommer die Kriegsmusik – die Feldzugszeit jener Epoche –, in den anderen Jahreszeiten auch im Krieg die Musik der Jahreszeit. Beim Wechsel der Jahreszeit geht die Musik sanft in die nächste über.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.49 – a csata lejátszódik",
 		"cimke": "Heptarchia",
 		"szoveg": "A roham és a rajtaütés eredménye már nem jelenik meg azonnal: az ablak tetején egy csík mutatja a két sereget – kék a tiéd, piros az ellenségé –, és pár másodperc alatt lejátszódik a csata három szakasza. A nyílzápor, a roham és a közelharc annyit sebez, amennyit a csata számítása szerint abban a szakaszban a sereg ereje adott; ahogy esnek el a harcosok, fogy a számuk a két szélen, és a határ a nyerő fél felé tolódik. A végén villan fel a győzelem vagy a vereség, és jön a részletes jelentés. Aki siet, az Átugrás gombbal azonnal a végére ugrik.\\nA csatának hangja is van: nyílzápor suhog, lovak dobognak és halkan nyerítenek a rohamban, a közelharcban kardok csattognak.",
