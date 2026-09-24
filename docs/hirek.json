@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.57 és új ParthLauncher – megszűnt a 95%-os elakadás",
+		"cimke": "Heptarchia",
+		"szoveg": "Az 1.56 letöltése lassabb hálózaton 95% körül HTTP 0 hibával megállt: a launcher egy letöltésre legfeljebb 60 másodpercet várt, az új festmények miatt megnőtt csomag pedig nem fért bele. Az 1.57-ben a képek tömörítve vannak (a csomag 130 MB helyett 98 MB), az új ParthLauncher (35. változat) pedig már nem szab időkorlátot: csak akkor szakítja meg a letöltést, ha tényleg megakad, és kiírja a hiba valódi okát.",
+		"cim_en": "Heptarchia 1.57 and a new ParthLauncher – no more stalling at 95%",
+		"szoveg_en": "On slower connections the 1.56 download stopped around 95% with an HTTP 0 error: the launcher allowed at most 60 seconds per download, and the package, grown by the new paintings, did not fit. In 1.57 the pictures are compressed (98 MB instead of 130 MB), and the new ParthLauncher (build 35) no longer sets a time limit: it only cancels a download that has really stalled, and tells you the actual reason.",
+		"cim_de": "Heptarchia 1.57 und ein neuer ParthLauncher – kein Hängenbleiben bei 95% mehr",
+		"szoveg_de": "Bei langsameren Verbindungen brach der Download von 1.56 bei etwa 95% mit HTTP 0 ab: der Launcher wartete höchstens 60 Sekunden pro Download, und das durch die neuen Gemälde gewachsene Paket passte nicht hinein. In 1.57 sind die Bilder komprimiert (98 MB statt 130 MB), und der neue ParthLauncher (Version 35) setzt kein Zeitlimit mehr: er bricht einen Download nur ab, wenn er wirklich hängt, und nennt den tatsächlichen Grund.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.56 – töltőképernyő festményekkel",
 		"cimke": "Heptarchia",
 		"szoveg": "Amikor kiválasztasz egy népet (vagy betöltesz egy mentést), amíg a világ megszületik, egész képernyős festmény jelenik meg a korból: 20 különböző kép váltja egymást, a lakomacsarnoktól a viking partraszálláson és Hastingsen át a varég testőrségig, és amíg mind sorra nem került, egyik sem ismétlődik. Alul a kezdőlap angolszász fonatmintájából kész töltőcsík mutatja, hol tart a töltés.",
