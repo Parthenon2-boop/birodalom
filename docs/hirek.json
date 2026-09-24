@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.49 – a csata lejátszódik",
+		"cimke": "Heptarchia",
+		"szoveg": "A roham és a rajtaütés eredménye már nem jelenik meg azonnal: az ablak tetején egy csík mutatja a két sereget – kék a tiéd, piros az ellenségé –, és pár másodperc alatt lejátszódik a csata három szakasza. A nyílzápor, a roham és a közelharc annyit sebez, amennyit a csata számítása szerint abban a szakaszban a sereg ereje adott; ahogy esnek el a harcosok, fogy a számuk a két szélen, és a határ a nyerő fél felé tolódik. A végén villan fel a győzelem vagy a vereség, és jön a részletes jelentés. Aki siet, az Átugrás gombbal azonnal a végére ugrik.\\nA csatának hangja is van: nyílzápor suhog, lovak dobognak és halkan nyerítenek a rohamban, a közelharcban kardok csattognak.",
+		"cim_en": "Heptarchia 1.49 – the battle plays out",
+		"szoveg_en": "The outcome of an assault or an ambush no longer appears at once: a bar at the top of the window shows the two armies – blue is yours, red the enemy's – and the three phases of the battle play out in a few seconds. The volleys, the charge and the melee deal as much damage as the army's strength in that phase did in the battle calculation; as warriors fall, their numbers drop at both ends and the dividing line moves towards the winning side. Victory or defeat flashes at the end, followed by the detailed report. In a hurry? The Skip button jumps straight to the end.\\nThe battle has sound too: arrows hiss in the volleys, horses gallop and neigh softly in the charge, swords clash in the melee.",
+		"cim_de": "Heptarchia 1.49 – die Schlacht spielt sich ab",
+		"szoveg_de": "Das Ergebnis eines Sturms oder Überfalls erscheint nicht mehr sofort: ein Balken oben im Fenster zeigt die beiden Heere – blau das deine, rot das des Feindes –, und in wenigen Sekunden laufen die drei Abschnitte der Schlacht ab. Pfeilhagel, Ansturm und Nahkampf richten so viel Schaden an, wie die Stärke des Heeres in diesem Abschnitt in der Berechnung beitrug; wenn Krieger fallen, sinken ihre Zahlen an beiden Enden, und die Grenze rückt zur siegreichen Seite. Am Ende leuchtet Sieg oder Niederlage auf, dann folgt der ausführliche Bericht. Eilig? Der Knopf Überspringen springt sofort ans Ende.\\nDie Schlacht hat auch Klang: Pfeile zischen im Hagel, Pferde galoppieren und wiehern leise beim Ansturm, im Nahkampf klirren die Schwerter.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.48 – átláthatóbb térkép, sehol nem lóg ki szöveg",
 		"cimke": "Heptarchia",
 		"szoveg": "A térkép már nem zsúfolt: a városjelölők a nagyítás szerint mutatnak részletet. Messziről csak a vár, a sereg és a város neve látszik, kicsit kisebb jelölővel; közelebb hajolva megjelennek a templomok, a tornyok és a kikötők, egészen közelről pedig az épületek piktogramsora is. Az egér alatti és a kijelölt város mindig teljes részletességgel, a többi fölött látszik.\\nA felület minden ablakát és gombját végigmértük mindhárom nyelven: a hosszú gombfeliratok (pl. Rend helyreállítása, Páncélos lovasság) kisebb betűvel kiférnek, a bal oldali teendők két sorba törnek, és az ablakok a szélességükben is a tartalmukhoz igazodnak – sehol nem lóg ki szöveg vagy gomb.",
