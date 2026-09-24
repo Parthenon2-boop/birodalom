@@ -147,7 +147,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 34
+const LAUNCHER_BUILD := 35
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -239,7 +239,9 @@ func _ready() -> void:
 	_load_game(game_idx)
 	_apply_skin()                 # a kiválasztott játék stílusa + felület
 	http = HTTPRequest.new()
-	http.timeout = 60.0
+	# nincs teljes időkorlát: egy 130 MB-os játék lassú hálózaton percekig is jöhet. Helyette a
+	# _process figyeli, és csak akkor szakítja meg, ha LETOLTES_ELAKAD másodpercig nem jön adat.
+	http.timeout = 0.0
 	add_child(http)
 	http_info = HTTPRequest.new()
 	http_info.timeout = 30.0
@@ -2427,7 +2429,7 @@ func _on_launcher_downloaded(result: int, code: int, _h: PackedStringArray, _b: 
 	http.download_file = ""
 	busy = false
 	if result != HTTPRequest.RESULT_SUCCESS or code >= 400:
-		_status("Az indító letöltése nem sikerült (HTTP %d)." % code, S.RED)
+		_status("Az indító letöltése nem sikerült (%s)." % (("HTTP %d" % code) if result == HTTPRequest.RESULT_SUCCESS else _result_text(result)), S.RED)
 		_refresh_labels()
 		return
 	_status("Kicsomagolás…")
@@ -2601,10 +2603,29 @@ func start_update() -> void:
 	_request(str(remote["url"]), _on_downloaded, _zip_tmp())
 	set_process(true)
 
-func _process(_delta: float) -> void:
-	if not busy or http == null or http.download_file == "": return
+const LETOLTES_ELAKAD := 45.0      # ennyi másodperc adat nélkül = megakadt a letöltés
+var _utolso_bajt := -1
+var _allo_ido := 0.0
+
+func _process(delta: float) -> void:
+	if not busy or http == null or http.download_file == "":
+		_utolso_bajt = -1
+		return
 	var total: int = http.get_body_size()
 	var got: int = http.get_downloaded_bytes()
+	# elakadásfigyelő: ha egy ideje nem jön új adat, megszakítjuk (különben örökké várna)
+	if got != _utolso_bajt:
+		_utolso_bajt = got
+		_allo_ido = 0.0
+	else:
+		_allo_ido += delta
+		if _allo_ido >= LETOLTES_ELAKAD:
+			_allo_ido = 0.0
+			_utolso_bajt = -1
+			http.cancel_request()
+			var h: Callable = http.request_completed.get_connections()[0]["callable"] if not http.request_completed.get_connections().is_empty() else Callable()
+			if h.is_valid(): h.call(HTTPRequest.RESULT_TIMEOUT, 0, PackedStringArray(), PackedByteArray())
+			return
 	if total > 0:
 		_progress(got * 100.0 / total, "%.1f / %.1f MB" % [got / 1048576.0, total / 1048576.0])
 	elif got > 0:
@@ -2615,7 +2636,9 @@ func _on_downloaded(result: int, code: int, _h: PackedStringArray, _b: PackedByt
 	http.download_file = ""
 	if result != HTTPRequest.RESULT_SUCCESS or code >= 400:
 		busy = false
-		_status("A letöltés nem sikerült (HTTP %d)." % code, S.RED)
+		# HTTP 0 = nem a szerver válaszolt hibával, hanem a kapcsolat szakadt meg: mondjuk meg, miért
+		var ok_szoveg := ("HTTP %d" % code) if result == HTTPRequest.RESULT_SUCCESS else _result_text(result)
+		_status("A letöltés nem sikerült (%s). Próbáld újra – ha megint elakad, nyomd meg a „Hálózati vizsgálat” gombot!" % ok_szoveg, S.RED)
 		_refresh_labels()
 		return
 	_progress(100, "kicsomagolás…")
