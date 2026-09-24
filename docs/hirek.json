@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.45 – javítások: béke-ajánlat, pápai ablak",
+		"cimke": "Heptarchia",
+		"szoveg": "Ha az ellenség békét kért, és elfogadtad, előfordult, hogy mégsem jött létre a fegyverszünet: ha a gépi uralkodó közben elköltötte a kincstárát, az elfogadás csendben elutasítássá vált. Mostantól az elfogadott béke mindig létrejön – ha pedig az ajánlat közben tényleg érvényét vesztette, a játék megmondja.\\nA pápai udvar ablaka (békeközvetítés, áldás, Romscot) nem lóg le többé a képernyőről akkor sem, ha a kiközösítés, a zarándokút és a várakozás sora is megjelenik; minden nyitott ablak újraméretezi magát, ha a tartalma nő. Javítva az elírás is, amely kétszer írta ki a pápa címét.",
+		"cim_en": "Heptarchia 1.45 – fixes: peace offers, papal window",
+		"szoveg_en": "If an enemy asked for peace and you accepted, the truce sometimes did not happen: if the AI ruler had spent his treasury in the meantime, your acceptance silently turned into a refusal. Now an accepted peace always takes effect – and if the offer really lapsed in the meantime, the game tells you.\\nThe papal court window (mediation, blessing, Romscot) no longer runs off the screen, even when the excommunication, pilgrimage and waiting lines all appear; every open window resizes itself when its content grows. The pope's title no longer appears twice.",
+		"cim_de": "Heptarchia 1.45 – Korrekturen: Friedensangebote, päpstliches Fenster",
+		"szoveg_de": "Hatte ein Feind um Frieden gebeten und du hast angenommen, kam der Waffenstillstand manchmal nicht zustande: hatte der KI-Herrscher inzwischen seinen Schatz ausgegeben, wurde deine Zusage stillschweigend zur Ablehnung. Jetzt tritt ein angenommener Frieden immer in Kraft – und ist das Angebot inzwischen wirklich hinfällig, sagt es dir das Spiel.\\nDas Fenster des päpstlichen Hofes (Vermittlung, Segen, Romscot) ragt nicht mehr über den Bildschirm hinaus, auch wenn die Zeilen zu Exkommunikation, Pilgerfahrt und Wartezeit erscheinen; jedes offene Fenster passt seine Größe an, wenn der Inhalt wächst. Auch der doppelt geschriebene Papsttitel ist behoben.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.44 – népek csapatai, részletes csaták, hadvezérek",
 		"cimke": "Heptarchia",
 		"szoveg": "Minden népnek saját csapata van: angol gesithek, dán berzerkerek, frank páncélos lovasság, walesi íjászok, gael kernek, szász lándzsások, szláv erdei íjászok, magyar lovasíjászok, bizánci kataphraktoszok, arab könnyűlovasság és még többen. A csapatot mindig a föld eredeti népe adja: ha Wessexszel elfoglalsz egy frank grófságot, ott frank lovasságot toborozhatsz – így számít, milyen földeket hódítasz, és miből áll a sereged.\\nA csata most három szakaszban zajlik: nyílzápor, roham, közelharc. Számít a terep (a lovasság síkságon erős, hegyen és lápon gyenge), hogy melyik csapatnem kinek az ellenfele (lándzsa a ló ellen, ló az íjász ellen), a harcmodor, és a vegyes sereg is erősebb. A csataablak előre megmutatja a csata menetét, utána pedig jelentés sorolja fel tételesen, mi döntött, és ki mit veszített.\\nMinden nép seregének élén hadvezér áll, képességgel és jellemmel: a seregével menetel, a térképen csillag jelzi, a győzelmekkel jobb vezér lesz – de vesztes csatában el is eshet.",
