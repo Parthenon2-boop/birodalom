@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.52 – gyorsabb körváltás és simább térkép",
+		"cimke": "Heptarchia",
+		"szoveg": "A körváltás több mint kétszer gyorsabb lett (kb. 0,7 mp helyett 0,3 mp számolás), a térkép pedig kétszer annyi képkockát rajzol másodpercenként: a tengeri díszítés most egyetlen előre megrajzolt kép. A Vallás, a Vikingek és a Varégok kiegészítő is frissült (a ParthLauncher felajánlja).",
+		"cim_en": "Heptarchia 1.52 – faster turns and a smoother map",
+		"szoveg_en": "Ending a turn is more than twice as fast (about 0.3 s of computing instead of 0.7 s), and the map draws twice as many frames per second: the sea decoration is now a single pre-drawn image. The Religion, Vikings and Varangians expansions were updated too (ParthLauncher offers the update).",
+		"cim_de": "Heptarchia 1.52 – schnellerer Rundenwechsel und flüssigere Karte",
+		"szoveg_de": "Der Rundenwechsel ist mehr als doppelt so schnell (etwa 0,3 s statt 0,7 s Berechnung), und die Karte zeichnet doppelt so viele Bilder pro Sekunde: die Meeresverzierung ist jetzt ein einziges vorgezeichnetes Bild. Auch die Erweiterungen Religion, Wikinger und Waräger wurden aktualisiert (der ParthLauncher bietet das Update an).",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.51 – javítás: a kijelölt város nem látszik át az ablakokon",
 		"cimke": "Heptarchia",
 		"szoveg": "Az 1.48 óta a kijelölt vagy az egér alatti város jelölője az események és az üzenetek ablakán is átlátszott. Javítva: a jelölő továbbra is a szomszéd városok fölé kerül, de az ablakok alatt marad.",
