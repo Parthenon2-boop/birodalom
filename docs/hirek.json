@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.46 – a béke-ajánlat ablaka kifér",
+		"cimke": "Heptarchia",
+		"szoveg": "Ha a Diplomáciában te ajánlottál békét, és sok feltételt szabtál (hadisarc, tartomány, hűbérség, szövetség felbontása), az esélyek listája annyira megnőtt, hogy az ablak alja a küldés gombbal együtt lelógott a képernyőről. Az ablak most két oszlopos: balra a feltételek, jobbra az esély tételes részletezése – minden kifér.",
+		"cim_en": "Heptarchia 1.46 – the peace offer window fits",
+		"szoveg_en": "When you offered peace from Diplomacy and set many terms (tribute, a province, vassalage, breaking an alliance), the list of odds grew so long that the bottom of the window, send button included, ran off the screen. The window now has two columns: the terms on the left, the itemised odds on the right – everything fits.",
+		"cim_de": "Heptarchia 1.46 – das Fenster für Friedensangebote passt",
+		"szoveg_de": "Hast du in der Diplomatie Frieden angeboten und viele Bedingungen gestellt (Tribut, eine Provinz, Lehnsabhängigkeit, Bruch eines Bündnisses), wurde die Liste der Chancen so lang, dass der untere Teil des Fensters samt Senden-Knopf über den Bildschirm hinausragte. Das Fenster hat jetzt zwei Spalten: links die Bedingungen, rechts die aufgeschlüsselten Chancen – alles passt.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.45 – javítások: béke-ajánlat, pápai ablak",
 		"cimke": "Heptarchia",
 		"szoveg": "Ha az ellenség békét kért, és elfogadtad, előfordult, hogy mégsem jött létre a fegyverszünet: ha a gépi uralkodó közben elköltötte a kincstárát, az elfogadás csendben elutasítássá vált. Mostantól az elfogadott béke mindig létrejön – ha pedig az ajánlat közben tényleg érvényét vesztette, a játék megmondja.\\nA pápai udvar ablaka (békeközvetítés, áldás, Romscot) nem lóg le többé a képernyőről akkor sem, ha a kiközösítés, a zarándokút és a várakozás sora is megjelenik; minden nyitott ablak újraméretezi magát, ha a tartalma nő. Javítva az elírás is, amely kétszer írta ki a pápa címét.",
