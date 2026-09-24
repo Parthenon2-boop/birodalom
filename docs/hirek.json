@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.56 – töltőképernyő festményekkel",
+		"cimke": "Heptarchia",
+		"szoveg": "Amikor kiválasztasz egy népet (vagy betöltesz egy mentést), amíg a világ megszületik, egész képernyős festmény jelenik meg a korból: 20 különböző kép váltja egymást, a lakomacsarnoktól a viking partraszálláson és Hastingsen át a varég testőrségig, és amíg mind sorra nem került, egyik sem ismétlődik. Alul a kezdőlap angolszász fonatmintájából kész töltőcsík mutatja, hol tart a töltés.",
+		"cim_en": "Heptarchia 1.56 – a painted loading screen",
+		"szoveg_en": "When you pick a people (or load a save), a full-screen painting from the age appears while the world is being born: 20 different pictures take turns, from the mead hall through the Viking landing and Hastings to the Varangian Guard, and none repeats until all have been shown. At the bottom a loading bar made from the main menu's Anglo-Saxon knotwork shows the progress.",
+		"cim_de": "Heptarchia 1.56 – ein gemalter Ladebildschirm",
+		"szoveg_de": "Wenn du ein Volk wählst (oder einen Spielstand lädst), erscheint, während die Welt entsteht, ein bildschirmfüllendes Gemälde aus der Epoche: 20 verschiedene Bilder wechseln sich ab, von der Methalle über die Wikingerlandung und Hastings bis zur Warägergarde, und keines wiederholt sich, bevor alle gezeigt wurden. Unten zeigt ein Ladebalken aus dem angelsächsischen Flechtmuster des Hauptmenüs den Fortschritt.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.55 – javítás: a csatajelenet az ablakon belül marad",
 		"cimke": "Heptarchia",
 		"szoveg": "A csata elején a jobb oldali sereg a csataablakon kívülről indult. Javítva: a két sereg és a hajók mindig az ablakon belül, középen maradnak, keskeny ablakban kisebbek, a vesztes pedig csak az ablak széléig hátrál.",
