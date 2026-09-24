@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.53 – tengeri ütközetek",
+		"cimke": "Heptarchia",
+		"szoveg": "Ha tengerről támadsz, és a célpont kikötőjében hajók állnak, előbb a két flotta csap össze, ugyanúgy, mint a szárazon: nyílzápor a fedélzetről, döfés, végül csáklyázás. Számít a hajók száma, a fedélzeten lévő harcosok, a harcmodor (a pajzsfal itt zárt hajórend, a roham nekirontás), az északiak hosszúhajói és a védő saját vizei. Csak a győztes flotta szállhat partra; a legyőzött flotta hajói odavesznek, néhányat zsákmányul ejtesz. A csataablak két oszlopban előre mutatja a tengeri ütközetet és a partraszállást, a csík előbb a tengeri csatát játssza le (hajóütközés hangjával), aztán a partraszállást.",
+		"cim_en": "Heptarchia 1.53 – sea battles",
+		"szoveg_en": "When you attack from the sea and ships lie in the target's harbour, the two fleets clash first, just like on land: arrows from the decks, ramming, then boarding. Ship numbers, the warriors on board, the tactic (the shield wall becomes a lashed battle line, the charge a full-speed ramming), Norse longships and the defender's home waters all count. Only the winning fleet may land; the beaten fleet is lost, and you capture a few of its ships. The battle window previews the sea battle and the landing side by side, and the bar plays the sea battle first (with the crash of ships), then the landing.",
+		"cim_de": "Heptarchia 1.53 – Seeschlachten",
+		"szoveg_de": "Greifst du von See an und liegen Schiffe im Hafen des Ziels, treffen zuerst die beiden Flotten aufeinander, genau wie an Land: Pfeile von Deck, Rammen, dann Entern. Es zählen die Zahl der Schiffe, die Krieger an Bord, die Taktik (der Schildwall wird zur geschlossenen Schiffslinie, der Sturmangriff zu voller Fahrt), die nordischen Langschiffe und die heimischen Gewässer des Verteidigers. Nur die siegreiche Flotte darf landen; die geschlagene Flotte geht unter, einige Schiffe erbeutest du. Das Schlachtfenster zeigt Seeschlacht und Landung nebeneinander, und der Balken spielt zuerst die Seeschlacht (mit krachenden Schiffen), dann die Landung ab.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.52 – gyorsabb körváltás és simább térkép",
 		"cimke": "Heptarchia",
 		"szoveg": "A körváltás több mint kétszer gyorsabb lett (kb. 0,7 mp helyett 0,3 mp számolás), a térkép pedig kétszer annyi képkockát rajzol másodpercenként: a tengeri díszítés most egyetlen előre megrajzolt kép. A Vallás, a Vikingek és a Varégok kiegészítő is frissült (a ParthLauncher felajánlja).",
