@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-24",
+		"cim": "Heptarchia 1.55 – javítás: a csatajelenet az ablakon belül marad",
+		"cimke": "Heptarchia",
+		"szoveg": "A csata elején a jobb oldali sereg a csataablakon kívülről indult. Javítva: a két sereg és a hajók mindig az ablakon belül, középen maradnak, keskeny ablakban kisebbek, a vesztes pedig csak az ablak széléig hátrál.",
+		"cim_en": "Heptarchia 1.55 – fix: the battle scene stays inside the window",
+		"szoveg_en": "At the start of a battle the right-hand army came in from outside the battle window. Fixed: both armies and the ships always stay inside the window, centred; they shrink in a narrow window, and the loser only falls back to the window's edge.",
+		"cim_de": "Heptarchia 1.55 – Korrektur: die Schlachtszene bleibt im Fenster",
+		"szoveg_de": "Zu Beginn einer Schlacht kam das rechte Heer von außerhalb des Schlachtfensters. Behoben: beide Heere und die Schiffe bleiben immer mittig im Fenster, in einem schmalen Fenster werden sie kleiner, und der Verlierer weicht nur bis zum Fensterrand zurück.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.54 – élő csatajelenet",
 		"cimke": "Heptarchia",
 		"szoveg": "A csata lejátszásakor a csík fölött a két sereg is megjelenik festett képeken: a nyílzápor alatt nyilak repülnek közöttük, a rohamnál egymásnak rontanak (rándulás, porfelhő), a közelharcban a csík határán tolakodnak, a végén a vesztes hátrál és eltűnik. Tengeri ütközetben két hosszúhajó ringatózik a hullámokon és döf egymásnak. A tengeri díszítés most közelről is tűéles.",
