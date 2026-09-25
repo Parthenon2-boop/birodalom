@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-25",
+		"cim": "Hit és egyház – szent helyek, ereklyék, keresztelés",
+		"cimke": "Heptarchia DLC",
+		"szoveg": "Nagy frissítést kapott a Hit és egyház kiegészítő. Szent helyek: Canterbury, York, Lindisfarne, Lichfield, St Davids, Iona, Armagh, Rouen (és a skandináv térképen Uppsala és Lejre) jellel látszanak a térképen; birtokosuk hitpontot és stabilitást kap, elvesztésük megrendíti a népet. Ereklyék: Szent Cuthbert teste, a lindisfarne-i evangéliumoskönyv, a Cathach, a hollós zászló és a többi – zarándokokat vonzanak, a portyázók elhurcolhatják őket, váltságdíjért visszavásárolhatók, néhányat csatába is vihetsz. Keresztelés: a legyőzött pogány királyt megkeresztelheted, ahogy Alfréd tette Guthrummal – szövetségesed lesz, és a te hitedre tér. A Hit és egyház ablak új fülein találod. (Játék: 1.61.)",
+		"cim_en": "Faith and Church – holy sites, relics, baptism",
+		"szoveg_en": "The Faith and Church expansion got a big update. Holy sites: Canterbury, York, Lindisfarne, Lichfield, St Davids, Iona, Armagh, Rouen (and on the Scandinavian map Uppsala and Lejre) are marked on the map; whoever holds them gains faith and stability, and losing them shakes the people. Relics: the body of St Cuthbert, the Lindisfarne Gospels, the Cathach, the Raven Banner and more – they draw pilgrims, raiders can carry them off, they can be ransomed back, and some can be carried into battle. Baptism: you can baptise a defeated pagan king, as Alfred did with Guthrum – he becomes your ally and takes your faith. Find it all in the new tabs of the Faith and Church window. (Game: 1.61.)",
+		"cim_de": "Glaube und Kirche – heilige Stätten, Reliquien, Taufe",
+		"szoveg_de": "Die Erweiterung Glaube und Kirche hat ein großes Update bekommen. Heilige Stätten: Canterbury, York, Lindisfarne, Lichfield, St Davids, Iona, Armagh, Rouen (und auf der skandinavischen Karte Uppsala und Lejre) sind auf der Karte markiert; wer sie besitzt, erhält Glauben und Stabilität, ihr Verlust erschüttert das Volk. Reliquien: der Leib des hl. Cuthbert, das Lindisfarne-Evangeliar, der Cathach, das Rabenbanner und mehr – sie locken Pilger an, Plünderer können sie verschleppen, man kann sie freikaufen, und manche in die Schlacht tragen. Taufe: einen besiegten heidnischen König kannst du taufen lassen, wie Alfred es mit Guthrum tat – er wird dein Verbündeter und nimmt deinen Glauben an. Alles in den neuen Reitern des Fensters Glaube und Kirche. (Spiel: 1.61.)",
+		"cimke_en": "Heptarchia DLC",
+		"cimke_de": "Heptarchia DLC"
+	},
+	{
+		"datum": "2026-09-25",
 		"cim": "Heptarchia 1.60 – új főmenü, olvashatóbb gombok",
 		"cimke": "Heptarchia",
 		"szoveg": "Rendezettebb lett a főmenü: a kezdőlapon Egyjátékos, Többjátékos, Beállítások és Kilépés; az Egyjátékos alatt Új játék, Betöltés és Oktatómód; az Új játékban választod ki a nemzetedet, majd Indítás. Az Esc egy lappal visszalép. A játékban az építés és toborzás gombjain a hosszú nevek (pl. Rend helyreállítása, a különleges egységek nevei) két sorba törnek, és a költségek is mindig kiférnek a gombon.",
