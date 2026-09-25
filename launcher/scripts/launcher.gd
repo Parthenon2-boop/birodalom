@@ -68,16 +68,14 @@ static func _label_of(g: Dictionary) -> String:
 
 # ── MEGVÁSÁROLHATÓ KIEGÉSZÍTŐK (DLC) ─────────────────────────────
 # Játékonként (a GAMES kulcsa szerint). A vevő a Gumroadon fizet, e-mailben licenckulcsot kap,
-# azt itt beváltja: az indító a Gumroaddal ellenőrzi, majd letölti a kiegészítő csomagját
-# (<key>.zip) a játék saját adatmappájába (…/app_userdata/<user_dir>/dlc/). A játék induláskor
-# onnan tölti be – így a játék frissítése (a telepítési mappa cseréje) nem törli.
+# azt itt a fiókjához köti (claim-license). A csomagok egy PRIVÁT tárolóban vannak: a letöltési
+# linket és a játéknak szóló aláírt igazolást a dlc-access szerverfüggvény adja (lásd _acc_dlc_access);
+# a csomag (<key>.zip) a játék saját adatmappájába kerül (…/app_userdata/<user_dir>/dlc/), a játék
+# induláskor onnan tölti be – így a játék frissítése (a telepítési mappa cseréje) nem törli.
 #   gumroad_product_id – a Gumroad termék azonosítója (a termék oldalán: Content → License key)
 #   store_url          – a vásárlási oldal (pl. https://valaki.gumroad.com/l/skandinavia)
-#   download_url       – a csomag (dlc/_csomagok/<key>.zip) letöltési címe
 #   game_id            – a játék saját beállításfájljában ([dlc] szakasz) ezzel a névvel kapcsolható ki-be
-#   releases_api       – a csomag-tároló kiadásai; ha újabb kiadásban van <key>.zip, az indító magától letölti
-#                        (a letöltött kiadás címkéje: ParthLauncher.cfg [dlc:<key>] version)
-# Amíg valamelyik üres, a kártya látszik, de a gomb jelzi, hogy a bolt még nincs beállítva.
+# A legújabb kiadás címkéjét is a szerver adja (ParthLauncher.cfg [dlc:<key>] version: a letöltötté).
 const DLCS := {
 	"heptarchia": [
 		{
@@ -89,9 +87,6 @@ const DLCS := {
 			"game_id": "scandinavia",      # a kiegészítő azonosítója a játékban (settings.cfg [dlc])
 			"gumroad_product_id": "bpMjj0INnbiEv1kf1hglPg==",
 			"store_url": "https://parthenon62.gumroad.com/l/ltsalt",
-			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/latest/download/skandinavia.zip",
-			# a csomag kiadásai: a legújabb olyan kiadás, amelyben <key>.zip van, az aktuális változat
-			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
 		},
 		{
 			"key": "vikingek",
@@ -102,9 +97,6 @@ const DLCS := {
 			"game_id": "vikings",
 			"gumroad_product_id": "3q90_eqTWf2lvTKEkkEr8Q==",
 			"store_url": "https://parthenon62.gumroad.com/l/fxtisw",
-			# a kiadása nem „latest” (az a Skandinávia csomagjáé), ezért konkrét címkével
-			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/download/vikingek-v1/vikingek.zip",
-			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
 		},
 		{
 			"key": "vallas",
@@ -115,8 +107,6 @@ const DLCS := {
 			"game_id": "religion",
 			"gumroad_product_id": "DzryuhWncOHx3Pq0IRIP8g==",
 			"store_url": "https://parthenon62.gumroad.com/l/iwqkt",
-			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/download/vallas-v1/vallas.zip",
-			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
 		},
 		{
 			"key": "varegok",
@@ -127,8 +117,6 @@ const DLCS := {
 			"game_id": "varangians",
 			"gumroad_product_id": "lKinUakqfvjYPDG8EnuTbA==",
 			"store_url": "https://parthenon62.gumroad.com/l/jrzwus",
-			"download_url": "https://github.com/Parthenon2-boop/heptarchia-dlc-csomagok/releases/download/varegok-v1/varegok.zip",
-			"releases_api": "https://api.github.com/repos/Parthenon2-boop/heptarchia-dlc-csomagok/releases?per_page=30",
 		},
 	],
 }
