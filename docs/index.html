@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ParthLauncher</title>
+<title>Ingyenes stratégiai játékok – Heptarchia, Birodalom, Kard és Mágia | ParthLauncher</title>
 <meta name="description" content="Három ingyenes játék egy indítóban: Heptarchia (angolszász nagystratégia), Birodalom (valós idejű stratégia) és Kard és Mágia (roguelike). Windows és macOS.">
 <link rel="icon" href="ikon.png" type="image/png">
 <link rel="alternate icon" href="favicon.ico">
@@ -145,6 +145,37 @@
 		nav { justify-content: center; }
 	}
 </style>
+<script type="application/ld+json">
+{
+	"@context": "https://schema.org",
+	"@graph": [
+		{
+			"@type": "WebSite",
+			"name": "ParthLauncher",
+			"url": "https://parthenon2-boop.github.io/birodalom/",
+			"inLanguage": ["hu", "en", "de"]
+		},
+		{
+			"@type": "SoftwareApplication",
+			"name": "ParthLauncher",
+			"applicationCategory": "GameApplication",
+			"operatingSystem": "Windows, macOS",
+			"url": "https://parthenon2-boop.github.io/birodalom/",
+			"downloadUrl": "https://github.com/Parthenon2-boop/birodalom/releases/latest",
+			"offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+			"description": "Három ingyenes játék egy indítóban: Heptarchia (angolszász nagystratégia), Birodalom (valós idejű stratégia) és Kard és Mágia (roguelike)."
+		},
+		{
+			"@type": "VideoGame",
+			"name": "Heptarchia",
+			"url": "https://parthenon2-boop.github.io/birodalom/heptarchia.html",
+			"genre": ["Grand strategy", "Turn-based strategy"],
+			"gamePlatform": ["PC", "Windows", "macOS"],
+			"offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"}
+		}
+	]
+}
+</script>
 </head>
 <body>
 <header>
@@ -179,7 +210,7 @@
 				</a>
 			</div>
 			<p class="note" data-i18n="hero.note" data-i18n-html="1">Windows: ha a SmartScreen figyelmeztet, válaszd a <i>További információ → Futtatás mindenképp</i> lehetőséget – <a href="#figyelmeztetes">miért van ez?</a><br>
-				Mac: első indításkor jobb klikk az alkalmazáson → <i>Megnyitás</i>.</p>
+				Mac: első indításkor engedélyezni kell az <i>Adatvédelem és biztonság</i> beállításban – <a href="#mac">így csináld</a>.</p>
 		</div>
 	</div>
 
@@ -297,6 +328,22 @@
 			<p><code>Get-FileHash .\ParthLauncher-Setup.exe -Algorithm SHA256</code></p>
 		</div>
 	</section>
+
+	<section id="mac">
+		<div class="wrap">
+			<h2 data-i18n="mac.title">Telepítés macOS-en</h2>
+			<p class="sub" data-i18n="mac.sub" data-i18n-html="1">A Mac első indításkor azt írja, hogy <b>nem tudja ellenőrizni a fejlesztőt</b>, és nem nyitja meg az indítót. Ez nem vírusjelzés: az alkalmazás nincs az Apple-nél hitelesítve (ez évi díjas fejlesztői tagsággal járna). Egyszer engedélyezni kell az <b>Adatvédelem és biztonság</b> beállításban:</p>
+			<ol class="steps">
+				<li data-i18n="mac.s1" data-i18n-html="1">Töltsd le a <b>ParthLauncher-macos.zip</b> fájlt, kattints rá duplán, és a kicsomagolt <b>ParthLauncher</b> alkalmazást húzd az <b>Alkalmazások</b> (Applications) mappába.</li>
+				<li data-i18n="mac.s2" data-i18n-html="1">Indítsd el. A figyelmeztető ablakban kattints a <b>Kész</b> (Done) gombra – ne a Kukába helyezésre.</li>
+				<li data-i18n="mac.s3" data-i18n-html="1">Nyisd meg a bal felső Apple-menüből (alma) a <b>Rendszerbeállításokat</b>, azon belül az <b>Adatvédelem és biztonság</b> részt, és görgess le a <b>Biztonság</b> részig.</li>
+				<li data-i18n="mac.s4" data-i18n-html="1">Ott ez áll: <i>A(z) „ParthLauncher” le lett tiltva…</i> Kattints a <b>Megnyitás mindenképp</b> (Open Anyway) gombra, add meg a Mac jelszavát, majd a felugró ablakban a <b>Megnyitás</b> gombra.</li>
+				<li data-i18n="mac.s5">Ezt csak egyszer kell megtenned. Utána az indító rendesen indul, és a játékokat is magától tölti le és frissíti.</li>
+			</ol>
+			<p class="sub" style="margin-top:22px" data-i18n="mac.term" data-i18n-html="1">Ha a gomb nem jelenik meg, a <b>Terminál</b> alkalmazásban ez a parancs is feloldja (utána indítsd újra az indítót):</p>
+			<p><code>xattr -cr /Applications/ParthLauncher.app</code></p>
+		</div>
+	</section>
 </main>
 
 <footer>
@@ -318,12 +365,12 @@
 			"sup.msg": "Message", "sup.send": "Send", "sup.sent": "Thanks, the message arrived. We reply to the address you gave.",
 			"sup.err": "It did not go through. Please try again later.", "sup.bademail": "Please enter a valid e-mail address.",
 			"sup.short": "Please write at least a few sentences.", "sup.many": "Too many messages in a short time. Please wait a few minutes.",
-			"meta.title": "ParthLauncher – Birodalom, Heptarchia and Kard és Mágia", "meta.desc": "Three free games in one launcher: Anglo-Saxon grand strategy, real-time empire building and a roguelike adventure. Windows and macOS.", "nav.dlc": "Add-ons", "nav.shots": "Screenshots",
+			"meta.title": "Free strategy games – Heptarchia, Birodalom, Kard és Mágia | ParthLauncher", "meta.desc": "Three free games in one launcher: Anglo-Saxon grand strategy, real-time empire building and a roguelike adventure. Windows and macOS.", "nav.dlc": "Add-ons", "nav.shots": "Screenshots",
 			"nav.news": "News", "nav.register": "Sign up",
 			"hero.lead": "One launcher for three games. It installs and updates <b>Birodalom</b>, <b>Heptarchia</b> and <b>Kard és Mágia</b>, and manages the add-ons you bought.",
 			"hero.win": "Download for Windows", "hero.installer": "installer", "hero.mac": "Download for macOS",
 			"hero.macsub": "Intel and Apple Silicon",
-			"hero.note": "Windows: if SmartScreen warns you, choose <i>More info → Run anyway</i> – <a href=\"#figyelmeztetes\">why is that?</a><br>Mac: on first launch right-click the app → <i>Open</i>.",
+			"hero.note": "Windows: if SmartScreen warns you, choose <i>More info → Run anyway</i> – <a href=\"#figyelmeztetes\">why is that?</a><br>Mac: on first launch you have to allow it under <i>Privacy &amp; Security</i> – <a href=\"#mac\">how to do it</a>.",
 			"games.title": "Games", "games.sub": "All free. The ParthLauncher downloads and updates them for you.",
 			"games.hep.tag": "Anglo-Saxon grand strategy, from 790",
 			"games.hep.desc": "Lead Wessex, Mercia or Northumbria – or the Scots, Picts and Irish. Diplomacy, the Witan, the church, population and recruitment, and the coming of the vikings.",
@@ -350,7 +397,14 @@
 			"warn.s1": "In the warning window, click <b>More info</b>.",
 			"warn.s2": "Then click the <b>Run anyway</b> button that appears.",
 			"warn.s3": "You will see this only for the installer, only once. It does not appear for the games downloaded by the launcher.",
-			"warn.hash": "Want to check that you really downloaded our file? We publish a SHA-256 checksum for every release – on the <a href=\"https://github.com/Parthenon2-boop/birodalom/releases/latest\">release page</a>, in <b>SHA256SUMS.txt</b> and at the bottom of the description. You can look up your own in PowerShell:",
+			"mac.title": "Installing on macOS",
+			"mac.sub": "On first launch your Mac says it <b>cannot verify the developer</b> and will not open the launcher. This is not a virus alert: the app is not notarized by Apple (that would require a paid yearly developer membership). You have to allow it once under <b>Privacy &amp; Security</b>:",
+			"mac.s1": "Download <b>ParthLauncher-macos.zip</b>, double-click it and drag the unpacked <b>ParthLauncher</b> app into your <b>Applications</b> folder.",
+			"mac.s2": "Start it. In the warning window click <b>Done</b> – not Move to Bin.",
+			"mac.s3": "Open <b>System Settings</b> from the Apple menu (top left), go to <b>Privacy &amp; Security</b> and scroll down to <b>Security</b>.",
+			"mac.s4": "It says <i>\"ParthLauncher\" was blocked…</i> Click <b>Open Anyway</b>, enter your Mac password, then click <b>Open</b> in the dialog.",
+			"mac.s5": "You only have to do this once. After that the launcher starts normally and downloads and updates the games by itself.",
+			"mac.term": "If the button does not appear, this command in the <b>Terminal</b> app unblocks it too (then start the launcher again):",			"warn.hash": "Want to check that you really downloaded our file? We publish a SHA-256 checksum for every release – on the <a href=\"https://github.com/Parthenon2-boop/birodalom/releases/latest\">release page</a>, in <b>SHA256SUMS.txt</b> and at the bottom of the description. You can look up your own in PowerShell:",
 			"dlc.buy": "Buy", "dlc.addon": "Heptarchia add-on", "ver.latest": "Latest: ", "ver.viaLauncher": "Get it with the launcher",
 			"news.tagNews": "News",
 		},
@@ -362,12 +416,12 @@
 			"sup.msg": "Nachricht", "sup.send": "Senden", "sup.sent": "Danke, die Nachricht ist angekommen. Wir antworten an die angegebene Adresse.",
 			"sup.err": "Es hat nicht geklappt. Bitte versuche es später erneut.", "sup.bademail": "Bitte gib eine gültige E-Mail-Adresse ein.",
 			"sup.short": "Bitte schreibe mindestens ein paar Sätze.", "sup.many": "Zu viele Nachrichten in kurzer Zeit. Bitte warte ein paar Minuten.",
-			"meta.title": "ParthLauncher – Birodalom, Heptarchia und Kard és Mágia", "meta.desc": "Drei kostenlose Spiele in einem Starter: angelsächsische Großstrategie, Echtzeit-Aufbaustrategie und ein Roguelike-Abenteuer. Windows und macOS.", "nav.dlc": "Erweiterungen", "nav.shots": "Bilder",
+			"meta.title": "Kostenlose Strategiespiele – Heptarchia, Birodalom, Kard és Mágia | ParthLauncher", "meta.desc": "Drei kostenlose Spiele in einem Starter: angelsächsische Großstrategie, Echtzeit-Aufbaustrategie und ein Roguelike-Abenteuer. Windows und macOS.", "nav.dlc": "Erweiterungen", "nav.shots": "Bilder",
 			"nav.news": "Neues", "nav.register": "Registrieren",
 			"hero.lead": "Ein Starter für drei Spiele. Er installiert und aktualisiert <b>Birodalom</b>, <b>Heptarchia</b> und <b>Kard és Mágia</b> und verwaltet die gekauften Erweiterungen.",
 			"hero.win": "Download für Windows", "hero.installer": "Installationsprogramm", "hero.mac": "Download für macOS",
 			"hero.macsub": "Intel und Apple Silicon",
-			"hero.note": "Windows: Wenn SmartScreen warnt, wähle <i>Weitere Informationen → Trotzdem ausführen</i> – <a href=\"#figyelmeztetes\">warum?</a><br>Mac: Beim ersten Start Rechtsklick auf die App → <i>Öffnen</i>.",
+			"hero.note": "Windows: Wenn SmartScreen warnt, wähle <i>Weitere Informationen → Trotzdem ausführen</i> – <a href=\"#figyelmeztetes\">warum?</a><br>Mac: Beim ersten Start musst du es unter <i>Datenschutz &amp; Sicherheit</i> erlauben – <a href=\"#mac\">so geht es</a>.",
 			"games.title": "Spiele", "games.sub": "Alle kostenlos. Der ParthLauncher lädt sie herunter und hält sie aktuell.",
 			"games.hep.tag": "Angelsächsische Großstrategie, ab 790",
 			"games.hep.desc": "Führe Wessex, Mercia oder Northumbria – oder die Schotten, Pikten und Iren. Diplomatie, Witan, Kirche, Bevölkerung und Aushebung sowie die Ankunft der Wikinger.",
@@ -394,7 +448,14 @@
 			"warn.s1": "Klicke im Warnfenster auf <b>Weitere Informationen</b>.",
 			"warn.s2": "Danach auf die erscheinende Schaltfläche <b>Trotzdem ausführen</b>.",
 			"warn.s3": "Das siehst du nur beim Installationsprogramm, ein einziges Mal. Bei den vom Launcher geladenen Spielen erscheint es nicht.",
-			"warn.hash": "Möchtest du prüfen, ob du wirklich unsere Datei geladen hast? Zu jeder Veröffentlichung geben wir eine SHA-256-Prüfsumme heraus – auf der <a href=\"https://github.com/Parthenon2-boop/birodalom/releases/latest\">Release-Seite</a>, in <b>SHA256SUMS.txt</b> und am Ende der Beschreibung. Deine eigene ermittelst du in der PowerShell so:",
+			"mac.title": "Installation unter macOS",
+			"mac.sub": "Beim ersten Start meldet der Mac, dass er <b>den Entwickler nicht überprüfen kann</b>, und öffnet den Launcher nicht. Das ist keine Virenmeldung: Die App ist nicht von Apple beglaubigt (das erfordert eine kostenpflichtige Entwicklermitgliedschaft). Du musst sie einmal unter <b>Datenschutz &amp; Sicherheit</b> erlauben:",
+			"mac.s1": "Lade <b>ParthLauncher-macos.zip</b> herunter, doppelklicke darauf und ziehe die entpackte App <b>ParthLauncher</b> in den Ordner <b>Programme</b>.",
+			"mac.s2": "Starte sie. Klicke im Warnfenster auf <b>Fertig</b> – nicht auf In den Papierkorb legen.",
+			"mac.s3": "Öffne über das Apple-Menü (oben links) die <b>Systemeinstellungen</b>, dann <b>Datenschutz &amp; Sicherheit</b>, und scrolle hinunter bis <b>Sicherheit</b>.",
+			"mac.s4": "Dort steht <i>„ParthLauncher“ wurde blockiert…</i> Klicke auf <b>Dennoch öffnen</b>, gib dein Mac-Passwort ein und klicke im Dialog auf <b>Öffnen</b>.",
+			"mac.s5": "Das musst du nur einmal tun. Danach startet der Launcher normal und lädt und aktualisiert die Spiele selbst.",
+			"mac.term": "Falls die Schaltfläche nicht erscheint, entsperrt sie auch dieser Befehl im Programm <b>Terminal</b> (danach den Launcher neu starten):",			"warn.hash": "Möchtest du prüfen, ob du wirklich unsere Datei geladen hast? Zu jeder Veröffentlichung geben wir eine SHA-256-Prüfsumme heraus – auf der <a href=\"https://github.com/Parthenon2-boop/birodalom/releases/latest\">Release-Seite</a>, in <b>SHA256SUMS.txt</b> und am Ende der Beschreibung. Deine eigene ermittelst du in der PowerShell so:",
 			"dlc.buy": "Kaufen", "dlc.addon": "Heptarchia-Erweiterung", "ver.latest": "Neueste: ", "ver.viaLauncher": "Mit dem Launcher erhältlich",
 			"news.tagNews": "Neues",
 		},

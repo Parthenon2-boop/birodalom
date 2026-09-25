@@ -135,7 +135,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 39
+const LAUNCHER_BUILD := 40
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1770,6 +1770,20 @@ func _acc_mod_valt(mod: String) -> void:
 		acc_popup.reset_size()
 		(acc_email_edit if jel else acc_user_edit).grab_focus.call_deferred()
 
+# Tab / Shift+Tab a fiókablakban: a látható mezők sorban, majd a fő gomb, onnan vissza az elsőre
+# (a Godot magától a pipára és a linkekre is továbblépne).
+func _acc_tab(ev: InputEvent, c: Control) -> void:
+	var k := ev as InputEventKey
+	if k == null or not k.pressed or k.keycode != KEY_TAB: return
+	var sor: Array[Control] = []
+	for m: Control in [acc_user_edit, acc_email_edit, acc_pass_edit, acc_fo_gomb]:
+		if m.is_visible_in_tree(): sor.append(m)
+	var i := sor.find(c)
+	if i < 0: return
+	var lep := -1 if k.shift_pressed else 1
+	sor[(i + lep + sor.size()) % sor.size()].grab_focus()
+	c.accept_event()
+
 # A nagy gomb (és az Enter) az aktuális állapot műveletét végzi
 func _acc_kuld() -> void:
 	match acc_mod:
@@ -1822,6 +1836,8 @@ func _build_account_popup() -> void:
 	login.add_child(acc_pass_edit)
 	acc_fo_gomb = _button(login, "Belépés", _acc_kuld)
 	acc_fo_gomb.custom_minimum_size = Vector2(0, 40)
+	for c: Control in [acc_user_edit, acc_email_edit, acc_pass_edit, acc_fo_gomb]:
+		c.gui_input.connect(_acc_tab.bind(c))
 	# „Bejelentkezve maradok”: a belépés a gépen marad, és induláskor magától megújul.
 	acc_stay = _checkbox(login, "Bejelentkezve maradok ezen a gépen", _acc_stay_on(), func(on: bool):
 		cfg.set_value("account", "maradjak", on)
