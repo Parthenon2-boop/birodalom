@@ -147,7 +147,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 35
+const LAUNCHER_BUILD := 36
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -250,6 +250,7 @@ func _ready() -> void:
 	http_dlc.timeout = 120.0
 	add_child(http_dlc)
 	_apply_net_settings()
+	_dlc_egyeztet()               # hálózat nélkül is: a telepített csomagok a legutóbb ismert jogokhoz igazodnak
 	_refresh_dlc()
 	# képkészítéshez: hálózat nélkül (nem keres frissítést, nem tölt le semmit)
 	if "--halozat-nelkul" in OS.get_cmdline_user_args():
@@ -1013,6 +1014,32 @@ func _dlc_zip_path(d: Dictionary) -> String:
 func _dlc_installed(d: Dictionary) -> bool:
 	return FileAccess.file_exists(_dlc_zip_path(d))
 
+# A telepített csomag csak akkor maradhat a játék DLC-mappájában, ha a belépett fióknak (vagy
+# egy ezen a gépen beváltott kulcsnak) joga van hozzá. A játék mindent betölt, ami abban a
+# mappában van – ezért ha fiókot váltanak vagy kijelentkeznek, a jogosulatlan csomagot
+# félretesszük a <user_dir>/dlc_zarolt mappába (a játék azt nem olvassa). Ha újra olyan fiók
+# lép be, amelyiknek megvan, visszakerül a helyére, újraletöltés nélkül.
+func _dlc_zarolt_path(d: Dictionary) -> String:
+	return _dlc_zip_path(d).get_base_dir().get_base_dir().path_join("dlc_zarolt").path_join(str(d["key"]) + ".zip")
+
+func _dlc_egyeztet() -> void:
+	var valtozott := false
+	for game_key in DLCS:
+		for d in DLCS[game_key]:
+			var hely := _dlc_zip_path(d)
+			var zar := _dlc_zarolt_path(d)
+			if _dlc_license(d) == "":
+				if FileAccess.file_exists(hely):
+					DirAccess.make_dir_recursive_absolute(zar.get_base_dir())
+					DirAccess.remove_absolute(zar)
+					# ha az áthelyezés nem sikerül, inkább töröljük: jogosulatlanul nem maradhat ott
+					if DirAccess.rename_absolute(hely, zar) != OK: DirAccess.remove_absolute(hely)
+					valtozott = true
+			elif not FileAccess.file_exists(hely) and FileAccess.file_exists(zar):
+				DirAccess.make_dir_recursive_absolute(hely.get_base_dir())
+				if DirAccess.rename_absolute(zar, hely) == OK: valtozott = true
+	if valtozott: _refresh_dlc()
+
 # Ki- és bekapcsolás: ugyanaz a beállítás, amit a játék Beállítások → Kiegészítők füle ír
 # (…/app_userdata/<user_dir>/settings.cfg, [dlc] <game_id> = true/false; alapból bekapcsolva)
 func _game_settings_path(d: Dictionary) -> String:
@@ -1546,6 +1573,7 @@ func _acc_sync() -> void:
 			elif have == ACC_LICENSE:
 				cfg.set_value(sect, "license", "")
 	cfg.save(CFG_PATH)
+	_dlc_egyeztet()          # a telepített csomagok a belépett fiók jogaihoz igazodnak
 	_refresh_dlc()
 	_check_dlc_updates()
 
@@ -1695,6 +1723,7 @@ func _acc_logout(silent: bool = false) -> void:
 			if str(cfg.get_value("dlc:" + str(d["key"]), "license", "")) == ACC_LICENSE:
 				cfg.set_value("dlc:" + str(d["key"]), "license", "")
 	cfg.save(CFG_PATH)
+	_dlc_egyeztet()              # a fiókból jött kiegészítők csomagja is félrekerül
 	_refresh_dlc()
 	_refresh_account_ui()
 	if not silent: _status("Kijelentkeztél.", S.TEXT)
@@ -2010,6 +2039,7 @@ func _on_dlc_downloaded(result: int, code: int, _h: PackedStringArray, _b: Packe
 var _dlc_check_running := false
 
 func _restore_owned_dlcs() -> void:
+	_dlc_egyeztet()
 	_check_dlc_updates()
 
 # Mit tudunk a kiegészítők legfrissebb kiadásáról? kulcs -> [címke, letöltési cím].
