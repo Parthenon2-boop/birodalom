@@ -1,6 +1,30 @@
 [
 	{
 		"datum": "2026-09-25",
+		"cim": "Heptarchia 1.66 – festett díszsávok, népi zene, Tab-lista",
+		"cimke": "Heptarchia",
+		"szoveg": "A térkép díszsávjait újrafestettük: minden nép saját, gazdagon festett szegélyt kapott (viking Urnes-kígyó, Sutton Hoo-i gránátberakás, kelta zománcspirálok, a Kells-i könyv fonatai, a bayeux-i kárpit hímzése, bizánci aranymozaik, kozmata márvány, arab csillagminta, honfoglalás kori palmetták, fonott fa). A zene is a népedhez igazodik: a vikingeknek északi líra és kürt, a kelta népeknek hárfa és bodhrán, a frankoknak és latinoknak gregorián ének és orgona, a bizánciaknak ison-kíséretes ének, az araboknak oud és darbuka Hidzsáz makámban, a sztyeppei népeknek lófejes hegedű és torokének, békében és háborúban más-más darab. Többjátékos módban a Tab lenyomva tartva megmutatja a játékosokat: név, nemzet, viszonyuk veled és a pingjük. Az építés és toborzás gombjain a kétsoros nevek szorosabbak lettek. A launcherben a fiókablakban a Tab most mezőről mezőre lép.",
+		"cim_en": "Heptarchia 1.66 – painted borders, folk music, Tab list",
+		"szoveg_en": "The map borders have been repainted: every people has its own richly painted band (Viking Urnes serpent, Sutton Hoo garnet inlay, Celtic enamel spirals, Book of Kells interlace, Bayeux Tapestry embroidery, Byzantine gold mosaic, Cosmatesque marble, Arab star pattern, conquest-era Magyar palmettes, carved knotwork). The music follows your people too: Nordic lyre and horn for the Vikings, harp and bodhran for the Celts, Gregorian chant and organ for Franks and Latins, chant over an ison drone for the Byzantines, oud and darbuka in maqam Hijaz for the Arabs, horsehead fiddle and throat singing for the steppe peoples, with separate pieces for peace and war. In multiplayer, holding Tab shows the players: name, nation, their relation to you and their ping. Two-line names on the build and recruit buttons are tighter. In the launcher's account window Tab now moves from field to field.",
+		"cim_de": "Heptarchia 1.66 – gemalte Zierbänder, Volksmusik, Tab-Liste",
+		"szoveg_de": "Die Zierbänder der Karte wurden neu gemalt: Jedes Volk hat sein eigenes, reich bemaltes Band (Wikinger-Urnes-Schlange, Granateinlagen von Sutton Hoo, keltische Emailspiralen, Flechtwerk des Book of Kells, Stickerei des Teppichs von Bayeux, byzantinisches Goldmosaik, Cosmaten-Marmor, arabisches Sternmuster, Palmetten der Landnahmezeit, geschnitztes Flechtband). Auch die Musik folgt deinem Volk: nordische Leier und Horn für die Wikinger, Harfe und Bodhran für die Kelten, gregorianischer Gesang und Orgel für Franken und Lateiner, Gesang über dem Ison für die Byzantiner, Oud und Darbuka im Maqam Hidschas für die Araber, Pferdekopfgeige und Kehlkopfgesang für die Steppenvölker, mit eigenen Stücken für Frieden und Krieg. Im Mehrspielermodus zeigt gedrückte Tab-Taste die Spieler: Name, Volk, ihr Verhältnis zu dir und ihren Ping. Zweizeilige Namen auf den Bau- und Rekrutierknöpfen sind enger gesetzt. Im Kontofenster des Launchers springt Tab jetzt von Feld zu Feld.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-25",
+		"cim": "Heptarchia 1.65 – népek sávokban, kereső a diplomáciában",
+		"cimke": "Heptarchia",
+		"szoveg": "Az Új játék nemzetválasztójában a népek kultúra szerinti sávokban állnak: angolszászok, kelták, vikingek, frankok és latinok, szlávok, sztyeppei népek, délvidék. A diplomácia listája ugyanígy csoportosít, és kereső is került fölé: név vagy csoport szerint szűr. A krónika már nem húzható tetszőleges méretűre: az alapméret marad, és egy gombbal lecsukható.",
+		"cim_en": "Heptarchia 1.65 – peoples in rows, search in diplomacy",
+		"szoveg_en": "In the New game nation picker the peoples now stand in rows by culture: Anglo-Saxons, Celts, Vikings, Franks and Latins, Slavs, steppe peoples, the south. The diplomacy list is grouped the same way and has a search box that filters by name or group. The chronicle can no longer be dragged to any size: it keeps its default size and collapses with one button.",
+		"cim_de": "Heptarchia 1.65 – Völker in Reihen, Suche in der Diplomatie",
+		"szoveg_de": "In der Volksauswahl unter Neues Spiel stehen die Völker nun nach Kultur in Reihen: Angelsachsen, Kelten, Wikinger, Franken und Lateiner, Slawen, Steppenvölker, der Süden. Die Diplomatieliste ist genauso gruppiert und hat ein Suchfeld, das nach Name oder Gruppe filtert. Die Chronik lässt sich nicht mehr beliebig groß ziehen: Sie behält ihre Standardgröße und klappt mit einem Knopf zu.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-25",
 		"cim": "Heptarchia 1.64 – a néped díszítése a térkép keretén",
 		"cimke": "Heptarchia",
 		"szoveg": "A térkép tetején és alján díszsáv fut, a játszott nép stílusában: a vikingeknek a Midgard-kígyó, Jörmungandr ölel körbe (fent és lent is ott a feje), az angoloknak a Sutton Hoo-i ékszerek gránátberakása, a walesieknek és a gaeleknek kelta spirálok, a normannoknak a bayeux-i kárpit szegélye, a bizánciaknak bíbor-arany mozaik, az araboknak nyolcágú csillagok, a magyaroknak honfoglalás kori palmetták, a többi népnek fonatminta a saját színében.",
