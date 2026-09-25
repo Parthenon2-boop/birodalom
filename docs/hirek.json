@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-25",
+		"cim": "Heptarchia 1.64 – a néped díszítése a térkép keretén",
+		"cimke": "Heptarchia",
+		"szoveg": "A térkép tetején és alján díszsáv fut, a játszott nép stílusában: a vikingeknek a Midgard-kígyó, Jörmungandr ölel körbe (fent és lent is ott a feje), az angoloknak a Sutton Hoo-i ékszerek gránátberakása, a walesieknek és a gaeleknek kelta spirálok, a normannoknak a bayeux-i kárpit szegélye, a bizánciaknak bíbor-arany mozaik, az araboknak nyolcágú csillagok, a magyaroknak honfoglalás kori palmetták, a többi népnek fonatminta a saját színében.",
+		"cim_en": "Heptarchia 1.64 – your people's ornament around the map",
+		"szoveg_en": "An ornamental band now runs along the top and bottom of the map in the style of the people you play: for the Vikings the Midgard Serpent, Jörmungandr, encircles it (its head at both top and bottom), for the English the garnet inlay of the Sutton Hoo jewels, for the Welsh and Gaels Celtic spirals, for the Normans the border of the Bayeux Tapestry, for the Byzantines a purple and gold mosaic, for the Arabs eight-pointed stars, for the Magyars conquest-era palmettes, and for every other people a knotwork band in their own colour.",
+		"cim_de": "Heptarchia 1.64 – der Schmuck deines Volkes am Kartenrand",
+		"szoveg_de": "Oben und unten auf der Karte läuft nun ein Zierband im Stil des gespielten Volkes: bei den Wikingern umschließt die Midgardschlange Jörmungandr die Karte (oben wie unten mit Kopf), bei den Engländern die Granateinlagen der Sutton-Hoo-Schätze, bei Walisern und Gälen keltische Spiralen, bei den Normannen der Rand des Teppichs von Bayeux, bei den Byzantinern ein Purpur-Gold-Mosaik, bei den Arabern achtzackige Sterne, bei den Magyaren Palmetten der Landnahmezeit und bei allen anderen ein Flechtband in ihrer Farbe.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-25",
 		"cim": "Heptarchia 1.63 – hűbéresek és szövetségesek a háborúban",
 		"cimke": "Heptarchia",
 		"szoveg": "Minden játékmódban, a játékosokra is: ha a hűbérúr háborúba lép – akár ő üzen hadat, akár őt támadják meg –, a hűbérese automatikusan vele tart, és ha az úr fegyverszünetet köt, a hűbéres is. A házassági szövetséges viszont nem lép be magától: a Diplomácia ablak új Hadba hívás gombjával hívhatod hadba. A gépi szövetséges mérlegel (a házasság, az erőtök és a saját háborúi számítanak), a játékos szövetséges pedig ajánlatot kap, és maga dönti el, elfogadja-e. MacBookon a ParthLauncher (39. változat) ablaka 2,5-szer nagyobb lett, a képernyőhöz igazítva.",
