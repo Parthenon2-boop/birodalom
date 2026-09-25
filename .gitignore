@@ -16,3 +16,6 @@ build/
 _epulet_shots/
 docs/*.import
 docs/kepek/*.import
+
+# a Supabase parancssoros eszköz ideiglenes fájljai
+server/supabase/.temp/
