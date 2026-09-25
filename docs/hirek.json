@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-25",
+		"cim": "Heptarchia 1.63 – hűbéresek és szövetségesek a háborúban",
+		"cimke": "Heptarchia",
+		"szoveg": "Minden játékmódban, a játékosokra is: ha a hűbérúr háborúba lép – akár ő üzen hadat, akár őt támadják meg –, a hűbérese automatikusan vele tart, és ha az úr fegyverszünetet köt, a hűbéres is. A házassági szövetséges viszont nem lép be magától: a Diplomácia ablak új Hadba hívás gombjával hívhatod hadba. A gépi szövetséges mérlegel (a házasság, az erőtök és a saját háborúi számítanak), a játékos szövetséges pedig ajánlatot kap, és maga dönti el, elfogadja-e. MacBookon a ParthLauncher (39. változat) ablaka 2,5-szer nagyobb lett, a képernyőhöz igazítva.",
+		"cim_en": "Heptarchia 1.63 – vassals and allies at war",
+		"szoveg_en": "In every game mode, players included: when a lord goes to war – whether they declare it or are attacked – their vassal automatically joins them, and when the lord makes a truce, so does the vassal. A marriage ally no longer joins by itself: you can call them to arms with the new Call to arms button in the Diplomacy window. An AI ally weighs it up (your marriage, your strength and its own wars count), while a player ally gets a proposal and decides whether to accept. On MacBooks the ParthLauncher (build 39) window is now 2.5 times larger, fitted to the screen.",
+		"cim_de": "Heptarchia 1.63 – Vasallen und Verbündete im Krieg",
+		"szoveg_de": "In jedem Spielmodus, auch für Spieler: zieht ein Lehnsherr in den Krieg – ob er ihn erklärt oder angegriffen wird –, folgt ihm sein Vasall automatisch, und schließt der Herr einen Waffenstillstand, tut es auch der Vasall. Ein Heiratsverbündeter tritt dagegen nicht von selbst bei: mit dem neuen Knopf Zu den Waffen rufen im Diplomatie-Fenster kannst du ihn rufen. Ein KI-Verbündeter wägt ab (die Heirat, eure Stärke und seine eigenen Kriege zählen), ein Spieler-Verbündeter erhält ein Angebot und entscheidet selbst. Auf MacBooks ist das Fenster des ParthLauncher (Version 39) jetzt 2,5-mal so groß, an den Bildschirm angepasst.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-25",
 		"cim": "Heptarchia 1.62 – álló töltőkép",
 		"cimke": "Heptarchia",
 		"szoveg": "A töltőképernyő festménye mostantól nyugodtan áll, nem közelít lassan; a lágy be- és kiúszás megmaradt. A teljes tesztsor (91 teszt) kiegészítőkkel és nélkülük is hibátlanul lefutott.",
