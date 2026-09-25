@@ -147,7 +147,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 36
+const LAUNCHER_BUILD := 37
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1574,6 +1574,7 @@ func _acc_sync() -> void:
 				cfg.set_value(sect, "license", "")
 	cfg.save(CFG_PATH)
 	_dlc_egyeztet()          # a telepített csomagok a belépett fiók jogaihoz igazodnak
+	await _dlc_jog_frissit()     # a játéknak szóló aláírt igazolás és a legújabb kiadások
 	_refresh_dlc()
 	_check_dlc_updates()
 
@@ -1724,6 +1725,7 @@ func _acc_logout(silent: bool = false) -> void:
 				cfg.set_value("dlc:" + str(d["key"]), "license", "")
 	cfg.save(CFG_PATH)
 	_dlc_egyeztet()              # a fiókból jött kiegészítők csomagja is félrekerül
+	_dlc_jog_torol()             # és a játék igazolása is megszűnik
 	_refresh_dlc()
 	_refresh_account_ui()
 	if not silent: _status("Kijelentkeztél.", S.TEXT)
@@ -1986,17 +1988,71 @@ func _gumroad_claim_any(key: String) -> Dictionary:
 		return {"status": "ok", "dlc": d}
 	return {"status": "invalid"}
 
-# A csomag letöltése a játék adatmappájába (a játék a következő indításkor betölti).
-# url / version: egy konkrét kiadás csomagja (a frissítés-ellenőrzés adja); üresen a legújabb.
+# ── Védett kiegészítők (dlc-access szerverfüggvény) ─────────────
+# A csomagok egy PRIVÁT tárolóban vannak: a letöltési linket (néhány percig érvényes) és a játéknak
+# szóló, aláírt jogosultsági igazolást a szerver adja, csak a bejelentkezett, jogosult fióknak.
+# Az igazolás a játék adatmappájába kerül (<user_dir>/dlc_jog.json); a játék csak az abban
+# felsorolt, erre a gépre szóló, le nem járt csomagokat tölti be (lásd a játék DLC.gd-jét).
+var _vedett_latest := {}          # kiegészítő -> [címke, ""] a szerver szerint (a frissítéshez)
+
+func _dlc_game_of(d: Dictionary) -> String:
+	for game_key in DLCS:
+		for x in DLCS[game_key]:
+			if str(x["key"]) == str(d["key"]): return str(game_key)
+	return ""
+
+func _dlc_jog_path(user_dir: String) -> String:
+	return OS.get_user_data_dir().get_base_dir().path_join(user_dir).path_join("dlc_jog.json")
+
+# {} ha nincs belépés; {"_code": n} ha a szerver hibát adott
+func _acc_dlc_access(game_key: String, download: String = "") -> Dictionary:
+	if acc_token == "": return {}
+	var body := {"game": game_key, "machine": OS.get_unique_id()}
+	if download != "": body["download"] = download
+	var r := await _acc_call(HTTPClient.METHOD_POST, "/functions/v1/dlc-access", body, acc_token)
+	if int(r[0]) != 200 or not r[1] is Dictionary: return {"_code": int(r[0])}
+	return r[1]
+
+# Az igazolás megújítása minden játékhoz, amelynek vannak kiegészítői (belépéskor, induláskor)
+func _dlc_jog_frissit() -> void:
+	for game_key in DLCS:
+		var lista: Array = DLCS[game_key]
+		if lista.is_empty(): continue
+		var r := await _acc_dlc_access(str(game_key))
+		if not r.has("token"): continue
+		var ut := _dlc_jog_path(str(lista[0]["user_dir"]))
+		DirAccess.make_dir_recursive_absolute(ut.get_base_dir())
+		var f := FileAccess.open(ut, FileAccess.WRITE)
+		if f != null:
+			f.store_string(JSON.stringify(r["token"]))
+			f.close()
+		var latest: Dictionary = r.get("latest", {}) if r.get("latest") is Dictionary else {}
+		for k in latest: _vedett_latest[str(k)] = [str(latest[k]), ""]
+
+func _dlc_jog_torol() -> void:
+	for game_key in DLCS:
+		var lista: Array = DLCS[game_key]
+		if not lista.is_empty(): DirAccess.remove_absolute(_dlc_jog_path(str(lista[0]["user_dir"])))
+	_vedett_latest.clear()
+
+# A csomag letöltése a játék adatmappájába (a játék a következő indításkor betölti).# url / version: egy konkrét kiadás csomagja (a frissítés-ellenőrzés adja); üresen a legújabb.
 func _download_dlc(d: Dictionary, url: String = "", version: String = "") -> void:
 	if dlc_busy or _dlc_license(d) == "": return
-	if url == "": url = str(d["download_url"])
-	if url == "":
-		_status("A(z) %s letöltése hamarosan elérhető lesz – a kulcsod el van mentve." % str(d["name"]), S.GOLD_LIGHT)
+	dlc_busy = true
+	# a védett csomag címét mindig frissen kérjük a szervertől (néhány percig érvényes, csak a jogosultnak)
+	var r := await _acc_dlc_access(_dlc_game_of(d), str(d["key"]))
+	if not r.has("url"):
+		dlc_busy = false
+		var okok := {401: "a belépésed lejárt, jelentkezz be újra", 403: "ez a fiók nem jogosult rá",
+			0: "a letöltési szerver nem érhető el"}
+		var kod := int(r.get("_code", 401 if r.is_empty() else -1))
+		_status("A(z) %s letöltése nem sikerült: %s." % [str(d["name"]), str(okok.get(kod, "hiba %d" % kod))], S.RED)
+		_refresh_dlc()
 		return
+	url = str(r["url"])
+	if version == "": version = str(r.get("tag", ""))
 	var dest := _dlc_zip_path(d)
 	DirAccess.make_dir_recursive_absolute(dest.get_base_dir())
-	dlc_busy = true
 	_refresh_dlc()
 	_status("A(z) %s letöltése…" % str(d["name"]))
 	for c in http_dlc.request_completed.get_connections():
@@ -2048,7 +2104,8 @@ func _restore_owned_dlcs() -> void:
 var dlc_latest := {}
 
 func _check_dlc_updates() -> void:
-	if _dlc_check_running or dlc_busy: return
+	# a védett csomagokhoz belépés kell (a szerver ad linket és igazolást); belépéskor újra lefut
+	if _dlc_check_running or dlc_busy or acc_token == "": return
 	_dlc_check_running = true
 	# Előbb MINDEGYIKET megkérdezzük, és csak utána töltünk: így minden kártya
 	# tudja, hol tart, nem csak az, amelyiket épp frissítjük.
@@ -2060,8 +2117,8 @@ func _check_dlc_updates() -> void:
 			var latest := await _latest_dlc_release(d)      # [címke, letöltési cím] vagy []
 			if latest.is_empty():
 				# a kiadások nem érhetők el: legalább a hiányzó csomagot pótoljuk
-				if not _dlc_installed(d) and str(d["download_url"]) != "":
-					letoltendo.append([d, str(d["download_url"]), ""])
+				if not _dlc_installed(d):
+					letoltendo.append([d, "", ""])
 				continue
 			dlc_latest[str(d["key"])] = latest
 			if not _dlc_installed(d) or have != str(latest[0]):
@@ -2077,18 +2134,8 @@ func _check_dlc_updates() -> void:
 
 # A csomag legújabb kiadása: [címke, letöltési cím], vagy [] ha nem sikerült lekérdezni
 func _latest_dlc_release(d: Dictionary) -> Array:
-	var api := str(d.get("releases_api", ""))
-	if api == "": return []
-	var body := await _fetch_text(api)
-	var data = JSON.parse_string(body) if body != "" else null
-	if not data is Array: return []
-	var want := str(d["key"]) + ".zip"
-	for rel in data:
-		if not rel is Dictionary or bool(rel.get("draft", false)) or bool(rel.get("prerelease", false)): continue
-		for a in rel.get("assets", []):
-			if str(a.get("name", "")) == want:
-				return [str(rel.get("tag_name", "")), str(a.get("browser_download_url", ""))]
-	return []
+	# a csomagok tárolója privát: a legújabb kiadást a szerver mondja meg (_dlc_jog_frissit)
+	return _vedett_latest.get(str(d["key"]), [])
 
 # ── Frissítés keresése ────────────────────────────────────────
 

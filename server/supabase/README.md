@@ -25,3 +25,22 @@ Hogy a játékos ne az e-mail-címével, hanem a **fióknevével** lépjen be:
    munkamenetet adja vissza: a cím sosem kerül ki a kliensbe.
 3. **Régi fiókok:** akiknek még nincs nevük, a belépőmezőbe az e-mail-címüket írva
    ugyanúgy be tudnak lépni (a weboldalon és a launcherben is).
+
+## Védett kiegészítők – `dlc-access` (launcher 37, Heptarchia 1.59)
+
+A csomagok tárolója (`heptarchia-dlc-csomagok`) PRIVÁT. Letöltési linket és a játéknak szóló, aláírt
+jogosultsági igazolást csak a `dlc-access` függvény ad, csak a bejelentkezett, jogosult fióknak.
+A játék (DLC.gd) csak érvényes, erre a gépre szóló igazolással tölt be telepített csomagot.
+
+1. **GitHub-token:** github.com → Settings → Developer settings → Fine-grained tokens → Generate:
+   Repository access: *Only select repositories* → `heptarchia-dlc-csomagok`;
+   Permissions → Repository → **Contents: Read-only**. (Semmi más.)
+2. **Függvény:** Edge Functions → Deploy a new function → Via Editor → neve `dlc-access`,
+   tartalma `functions/dlc-access/index.ts`. **Verify JWT: BEKAPCSOLVA.**
+3. **Titkok** (Edge Functions → Secrets):
+   - `DLC_SIGN_KEY` = a `TITKOS/dlc_alairo_PRIVAT_kulcs.pem` teljes tartalma (a BEGIN/END sorokkal együtt).
+     A párja (nyilvános kulcs) a játék `scripts/DLC.gd`-jében van. A titkos kulcs SOHA nem kerülhet gitbe,
+     a launcherbe vagy a játékba.
+   - `GITHUB_TOKEN` = az 1. pont tokenje.
+4. Ha a függvény él, és a launcher 37 + Heptarchia 1.59 kint van: a `heptarchia-dlc-csomagok` tárolót
+   **privátra** kell állítani (Settings → General → Danger Zone → Change visibility → Private).
