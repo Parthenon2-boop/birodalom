@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-25",
+		"cim": "Heptarchia 1.60 – új főmenü, olvashatóbb gombok",
+		"cimke": "Heptarchia",
+		"szoveg": "Rendezettebb lett a főmenü: a kezdőlapon Egyjátékos, Többjátékos, Beállítások és Kilépés; az Egyjátékos alatt Új játék, Betöltés és Oktatómód; az Új játékban választod ki a nemzetedet, majd Indítás. Az Esc egy lappal visszalép. A játékban az építés és toborzás gombjain a hosszú nevek (pl. Rend helyreállítása, a különleges egységek nevei) két sorba törnek, és a költségek is mindig kiférnek a gombon.",
+		"cim_en": "Heptarchia 1.60 – new main menu, more readable buttons",
+		"szoveg_en": "The main menu is tidier: the start page has Single player, Multiplayer, Settings and Quit; Single player holds New game, Load and Tutorial; in New game you pick your nation, then Start. Esc goes back one page. In the game, long names on the build and recruit buttons (e.g. restoring order, the special units) now wrap onto two lines, and the costs always fit on the button.",
+		"cim_de": "Heptarchia 1.60 – neues Hauptmenü, besser lesbare Schaltflächen",
+		"szoveg_de": "Das Hauptmenü ist aufgeräumter: auf der Startseite Einzelspieler, Mehrspieler, Einstellungen und Beenden; unter Einzelspieler Neues Spiel, Laden und Tutorial; unter Neues Spiel wählst du dein Volk und startest. Esc geht eine Seite zurück. Im Spiel brechen lange Namen auf den Bau- und Rekrutierungsknöpfen in zwei Zeilen um, und die Kosten passen immer auf den Knopf.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-25",
 		"cim": "Heptarchia 1.59 – védett kiegészítők, simább töltőképernyő",
 		"cimke": "Heptarchia",
 		"szoveg": "A megvásárolt kiegészítők mostantól a fiókodhoz kötve, védetten érkeznek: a ParthLauncher (37. változat) bejelentkezés után letölti őket, és egy aláírt igazolást ad a játéknak, amely csak a te fiókodra és a te gépedre érvényes. Ha más fiókkal lépsz be, vagy kijelentkezel, a kiegészítők kikapcsolnak, visszalépéskor újra előkerülnek. Fontos: a kiegészítőkhöz be kell jelentkezni a launcherben, és havonta legalább egyszer el kell indítani, amíg van internet. A töltőképernyő is simább lett: lágyan úszik be és ki, a kép lassan közelít.",
