@@ -1,5 +1,17 @@
 [
 	{
+		"datum": "2026-09-25",
+		"cim": "Heptarchia 1.59 – védett kiegészítők, simább töltőképernyő",
+		"cimke": "Heptarchia",
+		"szoveg": "A megvásárolt kiegészítők mostantól a fiókodhoz kötve, védetten érkeznek: a ParthLauncher (37. változat) bejelentkezés után letölti őket, és egy aláírt igazolást ad a játéknak, amely csak a te fiókodra és a te gépedre érvényes. Ha más fiókkal lépsz be, vagy kijelentkezel, a kiegészítők kikapcsolnak, visszalépéskor újra előkerülnek. Fontos: a kiegészítőkhöz be kell jelentkezni a launcherben, és havonta legalább egyszer el kell indítani, amíg van internet. A töltőképernyő is simább lett: lágyan úszik be és ki, a kép lassan közelít.",
+		"cim_en": "Heptarchia 1.59 – protected expansions, smoother loading screen",
+		"szoveg_en": "Purchased expansions are now tied to your account and delivered securely: after you sign in, ParthLauncher (build 37) downloads them and gives the game a signed certificate that is valid only for your account and your computer. If you sign in with another account or sign out, the expansions switch off, and they come back when you sign in again. Important: you need to be signed in to the launcher for expansions, and start it online at least once a month. The loading screen is smoother too: it fades in and out gently, and the picture slowly zooms.",
+		"cim_de": "Heptarchia 1.59 – geschützte Erweiterungen, flüssigerer Ladebildschirm",
+		"szoveg_de": "Gekaufte Erweiterungen sind jetzt an dein Konto gebunden und werden geschützt ausgeliefert: nach der Anmeldung lädt der ParthLauncher (Version 37) sie herunter und gibt dem Spiel ein signiertes Zertifikat, das nur für dein Konto und deinen Rechner gilt. Meldest du dich mit einem anderen Konto an oder ab, schalten sich die Erweiterungen aus und kehren bei der erneuten Anmeldung zurück. Wichtig: für Erweiterungen musst du im Launcher angemeldet sein und ihn mindestens einmal im Monat online starten. Auch der Ladebildschirm ist flüssiger: er blendet sanft ein und aus, und das Bild zoomt langsam heran.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
 		"datum": "2026-09-24",
 		"cim": "Heptarchia 1.57 és új ParthLauncher – megszűnt a 95%-os elakadás",
 		"cimke": "Heptarchia",
