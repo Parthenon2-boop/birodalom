@@ -135,7 +135,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 40
+const LAUNCHER_BUILD := 41
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -220,18 +220,23 @@ var _news_seen := {}                 # játékkulcs -> a legutóbbi indításkor
 
 # MacBookon (Retina-kijelzőn) az 1100×720-as ablak túl kicsi: 2,5-szeresére nagyítjuk. A tartalom az
 # ablakkal együtt nyúlik (stretch: canvas_items), így minden arányosan nagyobb lesz. Ha a képernyő
-# ennyit nem enged, akkora, amekkora kifér (a képernyő 94%-a), és középre kerül.
+# ennyit nem enged, akkora, amekkora kifér (a képernyő 94%-a), és középre kerül. Kis kijelzőn
+# (bármely rendszeren) ugyanígy kicsinyítjük, hogy az ablak ne lógjon ki a képernyőről.
 const MAC_NAGYITAS := 2.5
 
 func _mac_nagyitas() -> void:
+	if DisplayServer.get_name() == "headless": return
 	# (--mac-proba: más gépen is kipróbálható)
-	if (OS.get_name() != "macOS" and not "--mac-proba" in OS.get_cmdline_user_args()) or DisplayServer.get_name() == "headless": return
+	var mac := OS.get_name() == "macOS" or "--mac-proba" in OS.get_cmdline_user_args()
 	var w := get_window()
 	var alap := Vector2(ProjectSettings.get_setting("display/window/size/viewport_width", 1100),
 		ProjectSettings.get_setting("display/window/size/viewport_height", 720))
 	var hely := Vector2(DisplayServer.screen_get_usable_rect(w.current_screen).size)
-	var k := minf(MAC_NAGYITAS, minf(hely.x * 0.94 / alap.x, hely.y * 0.94 / alap.y))
-	if k <= 1.0: return
+	var kifer := minf(hely.x * 0.94 / alap.x, hely.y * 0.94 / alap.y)
+	# Macen nagyítunk; máshol csak akkor nyúlunk hozzá, ha az ablak nem fér ki (pl. 1024×768-as kijelző):
+	# ilyenkor arányosan kisebb lesz, a tartalom vele együtt zsugorodik
+	var k := minf(MAC_NAGYITAS, kifer) if mac else minf(1.0, kifer)
+	if is_equal_approx(k, 1.0) or (mac and k < 1.0): return
 	w.size = Vector2i((alap * k).round())
 	w.move_to_center()
 
@@ -845,7 +850,19 @@ func _on_main_button() -> void:
 func _needs_download() -> bool:
 	var latest: String = str(remote.get("version", ""))
 	if latest == "": return false
-	return latest != installed_version or not _game_installed()
+	return _ujabb(latest, installed_version) or not _game_installed()
+
+# Az "a" változat újabb-e, mint "b" ("v1.66" > "v1.9", mert számonként hasonlítunk). Ha a telepített
+# újabb a kiadottnál (pl. fejlesztői vagy visszavont kiadás), nem ajánlunk fel "frissítést" egy régebbire.
+static func _ujabb(a: String, b: String) -> bool:
+	if b == "": return a != ""
+	var x := a.trim_prefix("v").split(".")
+	var y := b.trim_prefix("v").split(".")
+	for i in maxi(x.size(), y.size()):
+		var p := x[i].to_int() if i < x.size() else 0
+		var q := y[i].to_int() if i < y.size() else 0
+		if p != q: return p > q
+	return false
 
 func _checkbox(parent: Node, text: String, value: bool, action: Callable) -> CheckBox:
 	var c := CheckBox.new()
@@ -961,8 +978,8 @@ func _refresh_labels() -> void:
 			also = "telepítve: %s" % itt
 		elif itt == "" :
 			also = "%s – letölthető" % fent
-		elif itt == fent:
-			also = "%s – naprakész" % fent
+		elif not _ujabb(fent, itt):
+			also = "%s – naprakész" % itt
 		else:
 			also = "%s → %s" % [itt, fent]
 		b.text = "%s\n%s" % [_label_of(GAMES[i]), also]
@@ -970,7 +987,7 @@ func _refresh_labels() -> void:
 	lbl_installed.text = "%s – telepített változat: %s" % [_label_of(g),
 		installed_version if installed_version != "" else "még nincs telepítve"]
 	var latest: String = str(remote.get("version", ""))
-	var up_to_date: bool = latest != "" and latest == installed_version
+	var up_to_date: bool = latest != "" and not _ujabb(latest, installed_version)
 	if remote.is_empty():
 		lbl_latest.text = ""
 	elif up_to_date:
@@ -1452,7 +1469,9 @@ func _acc_call(method: int, path: String, body = null, token: String = "") -> Ar
 		return [0, {}]
 	var res: Array = await req.request_completed
 	req.queue_free()
-	var data = JSON.parse_string((res[3] as PackedByteArray).get_string_from_utf8())
+	# üres válasznál (időtúllépés, megszakadt kapcsolat) nem elemzünk: az a naplóba hibát írna
+	var szoveg := (res[3] as PackedByteArray).get_string_from_utf8()
+	var data = JSON.parse_string(szoveg) if szoveg.strip_edges() != "" else null
 	var code: int = int(res[1]) if int(res[0]) == HTTPRequest.RESULT_SUCCESS else 0
 	return [code, data if data != null else {}]
 
@@ -1625,7 +1644,17 @@ func _acc_migrate_local_keys(owned: Dictionary) -> int:
 					S.GOLD_LIGHT)
 	return atkerult
 
+# Egy beküldés egyszerre: a kérés alatt egy újabb Enter vagy kattintás ne küldje el másodszor
+# (a második regisztráció a sikeres első után hibaüzenetet írna ki, és még egy levelet kérne).
+var _acc_kuldes_fut := false
+
 func _acc_login(signup: bool) -> void:
+	if _acc_kuldes_fut: return
+	_acc_kuldes_fut = true
+	await _acc_login_fut(signup)
+	_acc_kuldes_fut = false
+
+func _acc_login_fut(signup: bool) -> void:
 	var user := acc_user_edit.text.strip_edges()
 	var email := acc_email_edit.text.strip_edges()
 	var pw := acc_pass_edit.text
@@ -1690,6 +1719,11 @@ func _acc_login(signup: bool) -> void:
 			acc_status.text = "Ezzel az e-mail-címmel már van fiók – lépj be (lent: „Van már fiókom – belépés”)."
 		elif msg.to_lower().contains("duplicate") or msg.to_lower().contains("profiles"):
 			acc_status.text = "Ezt a fióknevet már valaki használja. Válassz másikat."
+		elif code == 429:
+			acc_status.text = "Túl sok próbálkozás rövid időn belül. Várj egy percet, és próbáld újra."
+		elif code >= 500:
+			# a szerver oldali hiba nem a felhasználó hibája: ne írjuk ki, hogy rossz a jelszó
+			acc_status.text = "A fiókszerver most hibát jelzett (%d). Próbáld újra pár perc múlva." % code
 		elif signup:
 			acc_status.text = "A regisztráció nem sikerült. Nézd meg az e-mail-címet és a jelszót, aztán próbáld újra."
 		else:
@@ -1716,8 +1750,11 @@ func _acc_forgot() -> void:
 	if not ("@" in email and "." in email):
 		acc_status.text = "Írd be a fiókod e-mail-címét, oda küldjük a levelet."
 		return
+	if _acc_kuldes_fut: return
+	_acc_kuldes_fut = true
 	acc_status.text = "Levél küldése…"
 	var r := await _acc_call(HTTPClient.METHOD_POST, "/auth/v1/recover?redirect_to=" + ACCOUNT_RESET_PAGE.uri_encode(), {"email": email})
+	_acc_kuldes_fut = false
 	var code := int(r[0])
 	if code == 0:
 		acc_status.text = "Nem sikerült elérni a szervert. Van internet?"
@@ -1767,7 +1804,7 @@ func _acc_mod_valt(mod: String) -> void:
 	acc_link2.visible = mod == "belepes"
 	if acc_status != null: acc_status.text = ""
 	if acc_popup != null and acc_popup.visible:
-		acc_popup.reset_size()
+		_acc_ablak_igazit()
 		(acc_email_edit if jel else acc_user_edit).grab_focus.call_deferred()
 
 # Tab / Shift+Tab a fiókablakban: a látható mezők sorban, majd a fő gomb, onnan vissza az elsőre
@@ -1897,7 +1934,19 @@ func _open_account() -> void:
 	acc_popup.size = Vector2i(560, 0)
 	acc_popup.reset_size()
 	acc_popup.popup_centered()
+	if not acc_status.has_meta("igazit"):
+		acc_status.set_meta("igazit", true)
+		acc_status.resized.connect(func(): _acc_ablak_igazit.call_deferred())
 	if not _acc_logged_in(): acc_user_edit.grab_focus()
+
+# A fiókablak a tartalmához méreteződik, és mindig a főablakon belül, középen marad (a hosszú
+# üzenettől – pl. a regisztráció utáni – se lógjon le a képernyő aljáról)
+func _acc_ablak_igazit() -> void:
+	if acc_popup == null or not acc_popup.visible: return
+	acc_popup.reset_size()
+	var hely := get_viewport().get_visible_rect().size
+	var m := Vector2(acc_popup.size)
+	acc_popup.position = Vector2i(((hely - m) / 2.0).max(Vector2(8, 8)).round())
 
 func _refresh_account_ui() -> void:
 	if acc_popup != null:
@@ -2440,7 +2489,7 @@ func _after_check() -> void:
 	var notes := str(remote.get("notes", "")).strip_edges()
 	_remember_notes(str(game()["key"]), v, date, notes)
 	_show_notes(str(game()["key"]))
-	var up_to_date: bool = v == installed_version
+	var up_to_date: bool = installed_version != "" and not _ujabb(v, installed_version)
 	if up_to_date and _game_installed():
 		_status("A játék készen áll.", S.GREEN)
 		if auto_play: _auto_launch()

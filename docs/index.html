@@ -586,7 +586,7 @@
 			<article class="item${n.dlc ? " dlcnews" : ""}">
 				<div class="meta"><span>${esc(fmtDate(n.date))}</span><span class="pill">${esc(pick(n.tag))}</span></div>
 				<h3>${esc(pick(n.title))}</h3>
-				${pick(n.text) ? `<p>${esc(pick(n.text))}</p>` : ""}
+				${pick(n.text) ? `<p>${esc(pick(n.text)).replace(/\n/g, "<br>")}</p>` : ""}
 			</article>`).join("") || `<p class="sub">${esc(T("news.none"))}</p>`;
 		document.getElementById("more").hidden = shown >= all.length;
 	}

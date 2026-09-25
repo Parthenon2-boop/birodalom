@@ -1,0 +1,49 @@
+# Éjfél után (budapesti idő) a nap közben gyűjtött hírek (hirek_varolista.json) egyetlen napi
+# bejegyzésként kerülnek a docs/hirek.json-ba – ezt mutatja a honlap és a launcher.
+# A négy időpont a nyári és a téli időszámítást és a GitHub késését is lefedi; a szkript csak a
+# már lezárt napok tételeit teszi ki, így többszöri futás sem duplikál.
+name: Napi hírösszesítő
+
+on:
+  schedule:
+    - cron: "5 22 * * *"
+    - cron: "5 23 * * *"
+    - cron: "5 0 * * *"
+    - cron: "5 1 * * *"
+  workflow_dispatch:
+    inputs:
+      kenyszer:
+        description: "A mai tételeket is tegye ki most"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: napi-hir
+  cancel-in-progress: false
+
+jobs:
+  osszesit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Összesítés
+        env:
+          KENYSZER: ${{ inputs.kenyszer && '1' || '0' }}
+        run: python .github/scripts/napi_hir.py
+      - name: Feltöltés
+        run: |
+          if git diff --quiet; then
+            echo "nincs változás"
+            exit 0
+          fi
+          git config user.name "napi-hir"
+          git config user.email "napi-hir@users.noreply.github.com"
+          git add docs/hirek.json hirek_varolista.json
+          git commit -m "Napi hírösszesítő"
+          git push

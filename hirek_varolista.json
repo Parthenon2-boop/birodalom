@@ -1,0 +1,26 @@
+[
+    {
+        "cim":  "Heptarchia 1.67 – 1066 és a korhű nevek",
+        "cimke":  "Heptarchia",
+        "szoveg":  "1066 úgy történik, mint a valóságban: ha Angliát a gép irányítja, Stamford Bridge-nél elesik Harald Hardrada, Hastingsnél győz Vilmos, és az angol földekből Normann Anglia lesz. Ha te vezeted az angolokat, mindkét invázió eljön, Harald a csatában mindenképp elesik, de Hastingsnél a te sereged dönt. A népek a saját korukban használt nevükön szerepelnek: 790-ben Frank Királyság, Norvég kiskirályságok, Dál Riata, Walesi királyságok, később Karoling Birodalom, Magyar Fejedelemség, Magyar Királyság, Német-római Birodalom és a többi; Novgorod, Prága, Hamburg vagy Turku is csak az alapítása után jelenik meg. Javítások: a csatajelentés és a támadás ablaka minden képernyőn kifér, és Enterrel vagy Esc-kel is bezárható (rajtaütés után nem ragad be a játék); a jobb oldali panel nem takarja el a Menü gombot; a hűbéressel kötött házasság nem szünteti meg a hűbérséget; a stabilitás nem mehet 100 fölé; Róma mentése pontos.",
+        "cim_en":  "Heptarchia 1.67 – 1066 and period names",
+        "szoveg_en":  "1066 happens as it did: if England is run by the computer, Harald Hardrada falls at Stamford Bridge, William wins at Hastings and the English lands become Norman England. If you lead the English, both invasions come and Harald always falls in battle, but at Hastings your army decides. Peoples now carry the names of their own era: in 790 the Kingdom of the Franks, the Norwegian petty kingdoms, Dál Riata and the Welsh kingdoms, later the Carolingian Empire, the Principality and Kingdom of Hungary, the Holy Roman Empire and more; Novgorod, Prague, Hamburg or Turku only appear once founded. Fixes: the battle report and the attack window fit every screen and close with Enter or Esc (the game no longer gets stuck after an ambush); the right-hand panel no longer covers the Menu button; marrying a vassal no longer ends the vassalage; stability cannot exceed 100; Rome is saved exactly.",
+        "cim_de":  "Heptarchia 1.67 – 1066 und zeitgemäße Namen",
+        "szoveg_de":  "1066 geschieht wie in Wirklichkeit: Wird England vom Computer geführt, fällt Harald Hardrada bei Stamford Bridge, Wilhelm siegt bei Hastings und die englischen Lande werden zum normannischen England. Führst du die Engländer, kommen beide Invasionen, Harald fällt immer in der Schlacht, doch bei Hastings entscheidet dein Heer. Die Völker tragen die Namen ihrer Zeit: 790 Frankenreich, norwegische Kleinkönigreiche, Dál Riata und walisische Königreiche, später Karolingerreich, Ungarisches Fürstentum und Königreich, Heiliges Römisches Reich und weitere; Nowgorod, Prag, Hamburg oder Turku erscheinen erst nach ihrer Gründung. Fehlerbehebungen: Schlachtbericht und Angriffsfenster passen auf jeden Bildschirm und schließen mit Enter oder Esc (nach einem Hinterhalt hängt das Spiel nicht mehr); die rechte Leiste verdeckt den Menü-Knopf nicht mehr; eine Heirat mit einem Vasallen beendet die Vasallität nicht; die Stabilität steigt nicht über 100; Rom wird exakt gespeichert.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-09-25"
+    },
+    {
+        "cim":  "Launcher 41 – kis képernyőn is kifér",
+        "cimke":  "Launcher",
+        "szoveg":  "A launcher ablaka kisebb (pl. 1024×768-as) képernyőn arányosan kisebb lesz, hogy kiférjen. A fiókablak hosszú üzenetnél sem lóg le a képernyőről, szerverhibánál nem írja, hogy rossz a jelszó, és a gyors dupla kattintás nem küldi el kétszer a belépést. Régebbi változatot nem ajánl fel frissítésként.",
+        "cim_en":  "Launcher 41 – fits small screens",
+        "szoveg_en":  "The launcher window now scales down to fit smaller screens (such as 1024×768). The account window no longer runs off the screen with long messages, a server error no longer claims your password is wrong, and a quick double click no longer sends the login twice. An older version is never offered as an update.",
+        "cim_de":  "Launcher 41 – passt auf kleine Bildschirme",
+        "szoveg_de":  "Das Launcher-Fenster wird auf kleineren Bildschirmen (etwa 1024×768) passend verkleinert. Das Kontofenster ragt auch bei langen Meldungen nicht mehr aus dem Bild, ein Serverfehler wird nicht mehr als falsches Passwort gemeldet, und ein schneller Doppelklick sendet die Anmeldung nicht zweimal. Eine ältere Version wird nie als Update angeboten.",
+        "cimke_en":  "Launcher",
+        "cimke_de":  "Launcher",
+        "datum":  "2026-09-25"
+    }
+]
