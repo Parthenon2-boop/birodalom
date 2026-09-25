@@ -135,7 +135,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 38
+const LAUNCHER_BUILD := 39
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -218,8 +218,26 @@ var _main_box: VBoxContainer         # a felület fő oszlopa: ebből látszik, 
 var _news: Array = []                # a legutóbb letöltött hírek (a beállításfájlban is)
 var _news_seen := {}                 # játékkulcs -> a legutóbbi indításkor már látott legfrissebb dátum
 
+# MacBookon (Retina-kijelzőn) az 1100×720-as ablak túl kicsi: 2,5-szeresére nagyítjuk. A tartalom az
+# ablakkal együtt nyúlik (stretch: canvas_items), így minden arányosan nagyobb lesz. Ha a képernyő
+# ennyit nem enged, akkora, amekkora kifér (a képernyő 94%-a), és középre kerül.
+const MAC_NAGYITAS := 2.5
+
+func _mac_nagyitas() -> void:
+	# (--mac-proba: más gépen is kipróbálható)
+	if (OS.get_name() != "macOS" and not "--mac-proba" in OS.get_cmdline_user_args()) or DisplayServer.get_name() == "headless": return
+	var w := get_window()
+	var alap := Vector2(ProjectSettings.get_setting("display/window/size/viewport_width", 1100),
+		ProjectSettings.get_setting("display/window/size/viewport_height", 720))
+	var hely := Vector2(DisplayServer.screen_get_usable_rect(w.current_screen).size)
+	var k := minf(MAC_NAGYITAS, minf(hely.x * 0.94 / alap.x, hely.y * 0.94 / alap.y))
+	if k <= 1.0: return
+	w.size = Vector2i((alap * k).round())
+	w.move_to_center()
+
 func _ready() -> void:
 	if _relaunch_without_console(): return
+	_mac_nagyitas()
 	_repo_file = _read_repo_file()
 	cfg.load(CFG_PATH)
 	_load_common()
