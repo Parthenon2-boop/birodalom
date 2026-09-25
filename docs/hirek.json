@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-25",
+		"cim": "Heptarchia 1.62 – álló töltőkép",
+		"cimke": "Heptarchia",
+		"szoveg": "A töltőképernyő festménye mostantól nyugodtan áll, nem közelít lassan; a lágy be- és kiúszás megmaradt. A teljes tesztsor (91 teszt) kiegészítőkkel és nélkülük is hibátlanul lefutott.",
+		"cim_en": "Heptarchia 1.62 – a still loading picture",
+		"szoveg_en": "The loading screen painting now stays still instead of slowly zooming in; the gentle fade in and out remains. The full test suite (91 tests) passed with and without expansions.",
+		"cim_de": "Heptarchia 1.62 – ein ruhiges Ladebild",
+		"szoveg_de": "Das Gemälde des Ladebildschirms steht jetzt still, statt langsam heranzuzoomen; das sanfte Ein- und Ausblenden bleibt. Die gesamte Testreihe (91 Tests) lief mit und ohne Erweiterungen fehlerfrei.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-25",
 		"cim": "Hit és egyház – szent helyek, ereklyék, keresztelés",
 		"cimke": "Heptarchia DLC",
 		"szoveg": "Nagy frissítést kapott a Hit és egyház kiegészítő. Szent helyek: Canterbury, York, Lindisfarne, Lichfield, St Davids, Iona, Armagh, Rouen (és a skandináv térképen Uppsala és Lejre) jellel látszanak a térképen; birtokosuk hitpontot és stabilitást kap, elvesztésük megrendíti a népet. Ereklyék: Szent Cuthbert teste, a lindisfarne-i evangéliumoskönyv, a Cathach, a hollós zászló és a többi – zarándokokat vonzanak, a portyázók elhurcolhatják őket, váltságdíjért visszavásárolhatók, néhányat csatába is vihetsz. Keresztelés: a legyőzött pogány királyt megkeresztelheted, ahogy Alfréd tette Guthrummal – szövetségesed lesz, és a te hitedre tér. A Hit és egyház ablak új fülein találod. (Játék: 1.61.)",
