@@ -988,6 +988,8 @@ func _login_button_text() -> void:
 		btn_main.tooltip_text = "A játékhoz jelentkezz be vagy regisztrálj"
 
 func _status(text: String, color: Color = S.TEXT) -> void:
+	# ablak nélküli futásnál (próbák, hibakeresés) a konzolra is
+	if DisplayServer.get_name() == "headless": print("[állapot] ", text)
 	lbl_status.text = text
 	lbl_status.add_theme_color_override("font_color", color)
 	# a nyitott Kiegészítők ablakban is látszódjon (különben a főoldalon, az ablak mögött maradna)
@@ -2010,7 +2012,9 @@ func _acc_dlc_access(game_key: String, download: String = "") -> Dictionary:
 	var body := {"game": game_key, "machine": OS.get_unique_id()}
 	if download != "": body["download"] = download
 	var r := await _acc_call(HTTPClient.METHOD_POST, "/functions/v1/dlc-access", body, acc_token)
-	if int(r[0]) != 200 or not r[1] is Dictionary: return {"_code": int(r[0])}
+	if int(r[0]) != 200 or not r[1] is Dictionary:
+		var hiba: Dictionary = r[1] if r[1] is Dictionary else {}
+		return {"_code": int(r[0]), "_error": str(hiba.get("error", "")), "_github": int(hiba.get("github", 0))}
 	return r[1]
 
 # Az igazolás megújítása minden játékhoz, amelynek vannak kiegészítői (belépéskor, induláskor)
@@ -2046,7 +2050,9 @@ func _download_dlc(d: Dictionary, url: String = "", version: String = "") -> voi
 		var okok := {401: "a belépésed lejárt, jelentkezz be újra", 403: "ez a fiók nem jogosult rá",
 			0: "a letöltési szerver nem érhető el"}
 		var kod := int(r.get("_code", 401 if r.is_empty() else -1))
-		_status("A(z) %s letöltése nem sikerült: %s." % [str(d["name"]), str(okok.get(kod, "hiba %d" % kod))], S.RED)
+		var reszlet := str(okok.get(kod, "hiba %d" % kod))
+		if str(r.get("_error", "")) != "": reszlet += " (%s%s)" % [str(r["_error"]), (", GitHub %d" % int(r["_github"])) if int(r.get("_github", 0)) > 0 else ""]
+		_status("A(z) %s letöltése nem sikerült: %s." % [str(d["name"]), reszlet], S.RED)
 		_refresh_dlc()
 		return
 	url = str(r["url"])

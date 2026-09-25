@@ -53,8 +53,10 @@ const gh = (path: string, extra: Record<string, string> = {}) =>
 	});
 
 // kiegészítőnként a legújabb (nem vázlat) kiadás, amelyben <kulcs>.zip van: { kulcs: { tag, asset } }
+let ghStatus = 0;          // a GitHub legutóbbi válaszkódja (hibakereséshez a válaszban)
 async function latest(keys: string[]): Promise<Record<string, { tag: string; asset: number }>> {
 	const res = await gh("/releases?per_page=50", { Accept: "application/vnd.github+json" });
+	ghStatus = res.status;
 	if (!res.ok) return {};
 	const rels = await res.json();
 	const out: Record<string, { tag: string; asset: number }> = {};
@@ -103,7 +105,7 @@ Deno.serve(async (req: Request) => {
 	const dl = String(body.download ?? "");
 	if (dl !== "") {
 		if (!owned.includes(dl)) return json({ error: "not_owned" }, 403);
-		if (!rel[dl]) return json({ error: "no_release" }, 404);
+		if (!rel[dl]) return json({ error: ghStatus === 200 ? "no_release" : "github_error", github: ghStatus }, ghStatus === 200 ? 404 : 502);
 		// a GitHub egy néhány percig érvényes, aláírt címre irányít át: azt adjuk tovább
 		const a = await gh(`/releases/assets/${rel[dl].asset}`, { Accept: "application/octet-stream" });
 		const loc = a.headers.get("location");
