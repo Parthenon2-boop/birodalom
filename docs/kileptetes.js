@@ -34,12 +34,14 @@
 	let szamlalo = null;
 	function szamlaloKell() {
 		if (szamlalo && document.contains(szamlalo)) return szamlalo;
-		const hely = document.getElementById("who") || document.querySelector('header a[href="fiok.html"]');
+		const who = document.getElementById("who");
+		const hely = who ? who.firstElementChild : document.querySelector('header a[href="fiok.html"]');
 		if (!hely) return null;
 		szamlalo = document.createElement("span");
 		szamlalo.className = "kilep-szamlalo";
 		szamlalo.style.cssText = "font: 15px 'EB Garamond', Georgia, serif; color: #b7a37f; white-space: nowrap; margin-right: 10px; font-variant-numeric: tabular-nums;";
 		szamlalo.title = "Ennyi idő múlva léptet ki a honlap, ha nem csinálsz semmit.";
+		// a név elé, vele egy csoportban (a fiók és az admin oldalon a #who dobozba)
 		hely.parentNode.insertBefore(szamlalo, hely);
 		return szamlalo;
 	}
