@@ -527,6 +527,7 @@
 		$("main").classList.add("wide");
 		$("accName").textContent = (user.user_metadata && user.user_metadata.username) || user.email;
 		$("whoName").textContent = "👤 " + $("accName").textContent; $("who").hidden = false;
+		$("langs").hidden = true;   // belépve a nyelv a Beállításokban választható
 		$("accEmail").textContent = user.email || "";
 		renderGames();
 		let failed = false;
@@ -562,7 +563,7 @@
 		acct = null;
 		$("accView").hidden = true; $("authBox").hidden = false; $("backNote").hidden = false;
 		$("main").classList.remove("wide");
-		$("adminLink").hidden = true; $("who").hidden = true;
+		$("adminLink").hidden = true; $("who").hidden = true; $("langs").hidden = false;
 		$("setView").hidden = true; $("pwView").hidden = true; menu(false);
 	}
 
