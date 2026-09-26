@@ -60,6 +60,18 @@
 	footer { border-top: 1px solid var(--line); padding: 22px 0 40px; color: var(--muted); font-size: 15px; text-align: center; }
 		.platformok { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 0 0 16px; } .plat { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px; color: inherit; text-decoration: none; font-size: 15px; transition: border-color .15s, transform .15s; } .plat:hover, .plat:focus-visible { border-color: currentColor; transform: translateY(-1px); } .plat svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 	.cta { text-align: center; padding: 30px 0 40px; }
+	/* Játékok lenyíló menü (a fejlécben) */
+	details.lenyilo { position: relative; display: inline-block; }
+	details.lenyilo > summary { list-style: none; color: var(--muted, #b7a37f); font-size: 16px; }
+	details.lenyilo > summary::-webkit-details-marker { display: none; }
+	details.lenyilo > summary::after { content: " ▾"; font-size: 12px; }
+	details.lenyilo > summary:hover, details.lenyilo[open] > summary { color: var(--gold-2, #f0cf85); }
+	.lenyilo-menu { position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 10px); z-index: 40; min-width: 190px;
+		display: flex; flex-direction: column; padding: 6px; background: var(--panel, #2f2219); border: 1px solid var(--gold, #d9a441);
+		border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,.55); }
+	.lenyilo-menu a { display: block; padding: 8px 12px; border-radius: 5px; color: var(--text, #eadcbc) !important; text-decoration: none; font-size: 16px; margin: 0 !important; white-space: nowrap; }
+	.lenyilo-menu a:hover { background: rgba(217,164,65,.12); color: var(--gold-2, #f0cf85) !important; }
+	.lenyilo-menu a:last-child { border-top: 1px solid var(--line, #6b4f2a); border-radius: 0 0 5px 5px; margin-top: 4px !important; color: var(--muted, #b7a37f) !important; }
 </style>
 </head>
 <body>
@@ -69,6 +81,7 @@
 		<nav>
 			<a href="./" data-i18n="nav.home">Főoldal</a>
 			<a href="./#letoltes" data-i18n="nav.download">Letöltés</a>
+			<details class="lenyilo"><summary data-i18n="nav.games">Játékok</summary><div class="lenyilo-menu"><a href="heptarchia.html">Heptarchia</a><a href="./#jatek-birodalom">Birodalom</a><a href="./#jatek-kard">Kard és Mágia</a><a href="./#jatekok" data-i18n="nav.allgames">Összes játék</a></div></details>
 			<a href="./#kiegeszitok" data-i18n="nav.dlc">Kiegészítők</a>
 			<a href="fiok.html" data-i18n="nav.account">Fiók / belépés</a>
 			<span class="langs" id="langs"></span>
@@ -156,7 +169,7 @@
 	const I18N = {
 		hu: {},
 		en: {
-			"nav.home": "Home", "nav.download": "Download", "nav.dlc": "Add-ons", "nav.account": "Account / sign in",
+			"nav.home": "Home", "nav.download": "Download", "nav.games": "Games", "nav.allgames": "All games", "nav.dlc": "Add-ons", "nav.account": "Account / sign in",
 			"lead": "Anglo-Saxon grand strategy from 790. Seven kingdoms, one island, and ships closing in from the sea. Lead Wessex, Mercia or Northumbria – or the Scots, Picts and Irish – and decide what the chronicles will say about you.",
 			"cta": "Free download", "free": "Free · Windows and macOS · updated by the ParthLauncher",
 			"what.title": "What is it?",
@@ -179,7 +192,7 @@
 			"cta2": "Download the ParthLauncher", "cta2sub": "The launcher installs and updates Heptarchia.",
 		},
 		de: {
-			"nav.home": "Startseite", "nav.download": "Download", "nav.dlc": "Erweiterungen", "nav.account": "Konto / Anmelden",
+			"nav.home": "Startseite", "nav.download": "Download", "nav.games": "Spiele", "nav.allgames": "Alle Spiele", "nav.dlc": "Erweiterungen", "nav.account": "Konto / Anmelden",
 			"lead": "Angelsächsische Großstrategie ab 790. Sieben Königreiche, eine Insel und Schiffe, die sich vom Meer her nähern. Führe Wessex, Mercia oder Northumbria – oder die Schotten, Pikten und Iren – und entscheide, was die Chroniken über dich schreiben.",
 			"cta": "Kostenlos herunterladen", "free": "Kostenlos · Windows und macOS · vom ParthLauncher aktualisiert",
 			"what.title": "Worum geht es?",
@@ -264,5 +277,14 @@
 	} catch (e) { /* nincs tároló (privát ablak) – marad a „Fiók / belépés” */ }
 })();
 </script><script src="kileptetes.js?v=2"></script>
-</body>
+<script>
+// Játékok lenyíló menü: kattintásra nyílik; kívülre kattintva, Esc-re vagy egy pontot választva bezárul
+(() => {
+	const d = document.querySelector("details.lenyilo");
+	if (!d) return;
+	document.addEventListener("click", e => { if (d.open && !d.contains(e.target)) d.open = false; });
+	document.addEventListener("keydown", e => { if (e.key === "Escape") d.open = false; });
+	d.querySelectorAll("a").forEach(a => a.addEventListener("click", () => { d.open = false; }));
+})();
+</script></body>
 </html>

@@ -82,13 +82,25 @@
 	.st.have { color: var(--ok); border: 1px solid rgba(127,174,90,.5); background: rgba(127,174,90,.1); }
 	.st.free { color: var(--muted); border: 1px solid var(--line); }
 	.item a.buy { white-space: nowrap; }
+	/* Játékok lenyíló menü (a fejlécben) */
+	details.lenyilo { position: relative; display: inline-block; }
+	details.lenyilo > summary { list-style: none; color: var(--muted, #b7a37f); font-size: 16px; }
+	details.lenyilo > summary::-webkit-details-marker { display: none; }
+	details.lenyilo > summary::after { content: " ▾"; font-size: 12px; }
+	details.lenyilo > summary:hover, details.lenyilo[open] > summary { color: var(--gold-2, #f0cf85); }
+	.lenyilo-menu { position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 10px); z-index: 40; min-width: 190px;
+		display: flex; flex-direction: column; padding: 6px; background: var(--panel, #2f2219); border: 1px solid var(--gold, #d9a441);
+		border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,.55); }
+	.lenyilo-menu a { display: block; padding: 8px 12px; border-radius: 5px; color: var(--text, #eadcbc) !important; text-decoration: none; font-size: 16px; margin: 0 !important; white-space: nowrap; }
+	.lenyilo-menu a:hover { background: rgba(217,164,65,.12); color: var(--gold-2, #f0cf85) !important; }
+	.lenyilo-menu a:last-child { border-top: 1px solid var(--line, #6b4f2a); border-radius: 0 0 5px 5px; margin-top: 4px !important; color: var(--muted, #b7a37f) !important; }
 </style>
 </head>
 <body>
 <header>
 	<div class="wrap">
 		<a class="logo" href="./">ParthLauncher</a>
-		<nav><a href="./" data-i18n="nav.home">Főoldal</a><a href="./#letoltes" data-i18n="nav.download">Letöltés</a><a href="heptarchia.html">Heptarchia</a><span class="langs" id="langs"></span></nav>
+		<nav><a href="./" data-i18n="nav.home">Főoldal</a><a href="./#letoltes" data-i18n="nav.download">Letöltés</a><details class="lenyilo"><summary data-i18n="nav.games">Játékok</summary><div class="lenyilo-menu"><a href="heptarchia.html">Heptarchia</a><a href="./#jatek-birodalom">Birodalom</a><a href="./#jatek-kard">Kard és Mágia</a><a href="./#jatekok" data-i18n="nav.allgames">Összes játék</a></div></details><span class="langs" id="langs"></span></nav>
 		<div class="who" id="who" hidden>
 			<button class="ghost" type="button" id="whoBtn" aria-haspopup="menu" aria-expanded="false"><span id="whoName"></span> ▾</button>
 			<div class="menu" id="whoMenu" role="menu" hidden>
@@ -220,7 +232,7 @@
 	const I18N = {
 		hu: {},
 		en: {
-			"nav.home": "Home", "nav.download": "Download", "title": "Account",
+			"nav.home": "Home", "nav.download": "Download", "nav.games": "Games", "nav.allgames": "All games", "title": "Account",
 			"tab.login": "Sign in", "tab.reg": "Sign up", "tab.forgot": "Forgot password",
 			"login.hint": "Sign in with your ParthLauncher account to see your games and the add-ons you bought.",
 			"f.login": "Account name or e-mail address", "f.pwcur": "Password",
@@ -266,7 +278,7 @@
 			"e.net": "Could not reach the server. Are you online?", "e.other": "It did not work. Please try again later.",
 		},
 		de: {
-			"nav.home": "Startseite", "nav.download": "Download", "title": "Konto",
+			"nav.home": "Startseite", "nav.download": "Download", "nav.games": "Spiele", "nav.allgames": "Alle Spiele", "title": "Konto",
 			"tab.login": "Anmelden", "tab.reg": "Registrieren", "tab.forgot": "Passwort vergessen",
 			"login.hint": "Melde dich mit deinem ParthLauncher-Konto an, um deine Spiele und gekauften Erweiterungen zu sehen.",
 			"f.login": "Kontoname oder E-Mail-Adresse", "f.pwcur": "Passwort",
@@ -648,5 +660,14 @@
 	applyLang();
 </script>
 <script src="kileptetes.js?v=2"></script>
-</body>
+<script>
+// Játékok lenyíló menü: kattintásra nyílik; kívülre kattintva, Esc-re vagy egy pontot választva bezárul
+(() => {
+	const d = document.querySelector("details.lenyilo");
+	if (!d) return;
+	document.addEventListener("click", e => { if (d.open && !d.contains(e.target)) d.open = false; });
+	document.addEventListener("keydown", e => { if (e.key === "Escape") d.open = false; });
+	d.querySelectorAll("a").forEach(a => a.addEventListener("click", () => { d.open = false; }));
+})();
+</script></body>
 </html>
