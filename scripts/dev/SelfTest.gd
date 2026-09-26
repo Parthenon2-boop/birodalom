@@ -11,6 +11,8 @@ extends Node
 
 var main : Node = null
 
+const HtmlEpulet := preload("res://scripts/buildings/HtmlEpulet.gd")
+
 var _pass : int = 0
 var _fail : Array[String] = []
 
@@ -956,20 +958,19 @@ func _test_fog() -> void:
 		str(sig_hiany))
 	for b3 in epitett:
 		if is_instance_valid(b3): b3.queue_free()
-	# A lakóház három arca: a változatot az azonosító sorsolja, tehát egy
-	# utcányi házból többféle áll.
-	var arcok := {}
-	var proba = main.spawn_building("house", 0,
-		main.find_land_near(hq.global_position + Vector2(-700, -700), 60.0), true)
-	if proba != null:
-		for i in range(30):
-			proba.nid = i + 1
-			arcok[proba._valtozat()] = true
-		check("a lakóháznak több arca van", arcok.size() >= 2,
-			"%d változat" % arcok.size())
-		check("a változat a 0..2 tartományban marad",
-			arcok.keys().all(func(v): return int(v) >= 0 and int(v) <= 2))
-		proba.queue_free()
+	# Az épület képe az eredeti rajza: minden típus, korszak és nemzet kap
+	# képet (a kalózok a vitorlások korában).
+	var kep_hiany: Array[String] = []
+	for t2 in Building.BUILD_STATS.keys():
+		for a2 in range(4):
+			for n2 in Style.NATION_ORDER:
+				if HtmlEpulet.kep(str(t2), a2, str(n2)).is_empty():
+					kep_hiany.append("%s@%d/%s" % [t2, a2, n2])
+		for n3 in Style.PIRATE_ORDER:
+			if HtmlEpulet.kep(str(t2), 1, str(n3)).is_empty():
+				kep_hiany.append("%s@1/%s" % [t2, n3])
+	check("minden épületnek van képe (az eredeti rajza)", kep_hiany.is_empty(),
+		str(kep_hiany.slice(0, 8)))
 	# A pálya nagy része legyen még sötét. (Egy fix sarokpont ingatag: a
 	# kezdőhelyeket a víz miatt néha messzire tolja a keresés.)
 	var felderitve := 0
@@ -985,39 +986,44 @@ func _test_fog() -> void:
 
 func _test_sprites() -> void:
 	print("\n[9] Textúrabetöltés")
+	# Az egységek a böngészős eredeti szerint rajzolódnak (UnitSprite.gd):
+	# a lapok kicsinyítve (0,38·s), a gépek, az ostromszerszámok és a lovas
+	# rajzolva. Minden szerepnek minden korszakban legyen rajza.
 	var roles := ["worker", "melee", "ranged", "spear", "cav", "priest", "spy",
-		"hero", "fisher", "warship", "galleon", "transport"]
-	var gyalogos := ["worker", "melee", "ranged", "spear", "priest", "spy", "hero"]
-	var hq = _player_hq()
+		"hero", "medic", "siege", "ram", "fisher", "warship", "galleon", "transport"]
 	for age in range(4):
 		var missing: Array[String] = []
-		# Az alakok magassága korszakon belül EGYSÉGES kell legyen: a
-		# lapokon 47-től 61 képpontig terjed, ezért igazítjuk őket.
-		var magassagok: Array[float] = []
 		for r in roles:
-			var s := Sprite2D.new()
-			s.set_script(load("res://scripts/units/UnitSprite.gd"))
-			add_child(s)
-			s.setup(r, age, 0)
-			# A 20. századi acélhajónak nincs lapja: azt rajzoljuk.
-			if s.texture == null and not s.is_drawn_ship(): missing.append(r)
-			elif r in gyalogos: magassagok.append(s.figure_height())
+			var s := _uj_rajz(str(r), age, 0)
+			if not s.has_sheet(): missing.append(str(r))
 			s.queue_free()
 		check("minden egység-sprite betölt (korszak %d)" % age,
 			missing.is_empty(), str(missing))
-		var lo := 999.0
-		var hi := 0.0
-		for h in magassagok:
-			lo = minf(lo, h)
-			hi = maxf(hi, h)
-		check("a gyalogosok egyforma magasak (korszak %d)" % age,
-			hi - lo < 1.5, "%.1f – %.1f px" % [lo, hi])
-	# A NÉGY IRÁNYNAK TÉNYLEG KÜLÖNBÖZNIE KELL.
-	#
-	# A WW2 lapon a Dél, az Észak és a Kelet sor sokáig BÁJTRA AZONOS volt:
-	# a modern korban minden katona jobbra nézett, akármerre ment. A kód
-	# helyes volt, a rajz hiányos — az ilyen hibát csak a képpontok
-	# összevetése fogja meg, ezért itt magukat a lapokat nézzük.
+	# KORSZAK -> LAP, ahogy az eredeti drawLPC választott: középkor LPC,
+	# 17. század napóleoni (a lövész és a pikás a sajátját, mindenki más a
+	# gyalogosét), 19–20. század a világháborús lap, a 20. századi
+	# közelharcos harckocsi.
+	var vart := {"melee@0": "lpc/melee", "worker@0": "lpc/worker", "melee@1": "napoleon/melee",
+		"worker@1": "napoleon/melee", "ranged@1": "napoleon/ranged",
+		"spear@1": "napoleon/spear", "melee@2": "ww2", "priest@3": "ww2", "melee@3": ""}
+	var rossz_lap: Array[String] = []
+	for k in vart:
+		var par: PackedStringArray = str(k).split("@")
+		var s2 := _uj_rajz(par[0], int(par[1]), 0)
+		if s2.sheet_key() != str(vart[k]): rossz_lap.append("%s=%s" % [k, s2.sheet_key()])
+		s2.queue_free()
+	check("a korszak lapja az eredeti szerint", rossz_lap.is_empty(), str(rossz_lap))
+	# MÉRET: az eredeti arányai — a vitéz a 64-es kocka 0,38·(11/9,2)-szerese,
+	# vagyis kb. 23 képpont; a ház ennél jóval magasabb.
+	var vitez := _uj_rajz("melee", 0, 0)
+	var fm: float = vitez.figure_height()
+	vitez.queue_free()
+	check("a gyalogos az eredeti méretében áll", fm > 18.0 and fm < 28.0, "%.1f px" % fm)
+	var haz_m: float = HtmlEpulet.meret("house").y + HtmlEpulet.magassag("house", 0)
+	check("a ház kétszer-négyszer olyan magas, mint a katona",
+		haz_m / fm > 2.0 and haz_m / fm < 4.5, "%.1fx" % (haz_m / fm))
+	# A NÉGY IRÁNYNAK TÉNYLEG KÜLÖNBÖZNIE KELL (a WW2 lapon egyszer a Dél,
+	# az Észak és a Kelet sor bájtra azonos volt).
 	for lap in ["ally", "axis"]:
 		var tex: Texture2D = load("res://assets/sprites/ww2/%s.png" % lap)
 		if tex == null:
@@ -1032,142 +1038,81 @@ func _test_sprites() -> void:
 					egyezo.append("%s=%s" % [nevek[a], nevek[b]])
 		check("a(z) %s lapon mind a négy irány külön rajz" % lap,
 			egyezo.is_empty(), str(egyezo))
-
+	# A lap sora az iránytól függ: kelet, dél, nyugat, észak más-más sor.
+	var gy := _uj_rajz("melee", 0, 0)
+	var sorok: Array[int] = []
+	for szog in [0.0, PI * 0.5, PI, -PI * 0.5]:
+		gy.update_anim(float(szog), 0.0, false, false)
+		sorok.append(int(gy._row))
+	gy.queue_free()
+	check("a gyalogos négy irányba néz", sorok == [3, 2, 1, 0], str(sorok))
+	# A ló a lépő sorokról: kelet felé jobbra (3. sor), nyugat felé balra (2.).
+	var lo := _uj_rajz("cav", 0, 0)
+	lo.update_anim(0.0, 1.0, true, false)
+	var lo_k: int = lo._row
+	lo.update_anim(PI, 1.0, true, false)
+	var lo_ny: int = lo._row
+	lo.queue_free()
+	check("a ló a menetirányba néz", lo_k == 3 and lo_ny == 2, "K %d / Ny %d" % [lo_k, lo_ny])
 	# --- A HAJÓK IRÁNYA ---
-	#
-	# A hajólapok OLDALNÉZETIEK: a test a kép alján, az árbocok fölfelé, az
-	# orr balra. Ilyen képet nem szabad a menetirányba forgatni — észak felé
-	# tartva a hajó az oldalára dőlne, az árbocai vízszintesen állnának.
-	# Helyette (mint az eredeti játékban) tükrözünk és keskenyítünk.
-	var iranyok := {"kelet": 0.0, "dél": PI * 0.5, "nyugat": PI, "észak": -PI * 0.5}
-	for r in ["fisher", "transport", "warship", "galleon"]:
-		# MINDEN korszakban: a vitorlásnak és az acélhajónak egyaránt a
-		# menetirányba kell néznie.
-		for hkor in range(4):
-			var hs := Sprite2D.new()
-			hs.set_script(load("res://scripts/units/UnitSprite.gd"))
-			add_child(hs)
-			hs.setup(r, hkor, 0)
-			var dolt: Array[String] = []
-			var sx := {}
-			for nev in iranyok:
-				hs.update_anim(float(iranyok[nev]), 0.0, true, false)
-				if absf(hs.rotation) > 0.15: dolt.append(str(nev))
-				sx[nev] = hs.scale.x
-			check("a(z) %s nem fordul az oldalára (korszak %d)" % [r, hkor],
-				dolt.is_empty(), str(dolt))
-			check("a(z) %s orra a menetirányba néz (korszak %d)" % [r, hkor],
-				float(sx["kelet"]) < 0.0 and float(sx["nyugat"]) > 0.0,
-				"K %.2f / Ny %.2f" % [sx["kelet"], sx["nyugat"]])
-			check("a(z) %s szemből keskenyebb (korszak %d)" % [r, hkor],
-				absf(float(sx["dél"])) < absf(float(sx["nyugat"])) * 0.6
-				and absf(float(sx["észak"])) < absf(float(sx["nyugat"])) * 0.6,
-				"D %.2f / É %.2f" % [sx["dél"], sx["észak"]])
-			hs.queue_free()
+	# Oldalnézeti képek: nem forgatjuk őket, hanem tükrözzük (kelet/nyugat),
+	# illetve szemből/hátulról keskenyen mutatjuk — ahogy az eredeti paintShip.
+	for r2 in ["fisher", "transport", "warship", "galleon"]:
+		var hs := _uj_rajz(str(r2), 1, 0)
+		hs.update_anim(0.0, 0.0, true, false)
+		var k_ok: bool = hs._pose == "side" and hs._pf > 0.0
+		hs.update_anim(PI, 0.0, true, false)
+		var ny_ok: bool = hs._pose == "side" and hs._pf < 0.0
+		hs.update_anim(PI * 0.5, 0.0, true, false)
+		var d_ok: bool = hs._pose == "front"
+		hs.update_anim(-PI * 0.5, 0.0, true, false)
+		var e_ok: bool = hs._pose == "back"
+		check("a(z) %s a menetirányba néz" % r2, k_ok and ny_ok and d_ok and e_ok)
+		check("a(z) %s nem fordul az oldalára" % r2, absf(hs.rotation) < 0.01)
+		hs.queue_free()
+	# A gép és a harckocsi oldalnézetben marad, csak tükröződik.
+	for r3 in ["fighter", "bomber"]:
+		var gp := _uj_rajz(str(r3), 3, 0)
+		gp.update_anim(0.0, 0.0, true, false)
+		var jobbra: float = gp._flip
+		gp.update_anim(PI, 0.0, true, false)
+		var balra: float = gp._flip
+		gp.queue_free()
+		check("a(z) %s oldalról látszik és tükröződik" % r3,
+			jobbra > 0.0 and balra < 0.0, "%.0f / %.0f" % [jobbra, balra])
+	# Az épületképek: minden korszakban a kisütött eredeti PAINT-rajz,
+	# csapatszín-maszkkal; korszakonként más kép.
+	var kep_hq0 := HtmlEpulet.kep("hq", 0, "hu")
+	check("a főváros képe a kisütött eredeti rajz", not kep_hq0.is_empty())
+	check("a kisütött rajzhoz csapatszín-maszk tartozik",
+		kep_hq0.get("mask", null) is Texture2D)
+	var kor_kepek: Array[String] = []
+	for a3 in range(4):
+		var kk: Texture2D = HtmlEpulet.kep("hq", a3, "hu").get("tex", null)
+		if kk != null and not (kk.resource_path in kor_kepek): kor_kepek.append(kk.resource_path)
+	check("a főváros korszakonként más", kor_kepek.size() == 4, "%d kép" % kor_kepek.size())
+	var meret_hiany: Array[String] = []
+	for t in Building.BUILD_STATS.keys():
+		if not HtmlEpulet.MERET.has(t) or not HtmlEpulet.BH.has(t):
+			meret_hiany.append(str(t))
+	check("minden épületnek megvan az eredeti mérete és magassága",
+		meret_hiany.is_empty(), str(meret_hiany))
+	# A nemzetek építészete különbözik (natOverlay): a magyar és az orosz
+	# középkori templom nem ugyanaz a kép.
+	var tm_hu: Texture2D = HtmlEpulet.kep("temple", 0, "hu").get("tex", null)
+	var tm_ru: Texture2D = HtmlEpulet.kep("temple", 0, "ru").get("tex", null)
+	check("a nemzetek épületei különböznek", tm_hu != null and tm_ru != null
+		and tm_hu.resource_path != tm_ru.resource_path)
+	await _test_sprites_2()
 
-	# --- A HAJÓK KORSZAKFÜGGŐEK ---
-	#
-	# 15. és 17. század: vitorlás lapról (más-más színben), 19. század: gőzös
-	# (kéménnyel), 20. század: rajzolt acélhajó, vitorla nélkül.
-	var hvart := ["sail", "sail", "steam", "steel"]
-	for r in ["fisher", "transport", "warship", "galleon"]:
-		var stilusok: Array[String] = []
-		var szinek: Array[Color] = []
-		var rossz_h: Array[String] = []
-		for hkor in range(4):
-			var hs2 := Sprite2D.new()
-			hs2.set_script(load("res://scripts/units/UnitSprite.gd"))
-			add_child(hs2)
-			hs2.setup(r, hkor, 0)
-			stilusok.append(str(hs2.ship_style()))
-			szinek.append(hs2.self_modulate)
-			if str(hs2.ship_style()) != str(hvart[hkor]):
-				rossz_h.append("%d:%s" % [hkor, hs2.ship_style()])
-			# A vízvonal minden korszakban a hajótest alja.
-			if hkor < 3 and hs2.offset.y >= 0.0:
-				rossz_h.append("%d:vízvonal" % hkor)
-			hs2.queue_free()
-		check("a(z) %s korszakonként más hajó" % r, rossz_h.is_empty(),
-			"%s (várt %s)" % [str(stilusok), str(hvart)])
-		check("a(z) %s a 15. és a 17. században sem egyforma" % r,
-			szinek[0] != szinek[1], "%s / %s" % [szinek[0], szinek[1]])
-	# A 20. századi hajó RAJZOLT: nincs lapja, de nem is üres folt.
-	var ah := Sprite2D.new()
-	ah.set_script(load("res://scripts/units/UnitSprite.gd"))
-	add_child(ah)
-	ah.setup("warship", 3, 0)
-	check("a 20. századi hadihajó rajzolt, nem vitorlás lap",
-		ah.is_drawn_ship() and ah.texture == null)
-	check("a rajzolt acélhajó mérete a hajótípushoz igazodik",
-		is_equal_approx(ah.scale.y, 46.0 * 2.4 / 64.0), "%.3f" % ah.scale.y)
-	ah.queue_free()
-	# A repülőgépek FELÜLNÉZETIEK, azokat viszont forgatni kell.
-	var rs := Sprite2D.new()
-	rs.set_script(load("res://scripts/units/UnitSprite.gd"))
-	add_child(rs)
-	rs.setup("fighter", 3, 0)
-	rs.update_anim(0.0, 0.0, true, false)
-	check("a vadászgép a menetirányba fordul",
-		is_equal_approx(rs.rotation, PI * 0.5), "%.2f" % rs.rotation)
-	rs.queue_free()
+func _uj_rajz(role: String, age: int, owner: int) -> Sprite2D:
+	var s := Sprite2D.new()
+	s.set_script(load("res://scripts/units/UnitSprite.gd"))
+	add_child(s)
+	s.setup(role, age, owner)
+	return s
 
-	# --- Korhűség: a 19. század nem a 20. ---
-	#
-	# A 19. századi katona vonalgyalogos, nem rohamsisakos géppisztolyos:
-	# a napóleoni lapról dolgozik, csak tompább egyenruhában.
-	var lapok: Dictionary = {}
-	var szinek: Dictionary = {}
-	for a in range(4):
-		var ks := Sprite2D.new()
-		ks.set_script(load("res://scripts/units/UnitSprite.gd"))
-		add_child(ks)
-		ks.setup("melee", a, 0)
-		lapok[a] = str(ks._sheet_key)
-		szinek[a] = ks.self_modulate
-		ks.queue_free()
-	check("a 19. század a napóleoni lapot használja",
-		str(lapok[2]).begins_with("napoleon"), str(lapok[2]))
-	check("a 20. század kapja a világháborús lapot",
-		str(lapok[3]) == "ww2", str(lapok[3]))
-	check("a 19. és a 20. század nem ugyanaz a lap", lapok[2] != lapok[3])
-	check("a 19. század nem ugyanúgy fest, mint a 17.",
-		szinek[2] != szinek[1], "%s / %s" % [szinek[1], szinek[2]])
-	# Az épületek is: MINDEN korszakban más anyagból épülnek — patics és
-	# zsúp, kő és cserép, tégla és pala, végül beton és lemez.
-	var elteres: Array[String] = []
-	for t in ["hq", "barracks", "house", "tower"]:
-		var latott: Array[String] = []
-		for a in range(4):
-			var kulcs := "%s+%s" % [BuildArt.fal_anyag(t, a), BuildArt.teto_anyag(t, a)]
-			if kulcs in latott: elteres.append("%s@%d" % [t, a])
-			latott.append(kulcs)
-	check("minden korszakban más anyagból épülnek a házak",
-		elteres.is_empty(), str(elteres))
-	# Az anyagminták legyenek TÖMÖREK: ha bárhol átlátszó a csempe, ott a
-	# fű látszana át a házon.
-	var likacsos: Array[String] = []
-	for key in BuildArt.FAL_SZIN:
-		for a in range(4):
-			var im: Image = BuildArt.anyag_tex(key, a).get_image()
-			var atl := 0
-			for yy in range(0, im.get_height(), 2):
-				for xx in range(0, im.get_width(), 2):
-					if im.get_pixel(xx, yy).a < 0.98: atl += 1
-			if atl > 0 and not (key in likacsos): likacsos.append(key)
-	check("az épületanyagok tömörek (nem látszik át rajtuk a táj)",
-		likacsos.is_empty(), str(likacsos))
-	# EGY STÍLUS: a tetőhajlás szűk sávban marad, hogy a házak egy
-	# nézőpontból rajzoltnak látszódjanak.
-	var kilogo: Array[String] = []
-	for t in Building.ROOF_TAPER:
-		var v: float = Building.ROOF_TAPER[t]
-		if v < 0.08 or v > 0.45: kilogo.append("%s=%.2f" % [t, v])
-	check("a tetők egy nézőpontból készültek (hajlás 0,08–0,45)",
-		kilogo.is_empty(), str(kilogo))
-	check("a korszakcsoportok jól oszlanak el",
-		Building.era_group(0) == 0 and Building.era_group(1) == 0
-		and Building.era_group(2) == 1 and Building.era_group(3) == 2)
-
+func _test_sprites_2() -> void:
 	# --- A halraj él ---
 	var hal: Node2D = null
 	for n in get_tree().get_nodes_in_group("resources"):
@@ -1188,124 +1133,6 @@ func _test_sprites() -> void:
 	else:
 		check("van halraj a pályán", false)
 
-	# A szerszám abban a kézben legyen, amelyikkel az alak dolgozik: a lapon
-	# a csapás animációja soronként adott irányba lendíti a kart.
-	#   sor 0 (hát) jobbra, 1 (nyugat) balra, 2 (dél) jobbra, 3 (kelet) jobbra
-	var elvart := {0: 1.0, 1: -1.0, 2: 1.0, 3: 1.0}
-	for age2 in [0, 1]:
-		var rossz: Array[String] = []
-		for r in ["worker", "melee", "ranged", "spear"]:
-			var s2 := Sprite2D.new()
-			s2.set_script(load("res://scripts/units/UnitSprite.gd"))
-			add_child(s2)
-			s2.setup(r, age2, 0)
-			for dir in range(4):
-				s2._dir = dir
-				var sor: int = s2._rows[dir]
-				if not is_equal_approx(s2.weapon_side(), elvart[sor]):
-					rossz.append("%s dir%d" % [r, dir])
-			s2.queue_free()
-		check("a szerszám a dolgozó kézben van (korszak %d)" % age2,
-			rossz.is_empty(), str(rossz))
-	# A SAJÁT FEGYVER: amelyik lapon már rajta van a fegyver (íjász íja,
-	# napóleoni lövész szablyája, világháborús puska), oda nem rajzolunk
-	# másodikat; a többinél marad a rajzolt szerszám.
-	var fegyveres := {"ranged": true, "melee": false, "spear": false,
-		"worker": false, "priest": false, "spy": false}
-	for age5 in [0, 1, 3]:
-		var rossz_f: Array[String] = []
-		for r in fegyveres.keys():
-			var fs := Sprite2D.new()
-			fs.set_script(load("res://scripts/units/UnitSprite.gd"))
-			add_child(fs)
-			fs.setup(str(r), age5, 0)
-			# A 20. században mindenki a világháborús lapról jön, azon van
-			# puska — ott tehát senkihez nem rajzolunk fegyvert.
-			var vart: bool = true if age5 >= 2 else bool(fegyveres[r])
-			if fs.sheet_has_weapon() != vart:
-				rossz_f.append("%s@%d" % [r, age5])
-			fs.queue_free()
-		check("a lapon lévő fegyvert nem duplázzuk (korszak %d)" % age5,
-			rossz_f.is_empty(), str(rossz_f))
-
-	# A szerszám a KÉZZEL mozog: a kar végét kockánként mérjük ki a lapról,
-	# tehát a járás és a csapás minden kockájában máshova kerül.
-	for age4 in [0, 1]:
-		var ms := Sprite2D.new()
-		ms.set_script(load("res://scripts/units/UnitSprite.gd"))
-		add_child(ms)
-		ms.setup("melee", age4, 0)
-		ms._dir = 0                       # Kelet -> 3. sor, jobb kéz
-		var jaras: Array[Vector2] = []
-		for c in range(ms._walk_base, ms._walk_base + ms._walk_frames):
-			jaras.append(ms._hand_at(3, c, 1.0))
-		var valtozik := false
-		for i in range(1, jaras.size()):
-			if jaras[i] != jaras[0]: valtozik = true
-		check("a kéz helye kockánként változik (korszak %d)" % age4,
-			valtozik, str(jaras.slice(0, 3)))
-		# A csapás kockáin a kar messzebb nyúlik, mint álló helyzetben.
-		var allo: Vector2 = ms._hand_at(3, ms._idle_col, 1.0)
-		var legtavolabb := allo.x
-		for c2 in range(ms._atk_base, ms._atk_base + ms._atk_frames):
-			legtavolabb = maxf(legtavolabb, ms._hand_at(3, c2, 1.0).x)
-		check("csapáskor kinyúlik a kar (korszak %d)" % age4,
-			legtavolabb > allo.x, "%.1f -> %.1f" % [allo.x, legtavolabb])
-		# Az álló kéz a csípő magasságában, a törzs mellett van.
-		check("a kéz a törzs mellett, csípőmagasságban van (korszak %d)" % age4,
-			absf(allo.x) >= 5.0 and absf(allo.x) < 20.0
-			and allo.y > 0.0 and allo.y < 26.0, str(allo))
-		ms.queue_free()
-
-	# A ló és a lovas aránya: a hátas legyen nagyobb, mint a nyeregben ülő
-	# ember, a lovas felsőteste pedig akkora, mint egy gyalogosé.
-	for age3 in [0, 1]:
-		var cs := Sprite2D.new()
-		cs.set_script(load("res://scripts/units/UnitSprite.gd"))
-		add_child(cs)
-		cs.setup("cav", age3, 0)
-		var lo: float = cs.horse_world_h()
-		var lovas: float = cs.rider_world_h()
-		var torzs: float = cs.rider_torso_h()
-		check("a ló nagyobb, mint a nyeregből kilátszó ember (korszak %d)" % age3,
-			lo > torzs * 1.7, "ló %.1f px, felsőtest %.1f px" % [lo, torzs])
-		check("a lovas alakja arányos (korszak %d)" % age3,
-			absf(lovas - cs.RIDER_H) < 1.5,
-			"%.1f px (várt %.1f)" % [lovas, cs.RIDER_H])
-		check("a lovas kisebb, mint a ló (korszak %d)" % age3,
-			lovas < lo, "lovas %.1f px, ló %.1f px" % [lovas, lo])
-		cs.queue_free()
-	var missing_b: Array[String] = []
-	for t in Building.BUILD_STATS.keys():
-		for age in range(4):
-			var b = main.spawn_building(t, 0,
-				Vector2(-9000, -9000), true)   # a palyan kivul, csak betoltesre
-			b.age = age
-			b._load_sprite()
-			# A fal és a tető anyagának LÉTEZNIE kell a közös palettában —
-			# különben az épület szín nélkül, tájidegen foltként jelenne meg.
-			if (not BuildArt.FAL_SZIN.has(b._fal_mat)
-					or not BuildArt.TETO_SZIN.has(b._teto_mat)
-					or BuildArt.anyag_tex(b._fal_mat, age) == null) \
-					and not ("%s@%d" % [t, age]) in missing_b:
-				missing_b.append("%s@%d" % [t, age])
-			b.queue_free()
-	check("minden épületnek van anyaga a közös palettából",
-		missing_b.is_empty(), str(missing_b))
-	# Méretarány: az épületek a KATONÁHOZ mérve legyenek értelmesek.
-	# (ház ~1,5x, laktanya ~2x, főváros ~3x a gyalogos magassága)
-	var ember := 46.0
-	var aranyok := {"house": [1.3, 2.2], "barracks": [1.7, 2.8],
-		"hq": [2.4, 3.6], "tower": [2.0, 3.4], "temple": [2.0, 3.4]}
-	for t in aranyok:
-		var b2 = main.spawn_building(t, 0, Vector2(-9000, -9000), true)
-		var magassag: float = b2._sprite_rect().size.y
-		var arany := magassag / ember
-		var hatar: Array = aranyok[t]
-		check("a(z) %s mérete arányos a katonával" % t,
-			arany >= hatar[0] and arany <= hatar[1],
-			"%.2fx (elvárt %.1f–%.1f)" % [arany, hatar[0], hatar[1]])
-		b2.queue_free()
 	# Zászlók és uralkodók
 	var missing_f: Array[String] = []
 	for key in Style.NATION_ORDER:
@@ -2308,20 +2135,21 @@ func _test_modules() -> void:
 	# nyereség a gyenge gépen (32 ms -> 18 ms képidő).
 	check("a képernyőn kívüli apróságok alapból nem mozognak",
 		Settings.cull_offscreen)
-	var kemeny: Node = null
+	# A lobogó zászló és a kéményfüst az épület ÉLŐ rétegén van: csak az
+	# rajzolódik újra, nem az egész épület — és csak a képernyőn.
+	var zaszlos: Node = null
 	for b in get_tree().get_nodes_in_group("buildings"):
-		if is_instance_valid(b) and b.tipus in Building.CHIMNEY and b.is_ready():
-			kemeny = b
+		if is_instance_valid(b) and b.tipus == "hq" and b.is_ready():
+			zaszlos = b
 			break
-	if kemeny != null:
-		kemeny._ensure_smoke()
-		var kulon := kemeny._smoke_node != null
+	if zaszlos != null:
+		var kulon: bool = zaszlos._felso != null
 		var figy := false
-		for c in kemeny.get_children():
+		for c in zaszlos.get_children():
 			if c is VisibleOnScreenNotifier2D: figy = true
-		check("a füst külön csomóponton van (nem rajzolja újra a házat)",
+		check("a zászló és a füst külön rétegen van (nem rajzolja újra a házat)",
 			kulon)
-		check("a kémény is csak a képernyőn füstöl", figy)
+		check("a zászló is csak a képernyőn lobog", figy)
 
 	Achievements.stats = ment_stat
 	Achievements.unlocked = ment_unl

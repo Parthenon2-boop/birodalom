@@ -34,9 +34,8 @@ const BUILD_STATS := {
 	"academy":  {"hp": [620, 760, 920, 1100]},
 }
 
-# A méretek az EGYSÉG magasságához igazodnak (UnitSprite.TARGET_H = 46 px):
-# egy ház nagyjából másfélszer, egy laktanya kétszer, a főváros közel
-# háromszor akkora, mint egy katona — ez a szokásos RTS-arány.
+# A lábnyom (ütközés, építési hely). A rajz az eredeti méreteivel készül
+# (HtmlEpulet.MERET), ez pár képponttal nagyobb.
 const BUILD_SIZE := {
 	"hq":       Vector2(108, 106),
 	"barracks": Vector2(86, 82),
@@ -85,31 +84,19 @@ static func height_of(t: String, age: int) -> float:
 static func size_of(t: String) -> Vector2:
 	return BUILD_SIZE.get(t, Vector2(64, 64))
 
-# --- Anyagok ---
+# --- Kinézet ---
 #
-# A falak és a tetők anyaga (és így a korszak arca) a BuildArt-ból jön:
-# ott van a teljes paletta, a kódból rajzolt anyagminták és a közös
-# fényirány. Ez a fájl CSAK az épület felépítését és a jellegzetes
-# részleteit rajzolja meg — a stílust a BuildArt tartja egy kézben.
-#
-# Korábban innen, az assets/sprites/buildings LPC-lapokból vágott
-# textúrafoltok kerültek a falra. Azok egy másik rajzoló másik fényei közt
-# készültek — hideg, kékesszürke tetők, lapos fehér vakolat —, ezért nem
-# illettek sem a tájhoz, sem az egységekhez. Az LPC-lapok maradnak a
-# mappában (a régi mentésekhez nem kellenek), de a játék már nem használja
-# őket épületanyagnak.
+# Az épületek képe a böngészős eredetiből jön (lásd HtmlEpulet.gd és a fájl
+# végén a rajzolást): a középkorban és a többi épületnél az eredeti
+# PAINT-rajzok kisütött képe, a 17. századtól a hat alapépületnél az LPC
+# gyarmati és viktoriánus rajz (assets/sprites/buildings).
 
-# Melyik anyagcsoport tartozik a korszakhoz. (A BuildArt korszakonként
-# külön anyagot ad, itt már csak a régi hívók kedvéért marad meg.)
+# Korszakcsoport (régi hívók kedvéért marad meg).
 static func era_group(a: int) -> int:
 	if a <= 1: return 0
 	return 1 if a == 2 else 2
 
-# Ezeknek nincs teteje: föld- illetve betonfelület, saját mintázattal.
-const FLAT_TYPES := ["farm", "airfield", "sugar"]
-
-# Típusszín. A RAJZ már nem ebből dolgozik — a fal és a tető anyaga adja a
-# színt (BuildArt) —, de a minikártya, a kampányszerkesztő és a mentés-
+# Típusszín. A RAJZ nem ebből dolgozik, de a minikártya, a kampányszerkesztő és a mentés-
 # olvasó ebből mutatja meg egy pillantásra, miféle épület áll ott.
 const BUILD_COLOR := {
 	"hq":       Color(0.62, 0.52, 0.36),
@@ -181,10 +168,7 @@ var _size        : Vector2 = Vector2(64, 64)
 var _height      : float   = 30.0
 var _color       : Color   = Color(0.6, 0.5, 0.4)
 var _tower_cd    : float   = 0.0
-# A fal és a tető anyaga (BuildArt kulcsok) — a korszak ezeken látszik.
-var _fal_mat     : String    = "patics"
-var _teto_mat    : String    = "zsup"
-# A gazdája nemzete — ebből jön az építészet (tető, fal, díszítés árnyalata).
+# A gazdája nemzete — ebből jön az építészet (a kép és a zászló).
 var _nemzet      : String    = ""
 var _flag_tex    : Texture2D = null
 var team_color   : Color   = Color.WHITE
@@ -205,9 +189,6 @@ var _selected    : bool    = false
 var rally_set    : bool    = false
 var rally_node   : Node2D  = null
 var rally_foe    : Node    = null
-# Kéményfüst: az eltelt idő és a következő újrarajzolásig hátralévő idő.
-var _smoke_t      : float  = 0.0
-var _smoke_redraw : float  = 0.0
 
 @onready var sprite   := $Sprite2D as Sprite2D
 @onready var col      := $CollisionShape2D as CollisionShape2D
@@ -227,9 +208,6 @@ func _ready() -> void:
 	_size   = BUILD_SIZE.get(tipus, Vector2(64, 64))
 	_height = height_of(tipus, age)
 	_color  = BUILD_COLOR.get(tipus, Color(0.6, 0.5, 0.4))
-	# A falminta ismételhető csempe: enélkül a draw_texture_rect(..., true)
-	# egyetlen példányt nyújtana szét a falon.
-	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	_load_sprite()
 	var shape := RectangleShape2D.new()
 	shape.size = _size
@@ -244,7 +222,6 @@ func _ready() -> void:
 		add_to_group("enemy_buildings")
 	if BUILD_STATS.get(tipus, {}).get("drop", false):
 		add_to_group("dropoff")
-	sprite.visible = false
 	queue_redraw()
 
 func _base_hp() -> float:
@@ -264,12 +241,7 @@ func _process(delta: float) -> void:
 	# Hálózati játszmában a csatlakozó nem termel, nem képez és nem épít:
 	# mindezt a házigazda számolja, ide csak a kész állapot érkezik.
 	if GameState.net_client:
-		if tipus in CHIMNEY and prog >= 1.0 and Settings.lively():
-			_smoke_t += delta
-			_smoke_redraw += delta
-			if _smoke_redraw >= 0.16:
-				_smoke_redraw = 0.0
-				queue_redraw()
+		_elo_tick(delta)
 		return
 	if not GameState.on or GameState.over: return
 	if prog < 1.0:
@@ -287,13 +259,8 @@ func _process(delta: float) -> void:
 	_tick_resources(delta)
 	_tick_tower(delta)
 	_tick_heal(delta)
-	# A kéményfüst mozgásához ritka újrarajzolás elég.
-	if tipus in CHIMNEY and Settings.lively():
-		_smoke_t += delta
-		_smoke_redraw += delta
-		if _smoke_redraw >= 0.16:
-			_smoke_redraw = 0.0
-			if _smoke_node != null and _on_screen: _smoke_node.queue_redraw()
+	# A zászló lobogásához és a kéményfüsthöz ritka újrarajzolás elég.
+	_elo_tick(delta)
 
 func is_ready() -> bool:
 	return prog >= 1.0
@@ -495,39 +462,6 @@ func _apply_rally(u: Node) -> void:
 	elif u.has_method("move_to"):
 		u.move_to(rally.global_position)
 
-# A gyülekezőpont jelzése: szaggatott vonal az épülettől, a végén zászló.
-func _draw_rally(strong: bool) -> void:
-	if not rally_set: return
-	var to := rally.position
-	var a := 0.85 if strong else 0.35
-	var col := team_accent
-	match rally_kind():
-		"node": col = Color("8a6234")
-		"foe":  col = Color("c0392b")
-	col.a = a
-	# szaggatott vezetővonal a talptól a zászlóig
-	var from := Vector2(0, _size.y * 0.5 - 2.0)
-	var d := to - from
-	var steps := maxi(2, int(d.length() / 11.0))
-	var line_c := Color(col.r, col.g, col.b, a * 0.75)
-	for i in range(0, steps, 2):
-		var p0 := from + d * (float(i) / float(steps))
-		var p1 := from + d * (float(mini(i + 1, steps)) / float(steps))
-		draw_line(p0, p1, Color(0, 0, 0, a * 0.35), 3.5)
-		draw_line(p0, p1, line_c, 2.0)
-	# talpgyűrű + rúd + lobogó — sötét kontúrral, hogy a füvön is olvasható
-	draw_arc(to, 7.0, 0.0, TAU, 18, Color(0, 0, 0, a * 0.45), 3.5)
-	draw_arc(to, 7.0, 0.0, TAU, 18, Color(col.r, col.g, col.b, a), 2.0)
-	var top := to + Vector2(0, -26.0)
-	draw_line(to, top, Color(0, 0, 0, a * 0.5), 4.0)
-	draw_line(to, top, Color(0.30, 0.24, 0.16, a), 2.0)
-	var flag := PackedVector2Array([top, top + Vector2(15.0, 5.0),
-		top + Vector2(0.0, 10.0)])
-	var outline := PackedVector2Array([top + Vector2(-1.5, -1.5),
-		top + Vector2(17.0, 5.0), top + Vector2(-1.5, 11.5)])
-	draw_colored_polygon(outline, Color(0, 0, 0, a * 0.5))
-	draw_colored_polygon(flag, col)
-
 # --- Sebzés ---
 
 # A `tamado` az egységeknél a veteránsághoz kell; az épület nem gyűjt
@@ -579,814 +513,194 @@ static func pop_bonus(t: String) -> int:
 	var st: Dictionary = BUILD_STATS.get(t, {})
 	return int(st.get("pop", 0))
 
+# --- RAJZ: A BÖNGÉSZŐS EREDETI SZERINT (index.html drawBuild) ---
+#
+# Az épület képe az eredeti PAINT-rajzaiból kisütött kép (a 17. századtól a
+# hat alapépületnél az LPC gyarmati/viktoriánus rajz) — lásd HtmlEpulet.gd.
+# A kép a Sprite2D gyerekcsomóponton ül (csapatszín-maszkkal), alatta a
+# vetett árnyék és a hátsó állvány (ez a csomópont), fölötte az élő réteg
+# (_felso): az első állvány, a lobogó zászló, a kéményfüst, a sérülés, a
+# kellékek, az életcsík, a kijelölés és a gyülekezőpont.
+#
+# Méretek: az eredeti BUILDS.w/h és BH táblája (HtmlEpulet.MERET, .BH) — a
+# rajzok ezekhez készültek. A kattintható lábnyom (BUILD_SIZE) ettől pár
+# képponttal eltérhet, a játékszabály azt használja.
+const HtmlEpulet := preload("res://scripts/buildings/HtmlEpulet.gd")
+
+var _kep: Dictionary = {}
+var _hw: Vector2 = Vector2(64, 64)
+var _hh: float = 28.0
+var _felso: Node2D = null
+var _on_screen: bool = true
+var _elo_redraw: float = 0.0
+
 func _load_sprite() -> void:
-	_fal_mat  = BuildArt.fal_anyag(tipus, age)
-	_teto_mat = BuildArt.teto_anyag(tipus, age)
-	# A gazdája nemzete adja az építészetet: a magyar falu vörös tetős és
-	# sárga vakolatú, a német szürke palás, az orosz zöld tetős. Egy pályán
-	# így ránézésre meg lehet mondani, kinek a földjén jársz.
+	# A gazdája nemzete adja az építészetet (az eredeti stFor + natOverlay):
+	# a magyar árkádos, a német favázas, az orosz hagymakupolás.
 	_nemzet = GameState.nation_of(owner_id)
-	if tipus == "hq":
-		var fp := Style.flag_path(
-			GameState.nation if owner_id == GameState.en_id else "de", age)
+	_hw = HtmlEpulet.meret(tipus)
+	_hh = HtmlEpulet.magassag(tipus, age)
+	_kep = HtmlEpulet.kep(tipus, age, _nemzet)
+	_flag_tex = null
+	if tipus == "hq" or tipus == "barracks":
+		var fp := Style.flag_path(_nemzet, age)
 		if ResourceLoader.exists(fp):
 			_flag_tex = load(fp)
+	if sprite != null:
+		sprite.material = null
+		var mask: Variant = _kep.get("mask", null)
+		if mask is Texture2D:
+			sprite.material = HtmlEpulet.anyag(mask as Texture2D, team_color, team_accent)
+	_ensure_felso()
+	_frissit_kep()
+	queue_redraw()
 
-# A korszakhoz és az anyaghoz illő tetőszín. A jellegzetességek (torony-
-# sisak, tetőablak, saroktorony) ebből származtatják a maguk árnyalatát,
-# így azok is együtt öregszenek az épülettel.
-func _roof_base() -> Color:
-	var c := BuildArt.teto_szin(_teto_mat, age, _nemzet)
-	var j := _teto_jitter()
-	return c.lightened(j) if j > 0.0 else c.darkened(-j)
-
-func _wall_base() -> Color:
-	return BuildArt.fal_szin(_fal_mat, age, _nemzet)
-
-# Példányonkénti apró tetőárnyalat (−4%..+4%): két szomszédos ház tetője ne
-# legyen betűre azonos. Az azonosítóból jön, tehát hálózatban is egyezik.
-func _teto_jitter() -> float:
-	return (float(absi(nid * 2246822519) % 9) - 4.0) * 0.01
-
-# --- ARÁNYOK: EGY NÉZŐPONT MINDEN HÁZON ---
-#
-# A homlokzat magassága a BUILD_HEIGHT-ból és a lábnyom mélységéből jön
-# (a magas torony magas marad, a zömök major zömök). A TETŐ viszont a
-# SZÉLESSÉGBŐL, egyetlen hajlásszög-táblából — korábban a lábnyom
-# mélységéből számoltuk, ezért a széles épületeken a tető akkorára nőtt,
-# hogy elnyelte a házat, és minden épület "tetőkupacnak" látszott.
-func _wall_height() -> float:
-	return maxf(_height * 0.82 + _size.y * 0.28, 16.0)
-
-# Tetőhajlás típusonként: a torony sisakja meredek, a piaci csarnok
-# tetője lapos. Az ÉRTÉK a lábnyom szélességéhez mért arány.
-const ROOF_PITCH := {
-	"tower": 0.80, "temple": 0.52, "hq": 0.34, "house": 0.36,
-	"barracks": 0.30, "stable": 0.28, "harbor": 0.28, "goldmine": 0.32,
-	"market": 0.26, "hospital": 0.32, "smith": 0.30, "academy": 0.34,
-}
-
-func _roof_height() -> float:
-	var p: float = ROOF_PITCH.get(tipus, 0.32)
-	return clampf(_size.x * p, 12.0, 70.0)
-
-func _roof_rect() -> Rect2:
-	var base := _size.y * 0.5 - _wall_height()
-	return Rect2(-_size.x * 0.5 - 5.0, base - _roof_height(),
-		_size.x + 10.0, _roof_height())
-
-func _wall_rect() -> Rect2:
-	var wh := _wall_height()
-	return Rect2(-_size.x * 0.5, _size.y * 0.5 - wh, _size.x, wh)
-
-func _sprite_rect() -> Rect2:
-	return _roof_rect().merge(_wall_rect())
-
-func _draw() -> void:
-	var foot := Rect2(-_size * 0.5, _size)
-	var box := _sprite_rect()
-	# Vetett árnyék + letaposott föld a ház körül. A fény bal felülről jön
-	# (BuildArt.NAP), ezért az árnyék jobbra-le dől — MINDEN épületnél
-	# ugyanúgy. Enélkül a ház a fű tetején lebegett.
-	# Az árnyék hossza a LÁTSZÓLAGOS magassághoz (BUILD_HEIGHT) igazodik,
-	# nem a rajz teljes kiterjedéséhez — különben a magas tetejű házak
-	# árnyéka fél pályányira nyúlt volna.
-	BuildArt.vetett_arnyek(self, foot, _height * 0.85)
-	# Építkezés alatt csak alulról látható annyi, amennyi már áll.
-	var reveal := box.end.y - box.size.y * clampf(prog, 0.0, 1.0)
-	if tipus in FLAT_TYPES:
-		_draw_flat(foot, reveal)
-	else:
-		_draw_house(foot, reveal)
-	if prog < 1.0:
-		_draw_scaffold(box)
-	_draw_team_band(foot)
-	if _selected:
-		# Sötét alávetés, hogy a keret a füvön és a homokon is olvasható
-		# legyen, nem csak a sötét tetőn.
-		draw_rect(foot.grow(1.5), Color(0, 0, 0, 0.45), false, 3.0)
-		draw_rect(foot, team_accent, false, 2.0)
-	# A gyülekezőpont a kijelölt épületnél erősen, a többinél halványan
-	# látszik — így nem vész el, de nem is nyomja agyon a képet.
-	if owner_id == GameState.en_id:
-		_draw_rally(_selected)
-	# Sérülés: repedések, korom, végül sötétedő fátyol.
-	var frac := clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
-	if frac < 0.85 and prog >= 1.0:
-		_draw_damage(box, frac)
-	if frac < 0.6:
-		draw_rect(box, Color(0.12, 0.06, 0.02, (0.6 - frac) * 0.45), true)
-	var bar_w := _size.x
-	var bar_top := box.position.y - 12.0
-	if prog < 1.0:
-		_draw_bar(bar_w, bar_top, prog, Color("d8b34a"))
-	elif frac < 1.0:
-		var c := Color("6fae52")
-		if frac < 0.55: c = Color("c98b3a")
-		if frac < 0.28: c = Color("c04a3a")
-		_draw_bar(bar_w, bar_top, frac, c)
-	elif not train_queue.is_empty():
-		var left := prod_tmr.time_left
-		var total := maxf(prod_tmr.wait_time, 0.001)
-		_draw_bar(bar_w, bar_top, 1.0 - left / total, Color("6f8fae"))
-
-# CSAPATSZÍN. Korábban az egész talpat elfoglaló, élénk sáv volt: a
-# képen vastag piros lábazatnak látszott, és minden házat elrontott.
-# Most FESTETT SÁV a lábazaton — beljebb kezdődik, sötét kerettel —,
-# így messziről is megmondja, kié a ház, de nem nyomja agyon a rajzot.
-func _draw_team_band(foot: Rect2) -> void:
-	var w := foot.size.x * 0.56
-	var y := foot.end.y - 5.0
-	draw_rect(Rect2(-w * 0.5 - 1.0, y - 1.0, w + 2.0, 4.5),
-		Color(BuildArt.INK.r, BuildArt.INK.g, BuildArt.INK.b, 0.6), true)
-	draw_rect(Rect2(-w * 0.5, y, w, 2.5), team_color, true)
-	draw_rect(Rect2(-w * 0.5, y, w, 1.0),
-		team_color.lightened(0.30), true)
-
-# SÉRÜLÉS. Az eredeti (index.html drawDamage) mintájára: repedések a
-# falon, korom, végül hiányzó tetőfedés. A rajz az épület azonosítójából
-# sorsolódik, tehát nem villódzik és minden gépen ugyanaz.
-func _draw_damage(box: Rect2, frac: float) -> void:
-	var suly := 1.0 - frac
-	var rng := RandomNumberGenerator.new()
-	rng.seed = nid * 7919 + 13
-	var db := int(2.0 + suly * 6.0)
-	var tus := Color(BuildArt.INK.r, BuildArt.INK.g, BuildArt.INK.b, 0.75 * suly)
-	for i in range(db):
-		var p := Vector2(rng.randf_range(box.position.x + 4.0, box.end.x - 4.0),
-			rng.randf_range(box.position.y + 6.0, box.end.y - 6.0))
-		var pontok := PackedVector2Array([p])
-		for _s in range(3):
-			p += Vector2(rng.randf_range(-5.0, 5.0), rng.randf_range(4.0, 9.0))
-			pontok.append(p)
-		draw_polyline(pontok, tus, 1.5)
-	if suly > 0.35:
-		for i in range(int(1.0 + suly * 4.0)):
-			draw_circle(Vector2(rng.randf_range(box.position.x, box.end.x),
-				rng.randf_range(box.position.y + 4.0, box.end.y - 4.0)),
-				4.0 + rng.randf() * 5.0, Color(0.09, 0.08, 0.06, 0.34 * suly))
-	# Hiányzó tetőfedés: sötét lyukak a tető felső sávjában.
-	if suly > 0.5 and not (tipus in FLAT_TYPES):
-		var rr := _roof_rect()
-		for i in range(int((suly - 0.5) * 10.0)):
-			var x := rng.randf_range(-rr.size.x * 0.28, rr.size.x * 0.28)
-			var y := rr.position.y + rng.randf() * rr.size.y * 0.8
-			draw_rect(Rect2(x, y, 3.0 + rng.randf() * 4.0, 2.5 + rng.randf() * 2.0),
-				Color(0.08, 0.07, 0.05, 0.55), true)
-
-func _draw_bar(w: float, top: float, frac: float, c: Color) -> void:
-	draw_rect(Rect2(-w * 0.5 - 1.0, top - 1.0, w + 2.0, 7.0), Color(0, 0, 0, 0.55), true)
-	draw_rect(Rect2(-w * 0.5, top, w * clampf(frac, 0.0, 1.0), 5.0), c, true)
-
-# A téglalap azon része, ami a megadott vonal ALATT van (építkezés).
-func _below(r: Rect2, y: float) -> Rect2:
-	if r.end.y <= y: return Rect2()
-	var top := maxf(r.position.y, y)
-	return Rect2(r.position.x, top, r.size.x, r.end.y - top)
-
-# Mennyire keskenyedik a tető a gerinc felé. 0 = csúcsos (sátortető),
-# 1 = lapos. A torony hegyes, a csarnokok laposabbak. Az értékek egy
-# szűk sávban maradnak (0,10–0,40), hogy a házak EGY nézőpontból
-# rajzoltnak látszódjanak: ez volt a "nem paszol bele" fő oka.
-const ROOF_TAPER := {
-	"tower": 0.10, "temple": 0.20, "hq": 0.30, "house": 0.28,
-	"barracks": 0.34, "stable": 0.38, "harbor": 0.36, "goldmine": 0.30,
-	"market": 0.40, "hospital": 0.30, "smith": 0.32, "academy": 0.28,
-}
-
-# Tetős épület EGY sziluettként: homlokzat + fölötte tető, közös
-# körvonallal. A rajz minden rétege a BuildArt közös szabályait követi:
-# egy nézőpont, egy fényirány, egy tus.
-func _draw_house(foot: Rect2, reveal: float) -> void:
-	var wall := _below(_wall_rect(), reveal)
-	var rr := _roof_rect()
-	var taper: float = ROOF_TAPER.get(tipus, 0.32)
-	var bot_w := rr.size.x                 # ereszszélesség (a talpnál szélesebb)
-	var top_w := rr.size.x * taper         # gerinc
-
-	# 1. Homlokzat: anyagminta, gerendaváz (ha patics), kőlábazat.
-	if wall.size.y > 0.0:
-		BuildArt.homlokzat(self, wall, _fal_mat, age, _nemzet)
-		if _fal_mat == "patics":
-			BuildArt.gerendavaz(self, wall)
-		BuildArt.labazat(self, wall, age)
-
-	# 2. Tető — csak az épülés során látható részig
-	if rr.end.y > reveal:
-		var vis_top := maxf(rr.position.y, reveal)
-		var t := (vis_top - rr.position.y) / maxf(rr.size.y, 0.001)
-		var vis_w := lerpf(top_w, bot_w, t)
-		BuildArt.teto(self, vis_top, vis_w, rr.end.y, bot_w, _teto_mat, age,
-			_nemzet, _teto_jitter())
-
-	# 3. Közös körvonal: a fal és a tető egy testként olvasódik.
-	if wall.size.y > 0.0:
-		draw_line(Vector2(wall.position.x, wall.position.y),
-			Vector2(wall.position.x, wall.end.y), BuildArt.INK, BuildArt.INK_W)
-		draw_line(Vector2(wall.end.x, wall.position.y),
-			Vector2(wall.end.x, wall.end.y), BuildArt.INK, BuildArt.INK_W)
-		draw_line(Vector2(wall.position.x, wall.end.y),
-			Vector2(wall.end.x, wall.end.y), BuildArt.INK, BuildArt.INK_W)
-	if prog < 1.0: return
-	if tipus in CHIMNEY: _draw_chimney(rr)
-	_draw_openings(foot)
-	_draw_signature(foot, wall, rr)
-
-# A FÜST KÜLÖN CSOMÓPONTON.
-#
-# A füst mozog, tehát újra kell rajzolni — de ha ezt az ÉPÜLET csinálja,
-# akkor a fal, a tető, az ablakok és az ajtó is újraépül minden alkalommal.
-# Mérve ez volt a legdrágább művelet a gyenge gépen (18 ms/kép). Így
-# viszont csak három pamacs rajzolódik újra.
-var _smoke_node: Node2D = null
-
-func _ensure_smoke() -> void:
-	if _smoke_node != null or not (tipus in CHIMNEY): return
-	_smoke_node = Node2D.new()
-	_smoke_node.z_index = 1
-	_smoke_node.draw.connect(_draw_smoke)
-	add_child(_smoke_node)
-	# Csak a képernyőn lévő kémények füstölnek: a pálya túloldalán álló
-	# házak füstjét úgysem látja senki.
+# Az élő réteg a kép FÖLÉ kerül (a gyerekek a szülő rajza után jönnek, és ez
+# a csomópont a Sprite2D után áll a fában).
+func _ensure_felso() -> void:
+	if _felso != null: return
+	_felso = Node2D.new()
+	_felso.name = "Felso"
+	_felso.draw.connect(_draw_felso)
+	add_child(_felso)
+	# Csak a képernyőn lévő épületek zászlaja lobog és kéménye füstöl.
 	if not Settings.cull_offscreen: return
 	var vis := VisibleOnScreenNotifier2D.new()
-	vis.rect = Rect2(-_size.x, -_size.y * 2.0, _size.x * 2.0, _size.y * 3.0)
+	vis.rect = Rect2(-_hw.x, -_hw.y - _hh - 60.0, _hw.x * 2.0, _hw.y * 2.0 + _hh + 60.0)
 	vis.screen_entered.connect(func() -> void: _on_screen = true)
 	vis.screen_exited.connect(func() -> void: _on_screen = false)
 	add_child(vis)
 
-var _on_screen: bool = true
+# A kép beállítása: építés közben alulról felfelé nő ki (az eredeti a
+# vásznat vágta: a talptól prog·(h+H) magasan látszik).
+func _frissit_kep() -> void:
+	if sprite == null: return
+	if _kep.is_empty() or prog <= 0.0:
+		sprite.visible = false
+		return
+	var tex: Texture2D = _kep["tex"]
+	var r: Rect2 = _kep["rect"]
+	var ts := Vector2(float(tex.get_width()), float(tex.get_height()))
+	var sc := r.size / ts
+	var ty0 := 0.0
+	if prog < 1.0:
+		var shown := (_hw.y + _hh) * clampf(prog, 0.0, 1.0)
+		ty0 = clampf((_hw.y * 0.5 - shown - r.position.y) / sc.y, 0.0, ts.y)
+	sprite.texture = tex
+	sprite.centered = false
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	sprite.scale = sc
+	sprite.region_enabled = true
+	sprite.region_rect = Rect2(0.0, ty0, ts.x, ts.y - ty0)
+	sprite.position = r.position + Vector2(0.0, ty0 * sc.y)
+	sprite.visible = ty0 < ts.y - 0.5
 
-func _draw_smoke() -> void:
-	if prog < 1.0 or not Settings.lively(): return
-	var r := _chimney_rect()
-	var cx := r.get_center().x
-	var top_y := r.position.y
-	# Az ipari kor kéménye vastagabb, sötétebb füstöt ereszt.
-	var korom := 0.86 if age < 2 else 0.62
-	for i in range(3):
-		var u := fmod(_smoke_t * 0.35 + float(i) / 3.0, 1.0)
-		var p := Vector2(cx + u * r.size.x * 1.3 + sin(u * 6.0) * 1.5,
-			top_y - 2.0 - u * 26.0)
-		_smoke_node.draw_circle(p, 2.0 + u * 5.0,
-			Color(korom, korom, korom * 1.02, (1.0 - u) * 0.32))
+func _draw() -> void:
+	# A rajz állapota (építés, kép) innen frissül: sok helyről csak a
+	# queue_redraw() jön (sérülés, kijelölés, építés), a kép és az élő réteg
+	# ehhez igazodik.
+	call_deferred("_frissit_kep")
+	if _felso != null: _felso.queue_redraw()
+	HtmlEpulet.arnyek(self, _hw.x, _hw.y, _hh)
+	if prog <= 0.0:
+		HtmlEpulet.kituzott_telek(self, _hw.x, _hw.y)
+	elif prog < 1.0:
+		HtmlEpulet.allvany(self, _hw.x, _hw.y, _hh, false)
 
-# Kémény és füst. Ettől lakott a település: a ház nem csak áll, hanem
-# fűtenek benne. A füst lassan száll, ezért az épület ritkán (6 Hz)
-# rajzolódik újra — ennyi elég a folyamatos mozgáshoz.
-const CHIMNEY := ["hq", "house", "barracks", "stable", "goldmine"]
+func _ido() -> float:
+	return float(Time.get_ticks_msec()) / 1000.0
 
-# Melyik változat ez a ház? A hálózati azonosító sorsolja, tehát minden
-# gépen ugyanaz — és egy utcányi lakóház nem lesz egyforma másolat.
-func _valtozat() -> int:
-	return absi(nid * 2654435761) % 3
+# Élő réteg: ami a kép előtt van, és ami időben változik.
+func _draw_felso() -> void:
+	var ci := _felso
+	var w := _hw.x
+	var h := _hw.y
+	var t := _ido()
+	var p := clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
+	if prog > 0.0 and prog < 1.0:
+		HtmlEpulet.allvany(ci, w, h, _hh, true)
+		# Építési csík: ugyanott és ugyanakkora, mint az életcsík.
+		var cs := w * 0.8
+		HtmlEpulet._rect(ci, -cs / 2, -h / 2 - _hh - 12, cs, 4, Color(0, 0, 0, 0.6))
+		HtmlEpulet._rect(ci, -cs / 2 + 0.5, -h / 2 - _hh - 11.5,
+			(cs - 1.0) * clampf(prog, 0.0, 1.0), 3, Color("d8b34a"))
+	elif prog >= 1.0:
+		if Settings.lively():
+			for k in HtmlEpulet.kemenyek(tipus, age, w, h, _hh):
+				var kk: Array = k
+				HtmlEpulet.fust(ci, float(kk[0]), float(kk[1]), float(kk[2]), float(kk[3]), t)
+		if (tipus == "hq" or tipus == "barracks") and _flag_tex != null:
+			_draw_zaszlo(ci, t)
+		HtmlEpulet.serules(ci, w, h, _hh, p, str(nid))
+		HtmlEpulet.eges(ci, w, h, p, str(nid), t, global_position.x)
+		HtmlEpulet.kellekek(ci, tipus, w, h)
+		if p < 1.0:
+			HtmlEpulet.eletcsik(ci, -h / 2 - _hh - 12, w * 0.8, p)
+	if _selected:
+		HtmlEpulet._szaggatott_teglalap(ci, Rect2(-w / 2 - 5, -h / 2 - 5, w + 10, h + 10),
+			team_accent, 2.0, 6.0, 4.0)
+	if owner_id == GameState.en_id and rally_set:
+		_draw_rally(_selected)
+	if not train_queue.is_empty() and prog >= 1.0:
+		var left := prod_tmr.time_left
+		var total := maxf(prod_tmr.wait_time, 0.001)
+		var k2 := clampf(1.0 - left / total, 0.0, 1.0)
+		HtmlEpulet._rect(ci, -21, h / 2 + 5, 42, 6, Color(0, 0, 0, 0.55))
+		HtmlEpulet._rect(ci, -20, h / 2 + 6, 40.0 * k2, 4, team_accent)
+		if train_queue.size() > 1:
+			ci.draw_circle(Vector2(27, h / 2 + 8), 7.0, Color(0, 0, 0, 0.6))
+			var font := ThemeDB.fallback_font
+			if font != null:
+				ci.draw_string(font, Vector2(20, h / 2 + 11.5), str(train_queue.size()),
+					HORIZONTAL_ALIGNMENT_CENTER, 14.0, 9, Color("e8dcc0"))
 
-# A kémény helye és mérete — a rajz ÉS a füst is innen olvassa ki, hogy a
-# pamacsok pontosan a kürtőből szálljanak fel.
-func _chimney_rect() -> Rect2:
-	var rr := _roof_rect()
-	var cw := clampf(rr.size.x * 0.10, 5.0, 11.0)
-	var ch := clampf(rr.size.y * 0.55, 9.0, 18.0)
-	# Az ipari korban a kémény MAGAS gyárkémény: ez a korszak arca.
-	if age >= 2:
-		ch *= 2.2
-		cw *= 0.74
-	# A lakóháznál a kémény hol a bal, hol a jobb oldalon áll.
-	var oldal := 1.0 if (tipus == "house" and _valtozat() == 1) else -1.0
-	var cx := oldal * rr.size.x * 0.24
-	# A kémény a tető ferde oldalán ül, ezért a gerinctől kissé lejjebb.
-	var top_y := rr.position.y + rr.size.y * 0.24
-	return Rect2(cx - cw * 0.5, top_y - ch, cw, ch)
+# Zászló a tetőn (a főváros bal, a kaszárnya jobb sarkán): rövid rúd,
+# lobogó nemzeti zászló, a rúd mentén a csapatszín.
+func _draw_zaszlo(ci: Node2D, t: float) -> void:
+	var fx := (-_hw.x / 2 + 9.0) if tipus == "hq" else (_hw.x / 2 - 9.0)
+	var fy := -_hw.y / 2 - _hh - (12.0 if age == 0 else 4.0)
+	ci.draw_line(Vector2(fx, fy + 4), Vector2(fx, fy - 15), Color("3a3128"), 2.0)
+	ci.draw_circle(Vector2(fx, fy - 16), 2.0, Color("c9b27a"))
+	var fazis := 0.0 if not Settings.lively() else t * 2.6 + float(nid) * 0.9
+	HtmlEpulet.zaszlo(ci, _flag_tex, fx + 1.5, fy - 15, 26.0, fazis)
+	HtmlEpulet._rect(ci, fx - 2.5, fy - 12, 5, 12, team_color)
+	HtmlEpulet._rect(ci, fx - 2.5, fy - 12, 5, 2, Color(0, 0, 0, 0.3))
 
-func _draw_chimney(_rr: Rect2) -> void:
-	var r := _chimney_rect()
-	var tegla := BuildArt.fal_szin("tegla", age, _nemzet)
-	draw_rect(r, tegla, true)
-	var tt := BuildArt.anyag_tex("tegla", age, _nemzet)
-	if tt != null:
-		draw_texture_rect(tt, r, true)
-	draw_rect(Rect2(r.position.x, r.position.y, r.size.x * 0.32, r.size.y),
-		Color(1, 0.96, 0.86, 0.12), true)
-	draw_rect(Rect2(r.end.x - r.size.x * 0.28, r.position.y,
-		r.size.x * 0.28, r.size.y), Color(0.09, 0.06, 0.04, 0.22), true)
-	draw_rect(Rect2(r.position.x - 1.5, r.position.y, r.size.x + 3.0, 3.0),
-		tegla.darkened(0.35), true)
-	draw_rect(r, BuildArt.INK, false, 1.0)
-	# A füstpamacsokat a _smoke_node rajzolja: azok mozognak, a kémény nem.
-	_ensure_smoke()
+# Mozog-e valami a képen (zászló, füst, égés, képzés) — ekkor a _process
+# ritkítva újrarajzolja az élő réteget.
+func _elo_kell() -> bool:
+	if prog < 1.0: return false
+	if not train_queue.is_empty(): return true
+	if not Settings.lively(): return false
+	if (tipus == "hq" or tipus == "barracks") and _flag_tex != null: return true
+	if hp < max_hp * 0.34: return true
+	return not HtmlEpulet.kemenyek(tipus, age, _hw.x, _hw.y, _hh).is_empty()
 
-# Ajtó és ablakok a homlokzaton; a fővároson ezen felül zászló is van.
-func _draw_openings(foot: Rect2) -> void:
-	var wall := _wall_rect()
-	if wall.size.y >= 14.0:
-		var dw := clampf(_size.x * 0.16, 8.0, 18.0)
-		var dh := wall.size.y * 0.62
-		var door := Rect2(-dw * 0.5, wall.end.y - dh, dw, dh)
-		# Kőkeret az ajtó körül, deszkás ajtólap, kilincs és küszöb.
-		draw_rect(Rect2(door.position - Vector2(2, 2), door.size + Vector2(4, 2)),
-			BuildArt.LABAZAT, true)
-		draw_rect(door, BuildArt.GERENDA.darkened(0.35), true)
-		for i in range(3):
-			var lx := door.position.x + door.size.x * (0.25 + 0.25 * float(i))
-			draw_line(Vector2(lx, door.position.y + 2.0),
-				Vector2(lx, door.end.y - 1.0), Color(0.14, 0.09, 0.05, 0.7), 1.0)
-		draw_circle(Vector2(door.end.x - 3.0, door.position.y + dh * 0.55), 1.4,
-			Color(0.78, 0.66, 0.30))
-		draw_rect(Rect2(door.position.x - 3.0, door.end.y - 2.0,
-			door.size.x + 6.0, 2.0), BuildArt.LABAZAT.darkened(0.12), true)
-		# Festett szemöldökfa a nemzet színében: kis felület, de messziről ez
-		# mondja meg, kinek a háza (a böngészős eredeti „trim” színe).
-		draw_rect(Rect2(door.position.x - 2.0, door.position.y - 2.5,
-			door.size.x + 4.0, 2.5), BuildArt.disz_szin(age, _nemzet), true)
-		draw_rect(door, BuildArt.INK, false, 1.0)
-		# Ablakok az ajtó két oldalán: keret, keresztfa, párkány és a
-		# bentről kiszűrődő fény.
-		var n := int(_size.x / 34.0)
-		for i in range(n):
-			var wx := -_size.x * 0.5 + 10.0 + i * 34.0
-			if absf(wx + 5.0) < dw * 0.7: continue
-			var win := Rect2(wx, wall.position.y + wall.size.y * 0.22, 11.0, 10.0)
-			if win.end.x > _size.x * 0.5 - 4.0: continue
-			draw_rect(Rect2(win.position - Vector2(1.5, 1.5),
-				win.size + Vector2(3, 3)), Color(0.50, 0.46, 0.40, 0.9), true)
-			draw_rect(win, Color(0.30, 0.26, 0.18), true)
-			draw_rect(Rect2(win.position, win.size * Vector2(1.0, 0.5)),
-				Color(0.90, 0.85, 0.56, 0.92), true)
-			draw_rect(Rect2(win.position.x, win.position.y + win.size.y * 0.5,
-				win.size.x, win.size.y * 0.5), Color(0.72, 0.66, 0.42, 0.85), true)
-			draw_line(Vector2(win.position.x + win.size.x * 0.5, win.position.y),
-				Vector2(win.position.x + win.size.x * 0.5, win.end.y),
-				Color(0.20, 0.16, 0.11), 1.0)
-			draw_line(Vector2(win.position.x, win.position.y + win.size.y * 0.5),
-				Vector2(win.end.x, win.position.y + win.size.y * 0.5),
-				Color(0.20, 0.16, 0.11), 1.0)
-			draw_rect(Rect2(win.position.x - 2.5, win.end.y + 1.0,
-				win.size.x + 5.0, 2.0), Color(0.56, 0.52, 0.45), true)
-	if tipus == "tower":
-		# Pártázat a fal tetején, a torony sisakja alatt.
-		var i := 0
-		var x := wall.position.x
-		while x < wall.end.x - 4.0:
-			if i % 2 == 0:
-				draw_rect(Rect2(x, wall.position.y - 5.0, 6.0, 6.0),
-					_wall_base().darkened(0.12), true)
-				draw_rect(Rect2(x, wall.position.y - 5.0, 6.0, 6.0),
-					BuildArt.INK, false, 1.0)
-			x += 8.0
-			i += 1
-	if tipus == "hq" and _flag_tex != null:
-		# Zászlórúd a tetőgerincen, rajta a nemzet korszakhoz illő lobogója.
-		var roof2 := _roof_rect()
-		var px := roof2.size.x * 0.10
-		var base_y := roof2.position.y + 2.0
-		var top_y := roof2.position.y - 34.0
-		draw_line(Vector2(px, base_y), Vector2(px, top_y),
-			Color(0.26, 0.20, 0.13), 2.0)
-		var fr := Rect2(px + 1.5, top_y, 30.0, 20.0)
-		draw_rect(Rect2(fr.position + Vector2(1, 2), fr.size), Color(0, 0, 0, 0.35), true)
-		draw_texture_rect(_flag_tex, fr, false)
-		draw_rect(fr, Color(0.12, 0.10, 0.07, 0.8), false, 1.0)
+func _elo_tick(delta: float) -> void:
+	if _felso == null or not _on_screen: return
+	if not _elo_kell(): return
+	_elo_redraw += delta
+	if _elo_redraw >= 0.1:
+		_elo_redraw = 0.0
+		_felso.queue_redraw()
 
-# --- JELLEGZETESSÉG: miről ismerni meg az épületet? ---
-#
-# A közös váz (fal + nyeregtető + ajtó + ablakok) jó alap, de önmagában
-# minden ház egyforma kis házikó. Erre a vázra fest rá ez a réteg egy-egy
-# ELÁRULÓ JEGYET, amit a játékos messziről is felismer:
-#
-#   templom    — harangtorony, rózsaablak, íves kapu
-#   aranybánya — bányaállvány csigával, sötét táró, ércrakás, csille
-#   piactér    — csíkos ponyva, hordók és ládák, cégér
-#   ispotály   — keresztes tábla, lámpás a bejárat fölött
-#   kovács     — izzó kohónyílás, üllő, vizesdézsa
-#   akadémia   — oszlopos előcsarnok oromzattal, lépcső
-#   kaszárnya  — zászlórúd, lándzsaállvány, palánk
-#   istálló    — széles kapu patkóval, szénabálák, karám
-#   kikötő     — móló cölöpökkel, daru, ládák
-#   torony     — lőrések
-#   főváros    — saroktornyok (a zászló már megvan)
-#
-# A LAKÓHÁZ marad ház — de három változatban (tető árnyalata, kémény
-# oldala, ablakszám), hogy egy utcányi ház ne tűnjön másolatnak. A
-# változatot az épület hálózati azonosítója sorsolja, tehát minden gépen
-# ugyanaz.
-func _draw_signature(foot: Rect2, wall: Rect2, rr: Rect2) -> void:
-	match tipus:
-		"temple":   _sig_temple(foot, wall, rr)
-		"goldmine": _sig_mine(foot, wall, rr)
-		"market":   _sig_market(foot, wall)
-		"hospital": _sig_hospital(foot, wall)
-		"smith":    _sig_smith(foot, wall, rr)
-		"academy":  _sig_academy(foot, wall)
-		"barracks": _sig_barracks(foot, wall)
-		"stable":   _sig_stable(foot, wall)
-		"harbor":   _sig_harbor(foot, wall)
-		"tower":    _sig_tower(wall)
-		"hq":       _sig_hq(wall, rr)
-		"house":    _sig_house(foot, wall, rr)
-
-# LAKÓHÁZ: marad ház, de három arca van, hogy egy utcányi ne legyen
-# egyforma. A kémény oldalát a _draw_chimney intézi; itt a tetőablak, a
-# toldalék és a kerti apróságok jönnek.
-func _sig_house(foot: Rect2, wall: Rect2, rr: Rect2) -> void:
-	match _valtozat():
-		0:
-			# Kerti pad és egy dézsa a fal mellett.
-			draw_rect(Rect2(wall.end.x - 18.0, wall.end.y - 8.0, 14.0, 3.0),
-				SIG_FA.lightened(0.1), true)
-			draw_rect(Rect2(wall.end.x - 17.0, wall.end.y - 5.0, 2.0, 4.0), SIG_FA, true)
-			draw_rect(Rect2(wall.end.x - 7.0, wall.end.y - 5.0, 2.0, 4.0), SIG_FA, true)
-		1:
-			# Oldalsó toldalék (fáskamra) lapos tetővel.
-			var t := Rect2(wall.position.x - 12.0, wall.position.y + wall.size.y * 0.42,
-				14.0, wall.size.y * 0.58)
-			draw_rect(t, _wall_base().darkened(0.06), true)
-			draw_rect(Rect2(t.position.x - 2.0, t.position.y - 3.0, t.size.x + 4.0, 4.0),
-				_roof_base().darkened(0.1), true)
-			draw_rect(t, BuildArt.INK, false, 1.2)
-			# Felaprított tűzifa a toldalék előtt.
-			for i in range(3):
-				draw_circle(Vector2(t.position.x + 3.0 + float(i) * 4.0,
-					t.end.y - 3.0), 2.0, SIG_FA.lightened(0.2))
-		_:
-			# Tetőablak a nyeregtetőn.
-			var a := Rect2(-6.0, rr.position.y + rr.size.y * 0.45, 12.0, 9.0)
-			draw_rect(a, _roof_base().lightened(0.45), true)
-			draw_rect(Rect2(a.position.x + 2.0, a.position.y + 2.0, 8.0, 5.0),
-				Color(0.88, 0.80, 0.48, 0.9), true)
-			draw_colored_polygon([a.position + Vector2(-2.0, 0),
-				Vector2(0.0, a.position.y - 5.0), a.position + Vector2(14.0, 0)],
-				_roof_base().darkened(0.15))
-			draw_rect(a, Color(0.16, 0.12, 0.09, 0.8), false, 1.0)
-
-const SIG_FA := Color(0.36, 0.25, 0.15)
-const SIG_KO := Color(0.56, 0.53, 0.47)
-const SIG_ARANY := Color(0.82, 0.68, 0.28)
-const SIG_VAS := Color(0.28, 0.28, 0.31)
-
-# TEMPLOM: harangtorony a homlokzat bal oldalán, hegyes sisakkal és
-# toronygombbal; a kapu íves, fölötte rózsaablak.
-func _sig_temple(foot: Rect2, wall: Rect2, rr: Rect2) -> void:
-	var tw := clampf(_size.x * 0.24, 14.0, 24.0)
-	var tx := wall.position.x + _size.x * 0.06
-	var torony := Rect2(tx, rr.position.y - _size.y * 0.42, tw, 0.0)
-	torony.size.y = wall.end.y - torony.position.y
-	# A harangtorony a HÁZ falából épül, nem a tetejéből: korábban a
-	# tetőszínt kapta, ezért rózsaszín kőnek látszott.
-	draw_rect(torony, _wall_base(), true)
-	var tt := BuildArt.anyag_tex(_fal_mat, age, _nemzet)
-	if tt != null:
-		draw_texture_rect(tt, torony, true)
-	draw_rect(Rect2(torony.end.x - torony.size.x * 0.28, torony.position.y,
-		torony.size.x * 0.28, torony.size.y), Color(0.09, 0.06, 0.04, 0.20), true)
-	draw_rect(torony, BuildArt.INK, false, BuildArt.INK_W)
-	# Harangablak: sötét, íves nyílás a torony tetején.
-	var ha := Rect2(torony.position.x + tw * 0.28, torony.position.y + 8.0,
-		tw * 0.44, 10.0)
-	draw_rect(ha, Color(0.10, 0.08, 0.06), true)
-	# Sisak és toronygomb.
-	var csucs := Vector2(torony.position.x + tw * 0.5, torony.position.y - tw * 1.15)
-	draw_colored_polygon([Vector2(torony.position.x - 2.0, torony.position.y),
-		csucs, Vector2(torony.end.x + 2.0, torony.position.y)],
-		_roof_base().darkened(0.10))
-	draw_polyline([Vector2(torony.position.x - 2.0, torony.position.y), csucs,
-		Vector2(torony.end.x + 2.0, torony.position.y)],
-		BuildArt.INK, BuildArt.INK_W)
-	draw_circle(csucs - Vector2(0, 2.0), 2.6, SIG_ARANY)
-	# Rózsaablak a homlokzat közepén, fölötte íves kapukeret.
-	var kozep := Vector2(_size.x * 0.10, wall.position.y + wall.size.y * 0.34)
-	draw_circle(kozep, 7.0, Color(0.42, 0.38, 0.30))
-	draw_circle(kozep, 5.2, Color(0.86, 0.76, 0.42, 0.92))
-	for i in range(6):
-		var a := float(i) * PI / 3.0
-		draw_line(kozep, kozep + Vector2(cos(a), sin(a)) * 5.2,
-			Color(0.35, 0.30, 0.22), 1.0)
-	draw_arc(Vector2(0.0, wall.end.y - wall.size.y * 0.62), _size.x * 0.10,
-		PI, TAU, 14, Color(0.52, 0.48, 0.42), 3.0)
-
-# ARANYBÁNYA: bányaállvány (két ferde gerenda + csiga) a tető fölött,
-# gerendázott sötét táró a ház oldalában, ércrakás és csille a talpnál.
-func _sig_mine(foot: Rect2, wall: Rect2, rr: Rect2) -> void:
-	var cx := _size.x * 0.22
-	var teto := rr.position.y - _size.y * 0.34
-	draw_line(Vector2(cx - 13.0, wall.end.y - 4.0), Vector2(cx, teto), SIG_FA, 3.0)
-	draw_line(Vector2(cx + 13.0, wall.end.y - 4.0), Vector2(cx, teto), SIG_FA, 3.0)
-	draw_line(Vector2(cx - 9.0, teto + 16.0), Vector2(cx + 9.0, teto + 16.0),
-		SIG_FA.darkened(0.2), 2.0)
-	# Csiga és kötél: ezen jár le a kas a tárnába.
-	draw_circle(Vector2(cx, teto + 1.0), 4.4, SIG_VAS)
-	draw_circle(Vector2(cx, teto + 1.0), 1.6, SIG_ARANY)
-	draw_line(Vector2(cx, teto + 5.0), Vector2(cx, wall.end.y - 10.0),
-		Color(0.20, 0.17, 0.12), 1.2)
-	# Táró: gerendakeret, mögötte a sötét.
-	var taro := Rect2(-_size.x * 0.44, wall.end.y - 20.0, 22.0, 18.0)
-	draw_rect(taro, Color(0.06, 0.05, 0.04), true)
-	draw_rect(taro.grow(2.0), SIG_FA, false, 3.0)
-	draw_line(Vector2(taro.position.x - 2.0, taro.position.y - 2.0),
-		Vector2(taro.end.x + 2.0, taro.position.y - 2.0), SIG_FA.lightened(0.15), 3.0)
-	# Ércrakás: sötét kőhalom, benne aranyszemcsék.
-	for i in range(3):
-		var p := Vector2(_size.x * 0.30 + float(i) * 7.0 - 7.0, wall.end.y - 4.0)
-		draw_circle(p, 5.0 - float(i), Color(0.32, 0.28, 0.22))
-		draw_circle(p + Vector2(1.0, -1.5), 1.2, SIG_ARANY)
-
-# PIACTÉR: csíkos ponyva a homlokzat előtt, alatta hordók és ládák,
-# oldalt kilógó cégér.
-func _sig_market(foot: Rect2, wall: Rect2) -> void:
-	var y := wall.position.y + wall.size.y * 0.42
-	var w := _size.x * 0.92
-	var bal := -w * 0.5
-	# Ponyva: váltakozó csíkok, enyhén lejtve.
-	var csik := int(w / 9.0)
-	for i in range(csik):
-		var x := bal + float(i) * (w / float(csik))
-		var c := Color(0.686, 0.267, 0.208) if i % 2 == 0 else Color(0.843, 0.788, 0.671)
-		draw_colored_polygon([Vector2(x, y), Vector2(x + w / float(csik), y),
-			Vector2(x + w / float(csik), y + 9.0), Vector2(x, y + 9.0)], c)
-	draw_line(Vector2(bal, y + 9.0), Vector2(bal + w, y + 9.0),
-		Color(0.22, 0.18, 0.14, 0.8), 1.5)
-	# Tartórudak
-	draw_line(Vector2(bal + 2.0, y + 9.0), Vector2(bal + 2.0, wall.end.y - 5.0), SIG_FA, 2.0)
-	draw_line(Vector2(bal + w - 2.0, y + 9.0), Vector2(bal + w - 2.0, wall.end.y - 5.0),
-		SIG_FA, 2.0)
-	# Hordók és ládák a ponyva alatt.
-	for i in range(2):
-		var hx := bal + 10.0 + float(i) * 15.0
-		draw_rect(Rect2(hx, wall.end.y - 14.0, 9.0, 12.0), Color(0.45, 0.31, 0.18), true)
-		draw_line(Vector2(hx, wall.end.y - 10.0), Vector2(hx + 9.0, wall.end.y - 10.0),
-			Color(0.30, 0.22, 0.14), 1.2)
-	draw_rect(Rect2(bal + w - 22.0, wall.end.y - 12.0, 12.0, 10.0),
-		Color(0.56, 0.42, 0.24), true)
-	draw_rect(Rect2(bal + w - 22.0, wall.end.y - 12.0, 12.0, 10.0),
-		Color(0.30, 0.22, 0.14), false, 1.0)
-	# Cégér: rúd a falból, rajta tábla.
-	var rud := Vector2(bal + w - 6.0, wall.position.y + 8.0)
-	draw_line(rud, rud + Vector2(10.0, 0), SIG_VAS, 1.5)
-	draw_rect(Rect2(rud.x + 6.0, rud.y + 1.0, 10.0, 8.0), Color(0.62, 0.48, 0.24), true)
-	draw_rect(Rect2(rud.x + 6.0, rud.y + 1.0, 10.0, 8.0), Color(0.24, 0.18, 0.10), false, 1.0)
-
-# ISPOTÁLY: fehér tábla vörös kereszttel a homlokzaton, lámpás a kapu
-# fölött — messziről ez mondja meg, hol gyógyítanak.
-func _sig_hospital(foot: Rect2, wall: Rect2) -> void:
-	var t := Rect2(_size.x * 0.16, wall.position.y + wall.size.y * 0.26, 18.0, 18.0)
-	draw_rect(t, Color(0.94, 0.93, 0.90), true)
-	draw_rect(t, Color(0.30, 0.28, 0.25), false, 1.0)
-	var k := Color(0.76, 0.18, 0.16)
-	draw_rect(Rect2(t.position.x + 7.0, t.position.y + 2.5, 4.0, 13.0), k, true)
-	draw_rect(Rect2(t.position.x + 2.5, t.position.y + 7.0, 13.0, 4.0), k, true)
-	# Lámpás a bejárat fölött.
-	var l := Vector2(0.0, wall.end.y - wall.size.y * 0.66)
-	draw_line(l + Vector2(0, -6.0), l, SIG_VAS, 1.4)
-	draw_rect(Rect2(l.x - 3.0, l.y, 6.0, 7.0), Color(0.24, 0.22, 0.18), true)
-	draw_rect(Rect2(l.x - 2.0, l.y + 1.0, 4.0, 5.0), Color(1.6, 1.3, 0.7), true)
-
-# KOVÁCSMŰHELY: izzó kohónyílás a fal tövében, előtte üllő és vizesdézsa.
-# (A kéményt a közös rajz adja — ez a műhely arca.)
-func _sig_smith(foot: Rect2, wall: Rect2, rr: Rect2) -> void:
-	var k := Rect2(-_size.x * 0.40, wall.end.y - 18.0, 16.0, 15.0)
-	draw_rect(k, Color(0.16, 0.12, 0.10), true)
-	draw_rect(k.grow(2.0), SIG_KO.darkened(0.25), false, 3.0)
-	# A tűz fénye: egynél világosabb szín, hogy a ragyogásban túlcsorduljon.
-	draw_rect(Rect2(k.position.x + 3.0, k.position.y + 5.0, k.size.x - 6.0,
-		k.size.y - 7.0), Color(2.2, 1.05, 0.30), true)
-	draw_circle(k.get_center() + Vector2(0, 2.0), 4.0, Color(2.6, 1.7, 0.6, 0.75))
-	# Üllő: tömb + szarv.
-	var u := Vector2(_size.x * 0.26, wall.end.y - 4.0)
-	draw_rect(Rect2(u.x - 7.0, u.y - 4.0, 14.0, 4.0), SIG_VAS, true)
-	draw_rect(Rect2(u.x - 3.0, u.y - 8.0, 6.0, 4.0), SIG_VAS.lightened(0.15), true)
-	draw_rect(Rect2(u.x - 5.0, u.y - 10.0, 12.0, 3.0), SIG_VAS.lightened(0.25), true)
-	# Vizesdézsa.
-	draw_rect(Rect2(u.x + 12.0, u.y - 9.0, 10.0, 9.0), Color(0.42, 0.30, 0.18), true)
-	draw_rect(Rect2(u.x + 13.0, u.y - 8.0, 8.0, 3.0), Color(0.34, 0.52, 0.62), true)
-
-# AKADÉMIA: oszlopos előcsarnok háromszögű oromzattal és lépcsővel.
-# A kő NEM fehér: a vakító fehér márvány kilógott a meleg palettából, és
-# az akadémia úgy világított a telepen, mint egy idegen test. A színek a
-# közös kőpalettából (BuildArt.LABAZAT) származnak.
-func _sig_academy(foot: Rect2, wall: Rect2) -> void:
-	var w := _size.x * 0.72
-	var bal := -w * 0.5
-	var also := wall.end.y - 6.0
-	var felso := wall.position.y + wall.size.y * 0.30
-	var ko := BuildArt.LABAZAT.lightened(0.22)
-	# Oromzat
-	draw_colored_polygon([Vector2(bal - 4.0, felso), Vector2(0.0, felso - 14.0),
-		Vector2(bal + w + 4.0, felso)], ko.darkened(0.06))
-	draw_polyline([Vector2(bal - 4.0, felso), Vector2(0.0, felso - 14.0),
-		Vector2(bal + w + 4.0, felso), Vector2(bal - 4.0, felso)],
-		BuildArt.INK, BuildArt.INK_W)
-	# Architráv
-	draw_rect(Rect2(bal - 3.0, felso, w + 6.0, 5.0), ko.lightened(0.08), true)
-	# Oszlopok
-	var db := 4
-	for i in range(db):
-		var x := bal + 4.0 + float(i) * (w - 8.0) / float(db - 1)
-		draw_rect(Rect2(x - 3.0, felso + 5.0, 6.0, also - felso - 5.0), ko, true)
-		draw_rect(Rect2(x - 4.0, felso + 5.0, 8.0, 3.0), ko.darkened(0.14), true)
-		draw_rect(Rect2(x - 4.0, also - 3.0, 8.0, 3.0), ko.darkened(0.14), true)
-		draw_line(Vector2(x + 2.0, felso + 8.0), Vector2(x + 2.0, also - 3.0),
-			Color(0, 0, 0, 0.20), 1.0)
-	# Lépcső
-	for i in range(3):
-		draw_rect(Rect2(bal - 5.0 - float(i) * 2.0, also + float(i) * 2.0,
-			w + 10.0 + float(i) * 4.0, 2.0), ko.darkened(0.05 + 0.05 * float(i)), true)
-
-# KASZÁRNYA: zászlórúd a kapu mellett, lándzsaállvány a falnál, palánk.
-func _sig_barracks(foot: Rect2, wall: Rect2) -> void:
-	# Zászlórúd a fél színével.
-	var rx := wall.position.x + 10.0
-	var teto := wall.position.y - 22.0
-	draw_line(Vector2(rx, wall.end.y - 4.0), Vector2(rx, teto), SIG_FA, 2.0)
-	draw_colored_polygon([Vector2(rx, teto), Vector2(rx + 16.0, teto + 5.0),
-		Vector2(rx, teto + 10.0)], team_color)
-	draw_polyline([Vector2(rx, teto), Vector2(rx + 16.0, teto + 5.0),
-		Vector2(rx, teto + 10.0)], Color(0, 0, 0, 0.5), 1.0)
-	# Lándzsaállvány: a falnak támasztott nyelek.
-	var ax := _size.x * 0.20
-	draw_rect(Rect2(ax - 2.0, wall.end.y - 6.0, 22.0, 3.0), SIG_FA, true)
-	for i in range(4):
-		var x := ax + float(i) * 5.5
-		draw_line(Vector2(x, wall.end.y - 5.0), Vector2(x + 4.0, wall.end.y - 26.0),
-			SIG_FA.lightened(0.1), 1.4)
-		draw_circle(Vector2(x + 4.2, wall.end.y - 27.0), 1.6, SIG_VAS.lightened(0.2))
-	# Palánk a talpnál: hegyezett karók.
-	var px := foot.position.x + 2.0
-	while px < foot.end.x - 2.0:
-		draw_colored_polygon([Vector2(px, foot.end.y - 2.0),
-			Vector2(px + 2.6, foot.end.y - 9.0), Vector2(px + 5.2, foot.end.y - 2.0)],
-			SIG_FA.darkened(0.1))
-		px += 7.0
-
-# ISTÁLLÓ: széles kettős kapu patkóval, szénabálák, karámrúd.
-func _sig_stable(foot: Rect2, wall: Rect2) -> void:
-	var kw := _size.x * 0.38
-	var kapu := Rect2(-kw * 0.5, wall.end.y - wall.size.y * 0.66, kw, wall.size.y * 0.62)
-	draw_rect(kapu, Color(0.34, 0.22, 0.13), true)
-	draw_rect(kapu, Color(0.16, 0.10, 0.06), false, 1.5)
-	draw_line(Vector2(0.0, kapu.position.y), Vector2(0.0, kapu.end.y),
-		Color(0.16, 0.10, 0.06), 1.5)
-	# Vasalás: két keresztpánt.
-	for s in [-1.0, 1.0]:
-		draw_line(Vector2(float(s) * kw * 0.5, kapu.position.y + 3.0),
-			Vector2(0.0, kapu.end.y - 3.0), Color(0.24, 0.22, 0.20, 0.8), 1.4)
-	# Patkó a kapu fölött.
-	var pk := Vector2(0.0, kapu.position.y - 7.0)
-	draw_arc(pk, 5.0, PI * 0.15, PI * 0.85, 12, SIG_VAS.lightened(0.35), 2.2)
-	# Szénabálák.
-	for i in range(2):
-		var b := Vector2(wall.end.x - 12.0 - float(i) * 13.0, wall.end.y - 6.0)
-		draw_rect(Rect2(b.x - 5.0, b.y - 8.0, 11.0, 8.0), Color(0.78, 0.66, 0.30), true)
-		draw_rect(Rect2(b.x - 5.0, b.y - 8.0, 11.0, 8.0), Color(0.52, 0.42, 0.18), false, 1.0)
-	# Karámrúd a bal oldalon.
-	var y := foot.end.y - 6.0
-	draw_line(Vector2(foot.position.x + 2.0, y), Vector2(foot.position.x + 26.0, y),
-		SIG_FA, 2.0)
-	draw_line(Vector2(foot.position.x + 2.0, y - 6.0),
-		Vector2(foot.position.x + 26.0, y - 6.0), SIG_FA, 2.0)
-
-# KIKÖTŐ: pallósor a víz felé, cölöpök, daru és ládák.
-func _sig_harbor(foot: Rect2, wall: Rect2) -> void:
-	# Móló: deszkák a talp alatt, a part felé kinyúlva.
-	var molo := Rect2(-_size.x * 0.34, foot.end.y - 2.0, _size.x * 0.68, 16.0)
-	draw_rect(molo, Color(0.48, 0.36, 0.22), true)
-	var x := molo.position.x
-	while x < molo.end.x:
-		draw_line(Vector2(x, molo.position.y), Vector2(x, molo.end.y),
-			Color(0.32, 0.23, 0.14, 0.8), 1.0)
-		x += 7.0
-	draw_rect(molo, Color(0.22, 0.16, 0.10, 0.7), false, 1.0)
-	# Kikötőbakok a móló két végén.
-	for s in [-1.0, 1.0]:
-		var bx: float = s * (_size.x * 0.34 - 3.0)
-		draw_rect(Rect2(bx - 2.5, molo.position.y - 7.0, 5.0, 8.0), SIG_FA, true)
-		draw_circle(Vector2(bx, molo.position.y - 7.0), 3.0, SIG_FA.lightened(0.15))
-	# Daru: ferde gém kötéllel és horoggal.
-	var tx := wall.end.x - 8.0
-	var ty := wall.position.y + 4.0
-	draw_line(Vector2(tx, wall.end.y - 4.0), Vector2(tx, ty), SIG_FA, 3.0)
-	draw_line(Vector2(tx, ty), Vector2(tx + 18.0, ty + 8.0), SIG_FA, 2.5)
-	draw_line(Vector2(tx + 18.0, ty + 8.0), Vector2(tx + 18.0, ty + 20.0),
-		Color(0.22, 0.19, 0.14), 1.2)
-	draw_rect(Rect2(tx + 15.0, ty + 20.0, 7.0, 6.0), Color(0.55, 0.42, 0.24), true)
-	# Ládák a parton.
-	draw_rect(Rect2(wall.position.x + 4.0, wall.end.y - 11.0, 11.0, 9.0),
-		Color(0.56, 0.42, 0.24), true)
-	draw_rect(Rect2(wall.position.x + 4.0, wall.end.y - 11.0, 11.0, 9.0),
-		Color(0.30, 0.22, 0.14), false, 1.0)
-
-# TORONY: lőrések a pártázat alatt.
-func _sig_tower(wall: Rect2) -> void:
-	for i in range(2):
-		var y := wall.position.y + 10.0 + float(i) * 14.0
-		if y > wall.end.y - 8.0: break
-		draw_rect(Rect2(-2.0, y, 4.0, 9.0), Color(0.10, 0.09, 0.08), true)
-		draw_rect(Rect2(-3.0, y - 1.0, 6.0, 2.0), Color(0.38, 0.36, 0.33), true)
-
-# FŐVÁROS: saroktornyok pártázattal — a zászló már a tetőgerincen áll.
-func _sig_hq(wall: Rect2, rr: Rect2) -> void:
-	for s in [-1.0, 1.0]:
-		var w := 13.0
-		var x: float = s * (_size.x * 0.5 - w * 0.6) - w * 0.5
-		var t := Rect2(x, rr.position.y + rr.size.y * 0.35, w, 0.0)
-		t.size.y = wall.end.y - t.position.y
-		# A saroktorony is KŐBŐL van, mint a fal — nem a tető színéből.
-		var ko := _wall_base()
-		draw_rect(t, ko, true)
-		var tx2 := BuildArt.anyag_tex(_fal_mat, age, _nemzet)
-		if tx2 != null:
-			draw_texture_rect(tx2, t, true)
-		draw_rect(Rect2(t.end.x - t.size.x * 0.3, t.position.y,
-			t.size.x * 0.3, t.size.y), Color(0.09, 0.06, 0.04, 0.20), true)
-		draw_rect(t, BuildArt.INK, false, 1.2)
-		# Pártázat a torony tetején.
-		for i in range(3):
-			if i % 2 == 1: continue
-			draw_rect(Rect2(t.position.x + float(i) * 4.5, t.position.y - 4.0,
-				4.0, 5.0), ko.darkened(0.10), true)
-		draw_rect(Rect2(t.position.x + 4.0, t.position.y + 10.0, 4.0, 7.0),
-			Color(0.12, 0.10, 0.08), true)
-
-# Tetőtlen telek: szántóföld vagy betonfelület.
-func _draw_flat(foot: Rect2, reveal: float) -> void:
-	var plot := _below(foot, reveal)
-	if plot.size.y <= 0.0: return
-	if tipus == "farm":
-		# Felszántott föld, barázdák és zöldellő vetés. (A fa-textúra ide
-		# deszkapadlónak látszana, nem szántónak.)
-		var soil := Color(0.46, 0.33, 0.19)
-		draw_rect(plot, soil, true)
-		var inner := foot.grow(-4.0)
-		var rows := maxi(3, int(inner.size.y / 8.0))
-		for i in range(rows):
-			var y := inner.position.y + inner.size.y * (float(i) + 0.5) / rows
-			if y < plot.position.y: continue
-			# barázda árnyéka
-			draw_line(Vector2(inner.position.x, y + 1.5),
-				Vector2(inner.end.x, y + 1.5), soil.darkened(0.32), 4.0)
-			# vetés: apró zöld csomók a soron
-			var x := inner.position.x + 2.0
-			while x < inner.end.x - 1.0:
-				draw_rect(Rect2(x, y - 2.5, 3.0, 3.0), Color(0.40, 0.60, 0.22), true)
-				draw_rect(Rect2(x, y - 3.5, 2.0, 2.0), Color(0.55, 0.75, 0.30), true)
-				x += 6.0
-		# Kerítés: oszlopok és két rúd a telek körül
-		_draw_fence(foot)
-	elif tipus == "sugar":
-		# Cukornád-ültetvény: magas, zöld nádsorok a barna földön.
-		draw_rect(plot, Color(0.42, 0.32, 0.20), true)
-		var cane := Color(0.44, 0.66, 0.26)
-		var cols := maxi(4, int(foot.size.x / 8.0))
-		for i in range(cols):
-			var x := foot.position.x + 4.0 + i * (foot.size.x - 8.0) / (cols - 1)
-			if x < plot.position.x - 1.0: continue
-			var top := maxf(plot.position.y, foot.position.y + 4.0)
-			draw_line(Vector2(x, foot.end.y - 4.0), Vector2(x, top), cane, 2.0)
-			draw_line(Vector2(x, top), Vector2(x - 3.0, top + 5.0),
-				cane.lightened(0.18), 1.5)
-			draw_line(Vector2(x, top + 2.0), Vector2(x + 3.0, top + 7.0),
-				cane.darkened(0.15), 1.5)
-		_draw_fence(foot)
-	else:
-		_draw_airfield(foot, plot)
-	draw_rect(foot, BuildArt.INK, false, BuildArt.INK_W)
-
-func _draw_fence(foot: Rect2) -> void:
-	var post := BuildArt.GERENDA.lightened(0.22)
-	draw_rect(foot, post, false, 2.0)
-	var px := foot.position.x
-	while px <= foot.end.x:
-		draw_rect(Rect2(px - 1.0, foot.position.y - 3.0, 2.5, 6.0), post, true)
-		draw_rect(Rect2(px - 1.0, foot.end.y - 3.0, 2.5, 6.0), post, true)
-		px += 12.0
-
-func _draw_airfield(foot: Rect2, plot: Rect2) -> void:
-	# Betonburkolat a közös anyagkönyvtárból — ugyanabból, amiből a
-	# 20. századi falak is épülnek.
-	var beton := BuildArt.fal_szin("beton", age)
-	draw_rect(plot, beton, true)
-	var t := BuildArt.anyag_tex("beton", age)
-	if t != null:
-		draw_texture_rect(t, plot, true)
-	var cy := foot.position.y + foot.size.y * 0.5
-	if cy < plot.position.y: return
-	draw_rect(Rect2(foot.position.x, cy - 9.0, foot.size.x, 18.0),
-		Color(0.216, 0.204, 0.192), true)
-	draw_rect(Rect2(foot.position.x, cy - 9.0, foot.size.x, 2.0),
-		Color(0, 0, 0, 0.25), true)
-	var x := foot.position.x + 8.0
-	while x < foot.end.x - 12.0:
-		draw_rect(Rect2(x, cy - 1.5, 10.0, 3.0), Color(0.90, 0.88, 0.80), true)
-		x += 20.0
-
-# Állványzat az építkezés idejére.
-func _draw_scaffold(box: Rect2) -> void:
-	var beam := Color(0.58, 0.42, 0.25, 0.9)
-	for i in range(4):
-		var x := box.position.x + box.size.x * (0.06 + 0.29 * i)
-		draw_line(Vector2(x, box.end.y), Vector2(x, box.position.y + 4.0), beam, 2.0)
-	draw_line(Vector2(box.position.x, box.position.y + 6.0),
-		Vector2(box.end.x, box.position.y + 6.0), beam, 2.0)
-	draw_line(Vector2(box.position.x, box.end.y - box.size.y * 0.45),
-		Vector2(box.end.x, box.end.y - box.size.y * 0.45), beam, 2.0)
+# A gyülekezőpont zászlócskája (drawRally): halványan mindig látszik,
+# kijelöléskor vonallal is.
+func _draw_rally(strong: bool) -> void:
+	var ci := _felso
+	var to := rally.position
+	var a := 0.75 if strong else 0.32
+	if strong:
+		HtmlEpulet._szaggatott(ci, Vector2.ZERO, to, Color(230.0 / 255.0, 215.0 / 255.0,
+			160.0 / 255.0, 0.7 * a), 1.4, 4.0, 5.0)
+	ci.draw_line(to, to + Vector2(0, -15), Color(0.227, 0.192, 0.157, a), 1.6)
+	var c := team_accent
+	match rally_kind():
+		"node": c = Color("8a6234")
+		"foe":  c = Color("c0392b")
+	c.a = a
+	ci.draw_colored_polygon(PackedVector2Array([to + Vector2(0, -15), to + Vector2(10, -11.5),
+		to + Vector2(0, -8)]), c)
 
 func set_selected(val: bool) -> void:
 	_selected = val
