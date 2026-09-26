@@ -658,5 +658,21 @@
 
 	applyLang();
 </script>
-</body>
+<script>
+// Ha a látogató be van lépve (a fiók oldal munkamenete a localStorage-ban), a menüben a neve látszik a „Fiók / belépés” helyett.
+(() => {
+	try {
+		const s = JSON.parse(localStorage.getItem("sb-gxvepswtairfqvosdcpb-auth-token") || "null");
+		const u = s && s.refresh_token && s.user;
+		if (!u) return;
+		const nev = (u.user_metadata && u.user_metadata.username) || String(u.email || "").split("@")[0];
+		if (!nev) return;
+		document.querySelectorAll('a[href="fiok.html"][data-i18n]').forEach(a => {
+			a.removeAttribute("data-i18n");
+			a.textContent = "👤 " + nev;
+			a.title = u.email || nev;
+		});
+	} catch (e) { /* nincs tároló (privát ablak) – marad a „Fiók / belépés” */ }
+})();
+</script></body>
 </html>
