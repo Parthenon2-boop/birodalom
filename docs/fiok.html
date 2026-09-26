@@ -56,7 +56,17 @@
 	.acc .box { padding: 18px 20px; overflow: visible; }
 	.acc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
 	.acc-head .name { font: 700 24px Cinzel, serif; color: var(--gold); }
-	.who { color: var(--muted); font-size: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+	.who { position: relative; }
+	.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 230px; display: flex; flex-direction: column;
+		background: var(--panel); border: 1px solid var(--gold); border-radius: 8px; padding: 6px; box-shadow: 0 10px 28px rgba(0,0,0,.55); }
+	.menu button, .menu a { display: block; width: 100%; text-align: left; background: transparent; border: 0; border-radius: 5px;
+		padding: 9px 12px; color: var(--text); font: 17px "EB Garamond", serif; text-decoration: none; }
+	.menu button:hover, .menu a:hover, .menu button:focus-visible, .menu a:focus-visible { background: rgba(217,164,65,.12); color: var(--gold-2); outline: none; }
+	.menu .out { border-top: 1px solid var(--line); border-radius: 0 0 5px 5px; margin-top: 4px; color: var(--err); }
+	.row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px dashed rgba(107,79,42,.45); }
+	.row:first-of-type { border-top: 0; }
+	.row span:first-child { color: var(--muted); }
+	select { padding: 7px 10px; border-radius: 6px; border: 1px solid var(--line); background: #1a130e; color: var(--text); font: 16px "EB Garamond", serif; }
 	.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 12px; }
 	.fact { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
 	.fact b { display: block; font: 700 22px Cinzel, serif; color: var(--gold-2); }
@@ -80,9 +90,14 @@
 		<a class="logo" href="./">ParthLauncher</a>
 		<nav><a href="./" data-i18n="nav.home">Főoldal</a><a href="./#letoltes" data-i18n="nav.download">Letöltés</a><a href="heptarchia.html">Heptarchia</a><span class="langs" id="langs"></span></nav>
 		<div class="who" id="who" hidden>
-			<span id="whoName"></span>
-			<a class="ghost" id="adminLink" href="admin.html" hidden data-i18n="acc.admin">Admin felület</a>
-			<button class="ghost" type="button" id="logoutBtn" data-i18n="acc.logout">Kijelentkezés</button>
+			<button class="ghost" type="button" id="whoBtn" aria-haspopup="menu" aria-expanded="false"><span id="whoName"></span> ▾</button>
+			<div class="menu" id="whoMenu" role="menu" hidden>
+				<button type="button" role="menuitem" data-view="acc" data-i18n="menu.acc">👤 Fiókom</button>
+				<button type="button" role="menuitem" data-view="set" data-i18n="menu.set">⚙ Beállítások</button>
+				<button type="button" role="menuitem" data-view="pw" data-i18n="menu.pw">🔑 Jelszó módosítása</button>
+				<a role="menuitem" id="adminLink" href="admin.html" hidden data-i18n="menu.admin">🛡 Admin felület</a>
+				<button type="button" role="menuitem" id="logoutBtn" class="out" data-i18n="menu.logout">⏻ Kijelentkezés</button>
+			</div>
 		</div>
 	</div>
 </header>
@@ -159,6 +174,35 @@
 			<div id="gameList" style="margin-top:14px"></div>
 		</div>
 	</div>
+
+	<!-- ── beállítások ── -->
+	<div class="acc" id="setView" hidden>
+		<div class="box">
+			<h2 data-i18n="set.title">Beállítások</h2>
+			<div class="row"><span data-i18n="set.lang">Nyelv</span><select id="setLang"></select></div>
+			<div class="row"><span data-i18n="set.user">Fióknév</span><b id="setUser"></b></div>
+			<div class="row"><span data-i18n="set.email">E-mail-cím</span><span id="setEmail"></span></div>
+			<div class="row"><span data-i18n="set.since">Regisztráció</span><span id="setSince"></span></div>
+			<p class="hint" style="margin-top:10px" data-i18n="set.hint">A fióknév és az e-mail-cím nem módosítható. Ha mégis szükséges, írj nekünk.</p>
+			<div class="dl-row" style="margin-top:14px">
+				<button class="ghost" type="button" data-view="pw" data-i18n="menu.pw">🔑 Jelszó módosítása</button>
+				<button class="ghost" type="button" data-view="acc" data-i18n="back.acc">← Vissza a fiókhoz</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- ── jelszó módosítása (belépve) ── -->
+	<div class="box" id="pwView" hidden>
+		<form id="chpw" novalidate>
+			<h2 data-i18n="pw.title" style="margin:0">Jelszó módosítása</h2>
+			<label><span data-i18n="pw.cur">Jelenlegi jelszó</span><input type="password" name="cur" autocomplete="current-password" required></label>
+			<label><span data-i18n="new.pw">Új jelszó (legalább 8 karakter)</span><input type="password" name="pw" autocomplete="new-password" minlength="8" required></label>
+			<label><span data-i18n="new.pw2">Új jelszó még egyszer</span><input type="password" name="pw2" autocomplete="new-password" minlength="8" required></label>
+			<button class="main" type="submit" data-i18n="new.save">Jelszó mentése</button>
+			<p class="msg" role="status"></p>
+			<button class="ghost" type="button" data-view="acc" data-i18n="back.acc" style="align-self:flex-start">← Vissza a fiókhoz</button>
+		</form>
+	</div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -187,6 +231,11 @@
 			"forgot.send": "Send e-mail", "new.hint": "Enter your new password.",
 			"new.pw": "New password (at least 8 characters)", "new.pw2": "New password again", "new.save": "Save password",
 			"back": "You play in the ParthLauncher. <a href=\"./#letoltes\">Download</a>",
+			"menu.acc": "👤 My account", "menu.set": "⚙ Settings", "menu.pw": "🔑 Change password", "menu.admin": "🛡 Admin area", "menu.logout": "⏻ Sign out",
+			"set.title": "Settings", "set.lang": "Language", "set.user": "Account name", "set.email": "E-mail address", "set.since": "Registered",
+			"set.hint": "The account name and e-mail address cannot be changed. If you really need it, write to us.",
+			"back.acc": "← Back to my account", "pw.title": "Change password", "pw.cur": "Current password",
+			"m.badcur": "The current password is wrong.", "m.pwok": "Done, your new password is saved. Use it from now on, in the ParthLauncher too.",
 			"acc.admin": "Admin area", "acc.logout": "Sign out", "acc.dlcs": "add-ons owned", "acc.coins": "coins (Kard és Mágia)",
 			"acc.games": "Games", "acc.games.hint": "All free: the ParthLauncher downloads and updates them, and the add-ons you bought too.",
 			"acc.dl.win": "ParthLauncher – Windows", "acc.dl.mac": "ParthLauncher – macOS",
@@ -228,6 +277,11 @@
 			"forgot.send": "E-Mail senden", "new.hint": "Gib dein neues Passwort ein.",
 			"new.pw": "Neues Passwort (mindestens 8 Zeichen)", "new.pw2": "Neues Passwort wiederholen", "new.save": "Passwort speichern",
 			"back": "Gespielt wird im ParthLauncher. <a href=\"./#letoltes\">Download</a>",
+			"menu.acc": "👤 Mein Konto", "menu.set": "⚙ Einstellungen", "menu.pw": "🔑 Passwort ändern", "menu.admin": "🛡 Admin-Bereich", "menu.logout": "⏻ Abmelden",
+			"set.title": "Einstellungen", "set.lang": "Sprache", "set.user": "Kontoname", "set.email": "E-Mail-Adresse", "set.since": "Registriert",
+			"set.hint": "Kontoname und E-Mail-Adresse lassen sich nicht ändern. Falls es doch nötig ist, schreib uns.",
+			"back.acc": "← Zurück zum Konto", "pw.title": "Passwort ändern", "pw.cur": "Aktuelles Passwort",
+			"m.badcur": "Das aktuelle Passwort ist falsch.", "m.pwok": "Fertig, dein neues Passwort ist gespeichert. Verwende es ab jetzt, auch im ParthLauncher.",
 			"acc.admin": "Admin-Bereich", "acc.logout": "Abmelden", "acc.dlcs": "gekaufte Erweiterungen", "acc.coins": "Münzen (Kard és Mágia)",
 			"acc.games": "Spiele", "acc.games.hint": "Alle kostenlos: Der ParthLauncher lädt und aktualisiert sie – auch die gekauften Erweiterungen.",
 			"acc.dl.win": "ParthLauncher – Windows", "acc.dl.mac": "ParthLauncher – macOS",
@@ -276,6 +330,8 @@
 		"m.unconfirmed": "Ez a fiók még nincs megerősítve. Előbb kattints a megerősítő levélben lévő gombra.",
 		"m.usenamefail": "A fióknévvel most nem sikerült belépni. Próbáld az e-mail-címeddel.",
 		"m.loadfail": "Nem sikerült betölteni minden adatot a fiókodról. Próbáld újra később.",
+		"m.badcur": "A jelenlegi jelszó hibás.",
+		"m.pwok": "Kész, az új jelszavad mentve. Mostantól ezzel lépj be, a ParthLauncherben is.",
 		"g.hep": "Angolszász nagystratégia 790-től.", "g.bir": "Valós idejű stratégia, 1400 – 1945.", "g.kard": "Roguelike kaland öt mélységgel.",
 		"g.free": "ingyenes", "g.have": "megvan", "g.buy": "Megvásárlás", "g.coinpack": "érme", "g.nodlc": "Nincs kiegészítő.",
 		"g.coinshop": "Érme a kinézet-bolthoz (csak külsőség):",
@@ -302,7 +358,8 @@
 		});
 		document.querySelectorAll("#langs button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
 		try { localStorage.setItem("parth_lang", lang); } catch (e) {}
-		if (acct) renderGames();
+		const sl = document.getElementById("setLang"); if (sl) sl.value = lang;
+		if (acct) { renderGames(); renderSettings(); }
 	}
 	document.getElementById("langs").innerHTML = Object.keys(LANGS)
 		.map(k => `<button type="button" data-lang="${k}" title="${LANGS[k]}">${k.toUpperCase()}</button>`).join("");
@@ -506,9 +563,63 @@
 		$("accView").hidden = true; $("authBox").hidden = false; $("backNote").hidden = false;
 		$("main").classList.remove("wide");
 		$("adminLink").hidden = true; $("who").hidden = true;
+		$("setView").hidden = true; $("pwView").hidden = true; menu(false);
 	}
 
-	$("logoutBtn").onclick = async () => { await sb.auth.signOut(); showAuth(); show("login"); };
+	// ── a névre kattintva lenyíló menü ──
+	function menu(open) {
+		$("whoMenu").hidden = !open;
+		$("whoBtn").setAttribute("aria-expanded", String(open));
+	}
+	$("whoBtn").onclick = e => { e.stopPropagation(); menu($("whoMenu").hidden); };
+	document.addEventListener("click", e => { if (!$("who").contains(e.target)) menu(false); });
+	document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("whoMenu").hidden) { menu(false); $("whoBtn").focus(); } });
+
+	// fiók / beállítások / jelszó nézet
+	function view(name) {
+		$("accView").hidden = name !== "acc";
+		$("setView").hidden = name !== "set";
+		$("pwView").hidden = name !== "pw";
+		menu(false);
+		if (name === "set") renderSettings();
+		if (name === "pw") { $("chpw").reset(); say($("chpw"), ""); $("chpw").cur.focus(); }
+		window.scrollTo(0, 0);
+	}
+	document.addEventListener("click", e => {
+		const b = e.target.closest("[data-view]");
+		if (b && acct) view(b.dataset.view);
+	});
+
+	function renderSettings() {
+		if (!acct) return;
+		$("setUser").textContent = acct.username || (acct.user.user_metadata && acct.user.user_metadata.username) || "–";
+		$("setEmail").textContent = acct.user.email || "–";
+		$("setSince").textContent = acct.user.created_at ? new Date(acct.user.created_at).toLocaleDateString(lang) : "–";
+		$("setLang").value = lang;
+	}
+	$("setLang").innerHTML = Object.keys(LANGS).map(k => `<option value="${k}">${LANGS[k]}</option>`).join("");
+	$("setLang").onchange = e => { lang = e.target.value; applyLang(); };
+
+	// jelszó módosítása: előbb a jelenlegi jelszót ellenőrizzük (újra belépünk vele), csak utána mentjük az újat
+	$("chpw").onsubmit = e => { e.preventDefault(); const f = e.target;
+		const cur = f.cur.value, pw = f.pw.value, pw2 = f.pw2.value;
+		if (!cur) return say(f, T("m.badcur"));
+		if (pw.length < 8) return say(f, T("m.short"));
+		if (pw !== pw2) return say(f, T("m.nomatch"));
+		if (pw === cur) return say(f, T("e.same"));
+		busy(f, async () => {
+			const email = acct && acct.user.email;
+			if (!email) return say(f, T("e.other"));
+			const { error: e1 } = await sb.auth.signInWithPassword({ email, password: cur });
+			if (e1) return say(f, String(e1.message).toLowerCase().includes("invalid") ? T("m.badcur") : friendly(e1));
+			const { error: e2 } = await sb.auth.updateUser({ password: pw });
+			if (e2) return say(f, friendly(e2));
+			f.reset();
+			say(f, T("m.pwok"), true);
+		});
+	};
+
+	$("logoutBtn").onclick = async () => { menu(false); await sb.auth.signOut(); showAuth(); show("login"); };
 
 	// a jelszó-visszaállító levél linkje ide vezet: a Supabase a címsor „#” utáni részében adja át az adatokat
 	const h = new URLSearchParams(location.hash.slice(1));
