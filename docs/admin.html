@@ -120,6 +120,13 @@
 			<div class="tabs" role="tablist">
 				<button type="button" role="tab" data-tab="accounts" aria-selected="true">Fiókok</button>
 				<button type="button" role="tab" data-tab="log" aria-selected="false">Napló</button>
+				<button type="button" role="tab" data-tab="dev" aria-selected="false">Fejlesztés alatt</button>
+			</div>
+
+			<div class="pane" id="pane-dev" hidden>
+				<p class="hint" style="margin-bottom:12px">Titkos játékok: csak itt és a launcherben admin fiókkal látszanak. Sehol máshol nem jelennek meg.</p>
+				<p class="msg" id="devMsg" role="status"></p>
+				<div class="stats" id="devList"></div>
 			</div>
 
 			<div class="pane" id="pane-accounts">
@@ -384,8 +391,26 @@
 		document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", String(x === b)));
 		$("pane-accounts").hidden = b.dataset.tab !== "accounts";
 		$("pane-log").hidden = b.dataset.tab !== "log";
+		$("pane-dev").hidden = b.dataset.tab !== "dev";
 		if (b.dataset.tab === "log") loadLog();
+		if (b.dataset.tab === "dev") loadDev();
 	});
+
+	// ── fejlesztés alatt álló (titkos) játékok ──
+	async function loadDev() {
+		say($("devMsg"), "");
+		$("devList").innerHTML = '<p class="dim">Betöltés…</p>';
+		try {
+			const d = await call("dev");
+			$("devList").innerHTML = d.games.map(g => `<div class="box stat">
+				<b>${esc(g.name)}</b>
+				<span>${esc(g.years)} · ${esc(g.area)}</span><br>
+				<span>${g.tag ? `Legújabb kiadás: <b style="display:inline;font-size:inherit">${esc(g.tag)}</b> (${fmtDate(g.date)})`
+					: (g.github === 200 ? "Még nincs kiadás." : "A GitHub nem érhető el (" + esc(g.github) + ").")}</span><br>
+				<span class="dim">Tesztelés: a launcherben admin fiókkal belépve a „Játékaim” listában.</span>
+			</div>`).join("");
+		} catch (err) { $("devList").innerHTML = ""; say($("devMsg"), errText(err)); }
+	}
 
 	// ── napló ──
 	const ACTION = { dlc_ad: "kiegészítő adása", dlc_elvesz: "kiegészítő visszavonása", erme: "érme",

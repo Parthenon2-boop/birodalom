@@ -60,6 +60,33 @@ const GAMES := [
 		"home": false,
 		"cover_has_title": true,            # a borítóképen már rajta a cím
 	},
+	# ── Fejlesztés alatt álló, TITKOS játékok ──
+	# Csak admin fióknak látszanak: a listát és a letöltési linket a jatek-access szerverfüggvény adja
+	# (a tárolójuk privát, a GitHubról névtelenül nem tölthetők le). Csak Windowsra készülnek.
+	{
+		"key": "antiquitas",
+		"name": "ANTIQUITAS",
+		"sub": "Ókori nagystratégia,  i.e. 3000 – i.sz. 793  ·  fejlesztés alatt",
+		"owner": "Parthenon2-boop",
+		"repo": "antiquitas",
+		"branch": "main",
+		"dir": "Antiquitas",
+		"marker": "antiquitas_launcher.marker",
+		"home": false,
+		"titkos": true,
+	},
+	{
+		"key": "saecula",
+		"name": "SAECULA",
+		"sub": "Világtörténeti nagystratégia,  1066 – 1989  ·  fejlesztés alatt",
+		"owner": "Parthenon2-boop",
+		"repo": "saecula",
+		"branch": "main",
+		"dir": "Saecula",
+		"marker": "saecula_launcher.marker",
+		"home": false,
+		"titkos": true,
+	},
 ]
 
 # A játék megjelenő neve (pl. „Kard és Mágia”, nem „Kard És Mágia”)
@@ -135,7 +162,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 43
+const LAUNCHER_BUILD := 44
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -258,6 +285,8 @@ func _ready() -> void:
 	cfg.load(CFG_PATH)
 	_load_common()
 	game_idx = clampi(int(cfg.get_value("state", "game", 0)), 0, GAMES.size() - 1)
+	# titkos játékkal nem indulunk: az csak akkor jelenik meg, ha a szerver admin fióknak ismeri el
+	if bool(GAMES[game_idx].get("titkos", false)): game_idx = 0
 	_load_game(game_idx)
 	_apply_skin()                 # a kiválasztott játék stílusa + felület
 	http = HTTPRequest.new()
@@ -630,6 +659,7 @@ func _build_ui() -> void:
 	for i in GAMES.size():
 		var idx := i
 		game_btns.append(_game_row(side, str(GAMES[i]["key"]), func(): _switch_game(idx)))
+	_titkos_lathatosag()
 	var side_space := Control.new()
 	side_space.size_flags_vertical = SIZE_EXPAND_FILL
 	side.add_child(side_space)
@@ -1623,6 +1653,7 @@ func _acc_sync() -> void:
 	await _dlc_jog_frissit()     # a játéknak szóló aláírt igazolás és a legújabb kiadások
 	_refresh_dlc()
 	_check_dlc_updates()
+	await _titkos_frissit()      # admin fióknak a fejlesztés alatt álló játékok is
 
 # Régi, GÉPHEZ kötött kulcsok átemelése a fiókba.
 #
@@ -1790,6 +1821,8 @@ func _acc_logout(silent: bool = false) -> void:
 	cfg.save(CFG_PATH)
 	_dlc_egyeztet()              # a fiókból jött kiegészítők csomagja is félrekerül
 	_dlc_jog_torol()             # és a játék igazolása is megszűnik
+	_titkos.clear()              # a fejlesztés alatt álló játékok eltűnnek a listából
+	_titkos_lathatosag()
 	_refresh_dlc()
 	_refresh_account_ui()
 	if not silent: _status("Kijelentkeztél.", S.TEXT)
@@ -2281,6 +2314,9 @@ func check_latest() -> void:
 	_refresh_labels()
 	_status("Frissítés keresése…")
 	_progress(0, "")
+	if bool(game().get("titkos", false)):
+		_check_titkos()
+		return
 	_request("%s/repos/%s/%s/releases/latest" % [API, repo_owner, repo], _on_release_checked)
 	# A gombnyomásra az indító a saját változatát és a kiegészítőket is újranézi.
 	_check_home_launcher()
@@ -2294,8 +2330,67 @@ func check_latest() -> void:
 func _sweep_versions() -> void:
 	_sweep_sor.clear()
 	for g in GAMES:
+		if bool(g.get("titkos", false)): continue    # privát tároló: a változatát a jatek-access adja
 		_sweep_sor.append(str(g["key"]))
 	_sweep_next()
+
+# ── Titkos (fejlesztés alatt álló) játékok ─────────────────────
+var _titkos := {}                  # játékkulcs -> legújabb kiadás címkéje ("" ha még nincs); csak adminnak nem üres
+
+func _titkos_elerheto(g: Dictionary) -> bool:
+	return not bool(g.get("titkos", false)) or _titkos.has(str(g["key"]))
+
+# A titkos játékok sora csak akkor látszik, ha a szerver elérhetőnek mondta; ha épp egy ilyen van
+# kiválasztva, de már nem érhető el (pl. kijelentkezés után), visszaváltunk az elsőre.
+func _titkos_lathatosag() -> void:
+	for i in mini(game_btns.size(), GAMES.size()):
+		game_btns[i].visible = _titkos_elerheto(GAMES[i])
+	if not _titkos_elerheto(game()): _switch_game(0)
+
+# Belépés után (és induláskor, ha be vagyunk lépve) megkérdezzük a szervert
+func _titkos_frissit() -> void:
+	if acc_token == "":
+		_titkos.clear()
+		_titkos_lathatosag()
+		return
+	var r := await _acc_call(HTTPClient.METHOD_POST, "/functions/v1/jatek-access", {}, acc_token)
+	if int(r[0]) != 200 or not r[1] is Dictionary: return      # hálózati hiba: marad, ami volt
+	var games = (r[1] as Dictionary).get("games", {})
+	_titkos = games if games is Dictionary else {}
+	for k in _titkos:
+		if str(_titkos[k]) != "": latest_ver[str(k)] = str(_titkos[k])
+	_titkos_lathatosag()
+	_refresh_labels()
+
+# A titkos játék legújabb kiadása és a néhány percig érvényes letöltési linkje a szervertől
+func _titkos_link(key: String) -> Dictionary:
+	var r := await _acc_call(HTTPClient.METHOD_POST, "/functions/v1/jatek-access", {"game": key}, acc_token)
+	var d: Dictionary = r[1] if r[1] is Dictionary else {}
+	d["_code"] = int(r[0])
+	return d
+
+func _check_titkos() -> void:
+	var key := str(game()["key"])
+	if _is_mac():
+		busy = false
+		_status("Ez a játék még fejlesztés alatt áll, és egyelőre csak Windowsra készül.", S.GOLD_LIGHT)
+		_refresh_labels()
+		return
+	var d := await _titkos_link(key)
+	busy = false
+	var code: int = int(d["_code"])
+	if code == 200 and str(d.get("url", "")) != "":
+		latest_ver[key] = str(d.get("tag", ""))
+		remote = {"mode": "release", "version": str(d.get("tag", "?")), "url": str(d["url"]),
+			"size": int(d.get("size", 0)), "notes": "", "date": ""}
+		_after_check()
+	elif code == 404:
+		_status("Ennek a fejlesztés alatt álló játéknak még nincs kiadása.", S.GOLD_LIGHT)
+	elif code == 401 or code == 403:
+		_status("A letöltéshez admin fiókkal kell belépni.", S.RED)
+	else:
+		_status("A letöltési linket most nem sikerült lekérni (hiba %d). Próbáld újra." % code, S.RED)
+	_refresh_labels()
 
 func _sweep_next() -> void:
 	if _sweep_sor.is_empty(): return
@@ -2811,6 +2906,16 @@ func start_update() -> void:
 	_refresh_labels()
 	_status("Letöltés…")
 	_progress(0, "0%")
+	# titkos játék: a link csak néhány percig érvényes, ezért közvetlenül a letöltés előtt kérünk újat
+	if bool(game().get("titkos", false)):
+		var d := await _titkos_link(str(game()["key"]))
+		if int(d["_code"]) != 200 or str(d.get("url", "")) == "":
+			busy = false
+			_status("A letöltési linket nem sikerült lekérni (hiba %d)." % int(d["_code"]), S.RED)
+			_refresh_labels()
+			return
+		remote["url"] = str(d["url"])
+		remote["version"] = str(d.get("tag", remote["version"]))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(_zip_tmp()))
 	_request(str(remote["url"]), _on_downloaded, _zip_tmp())
 	set_process(true)

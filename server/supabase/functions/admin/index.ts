@@ -10,6 +10,7 @@
 //   coins    { id, amount, note }         – érme jóváírása (+) / levonása (−); indoklás kötelező
 //   suspend  { id, on, note }             – fiók felfüggesztése (on=true, indoklás kötelező) / feloldása
 //   delete   { id, confirm:"TÖRLÉS", note } – fiók végleges törlése (kiegészítőkkel, érmékkel együtt)
+//   dev      {}                           – a fejlesztés alatt álló titkos játékok legújabb kiadása
 //   log      { page? }                    – az admin-napló (50/oldal)
 // Mindegyikhez a fiók tokenje kell (Authorization: Bearer <access_token>), és a fióknak benne kell
 // lennie a public.admins táblában (lásd schema_admin.sql). Minden módosítás naplózódik (public.admin_log).
@@ -41,6 +42,11 @@ const DLCS = [
 	{ key: "varegok", name: "A varégok útja", game: "heptarchia" },
 ];
 const DLC_KEYS = new Set(DLCS.map((d) => d.key));
+// fejlesztés alatt álló, titkos játékok (csak admin láthatja; a launcherben is csak admin fiókkal jelennek meg)
+const DEV_GAMES = [
+	{ key: "antiquitas", repo: "antiquitas", name: "Antiquitas", years: "i.e. 3000 – i.sz. 793", area: "Európa, Közel-Kelet, Észak-Afrika" },
+	{ key: "saecula", repo: "saecula", name: "Saecula", years: "1066 – 1989", area: "az egész világ" },
+];
 const PAGE = 50;
 // true: a fióklistában a teljes e-mail-cím látszik; false: csak kitakarva (pl. pa•••@gmail.com)
 const SHOW_FULL_EMAIL = false;
@@ -250,6 +256,19 @@ async function handle(db: SupabaseClient, admin: Admin, action: string, body: Bo
 			]);
 			await naplo(db, admin, "torles", null, c.name, osszegzes);
 			return [{ ok: true }, 200];
+		}
+		case "dev": {
+			// a fejlesztés alatt álló, titkos játékok (privát tárolók) legújabb kiadása – csak itt, az adminnak látszik
+			const out = await Promise.all(DEV_GAMES.map(async (g) => {
+				const res = await fetch(`https://api.github.com/repos/Parthenon2-boop/${g.repo}/releases?per_page=5`, {
+					headers: { Authorization: `Bearer ${Deno.env.get("GITHUB_TOKEN") ?? ""}`, "User-Agent": "parthlauncher",
+						"X-GitHub-Api-Version": "2022-11-28", Accept: "application/vnd.github+json" },
+				});
+				const rels = res.ok ? await res.json() : [];
+				const r = Array.isArray(rels) ? rels.find((x: { draft: boolean }) => !x.draft) : null;
+				return { ...g, github: res.status, tag: r ? String(r.tag_name) : "", date: r ? String(r.published_at ?? "") : "" };
+			}));
+			return [{ games: out }, 200];
 		}
 		case "log": {
 			const page = Math.max(0, Math.floor(Number(body.page ?? 0)) || 0);
