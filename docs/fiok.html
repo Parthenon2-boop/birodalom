@@ -11,6 +11,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
+	html, body { cursor: url(kurzor/nyil_32.png) 1 1, auto; cursor: -webkit-image-set(url(kurzor/nyil_32.png) 1x, url(kurzor/nyil_64.png) 2x) 1 1, auto; cursor: image-set(url(kurzor/nyil_32.png) 1x, url(kurzor/nyil_64.png) 2x) 1 1, auto; }
+	a, button, [role=button], label, select, summary, .btn, input[type=submit], input[type=button], input[type=checkbox] { cursor: url(kurzor/kard_32.png) 1 1, pointer; cursor: -webkit-image-set(url(kurzor/kard_32.png) 1x, url(kurzor/kard_64.png) 2x) 1 1, pointer; cursor: image-set(url(kurzor/kard_32.png) 1x, url(kurzor/kard_64.png) 2x) 1 1, pointer; }
+	input[type=text], input[type=email], input[type=password], input[type=search], input[type=number], textarea { cursor: text; }
 	:root { --bg: #1d1510; --panel: #2f2219; --panel-2: #251a13; --line: #6b4f2a; --gold: #d9a441; --gold-2: #f0cf85;
 		--text: #eadcbc; --muted: #b7a37f; --ok: #9fcf7a; --err: #f08a74; }
 	* { box-sizing: border-box; }
@@ -27,16 +30,16 @@
 	h2 { font-family: Cinzel, serif; color: var(--gold-2); font-size: 20px; margin: 0 0 10px; }
 	.box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 	.tabs { display: flex; border-bottom: 1px solid var(--line); }
-	.tabs button { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--muted); padding: 14px 6px; font: 15px Cinzel, serif; cursor: pointer; border-bottom: 3px solid transparent; }
+	.tabs button { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--muted); padding: 14px 6px; font: 15px Cinzel, serif; border-bottom: 3px solid transparent; }
 	.tabs button[aria-selected="true"] { color: var(--gold-2); border-bottom-color: var(--gold); background: rgba(217,164,65,.07); }
 	form { padding: 22px 20px 24px; display: flex; flex-direction: column; gap: 12px; }
 	form[hidden], [hidden] { display: none !important; }
 	label { font-size: 16px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 	input { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); background: #1a130e; color: var(--text); font: 17px "EB Garamond", serif; }
 	input:focus, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
-	button.main, a.main { margin-top: 6px; padding: 12px; border-radius: 7px; border: 1px solid var(--gold); background: linear-gradient(#e7b95a, #b98326); color: var(--bg); font: 17px Cinzel, serif; cursor: pointer; text-align: center; text-decoration: none; }
+	button.main, a.main { margin-top: 6px; padding: 12px; border-radius: 7px; border: 1px solid var(--gold); background: linear-gradient(#e7b95a, #b98326); color: var(--bg); font: 17px Cinzel, serif; text-align: center; text-decoration: none; }
 	button.main:disabled { opacity: .6; cursor: wait; }
-	.ghost { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--gold-2); font: 15px Cinzel, serif; cursor: pointer; text-decoration: none; display: inline-block; }
+	.ghost { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--gold-2); font: 15px Cinzel, serif; text-decoration: none; display: inline-block; }
 	.ghost:hover { border-color: var(--gold); }
 	.hint { font-size: 15px; color: var(--muted); margin: 0; }
 	.msg { font-size: 16px; margin: 0; padding: 10px 12px; border-radius: 6px; }
@@ -44,7 +47,7 @@
 	.msg.ok { color: var(--ok); background: rgba(127,174,90,.12); border: 1px solid rgba(127,174,90,.4); }
 	.msg.err { color: var(--err); background: rgba(176,56,42,.14); border: 1px solid rgba(176,56,42,.45); }
 	.langs { display: inline-flex; gap: 4px; margin-left: 14px; }
-	.langs button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 5px; padding: 2px 7px; font: 13px "EB Garamond", serif; cursor: pointer; }
+	.langs button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 5px; padding: 2px 7px; font: 13px "EB Garamond", serif; }
 	.langs button:hover { color: var(--gold-2); border-color: var(--gold); }
 	.langs button.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
 	.back { text-align: center; margin-top: 18px; font-size: 16px; }

@@ -11,6 +11,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
+	html, body { cursor: url(kurzor/nyil_32.png) 1 1, auto; cursor: -webkit-image-set(url(kurzor/nyil_32.png) 1x, url(kurzor/nyil_64.png) 2x) 1 1, auto; cursor: image-set(url(kurzor/nyil_32.png) 1x, url(kurzor/nyil_64.png) 2x) 1 1, auto; }
+	a, button, [role=button], label, select, summary, .btn, input[type=submit], input[type=button], input[type=checkbox] { cursor: url(kurzor/kard_32.png) 1 1, pointer; cursor: -webkit-image-set(url(kurzor/kard_32.png) 1x, url(kurzor/kard_64.png) 2x) 1 1, pointer; cursor: image-set(url(kurzor/kard_32.png) 1x, url(kurzor/kard_64.png) 2x) 1 1, pointer; }
+	input[type=text], input[type=email], input[type=password], input[type=search], input[type=number], textarea { cursor: text; }
 	:root { --bg: #1d1510; --panel: #2f2219; --panel-2: #251a13; --line: #6b4f2a; --gold: #d9a441; --gold-2: #f0cf85;
 		--text: #eadcbc; --muted: #b7a37f; --ok: #9fcf7a; --err: #f08a74; }
 	* { box-sizing: border-box; }
@@ -30,7 +33,7 @@
 	label { font-size: 15px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 	input, select { width: 100%; padding: 9px 11px; border-radius: 6px; border: 1px solid var(--line); background: #1a130e; color: var(--text); font: 16px "EB Garamond", serif; }
 	input:focus, select:focus, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
-	button { font: 15px Cinzel, serif; cursor: pointer; border-radius: 6px; }
+	button { font: 15px Cinzel, serif; border-radius: 6px; }
 	.main { padding: 10px 14px; border: 1px solid var(--gold); background: linear-gradient(#e7b95a, #b98326); color: var(--bg); }
 	button.ghost { padding: 6px 11px; border: 1px solid var(--line); background: transparent; color: var(--gold-2); }
 	button.ghost:hover { border-color: var(--gold); }

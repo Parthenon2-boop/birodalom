@@ -135,7 +135,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 41
+const LAUNCHER_BUILD := 42
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -240,9 +240,20 @@ func _mac_nagyitas() -> void:
 	w.size = Vector2i((alap * k).round())
 	w.move_to_center()
 
+# Középkori egérmutató (mint a Heptarchiában): bronz-arany nyíl, kattintható helyen kard.
+func _kurzor_beallit() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var mag: int = DisplayServer.screen_get_size(DisplayServer.window_get_current_screen()).y
+	var meret: int = 64 if mag >= 2000 else (48 if mag >= 1400 else 32)
+	var hot := Vector2(meret / 32.0, meret / 32.0)
+	Input.set_custom_mouse_cursor(load("res://assets/kurzor/nyil_%d.png" % meret), Input.CURSOR_ARROW, hot)
+	Input.set_custom_mouse_cursor(load("res://assets/kurzor/kard_%d.png" % meret), Input.CURSOR_POINTING_HAND, hot)
+
 func _ready() -> void:
 	if _relaunch_without_console(): return
 	_mac_nagyitas()
+	_kurzor_beallit()
 	_repo_file = _read_repo_file()
 	cfg.load(CFG_PATH)
 	_load_common()

@@ -23,6 +23,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
+	html, body { cursor: url(kurzor/nyil_32.png) 1 1, auto; cursor: -webkit-image-set(url(kurzor/nyil_32.png) 1x, url(kurzor/nyil_64.png) 2x) 1 1, auto; cursor: image-set(url(kurzor/nyil_32.png) 1x, url(kurzor/nyil_64.png) 2x) 1 1, auto; }
+	a, button, [role=button], label, select, summary, .btn, input[type=submit], input[type=button], input[type=checkbox] { cursor: url(kurzor/kard_32.png) 1 1, pointer; cursor: -webkit-image-set(url(kurzor/kard_32.png) 1x, url(kurzor/kard_64.png) 2x) 1 1, pointer; cursor: image-set(url(kurzor/kard_32.png) 1x, url(kurzor/kard_64.png) 2x) 1 1, pointer; }
+	input[type=text], input[type=email], input[type=password], input[type=search], input[type=number], textarea { cursor: text; }
 	:root { --bg: #1d1510; --bg2: #271c14; --panel: #2f2219; --line: #6b4f2a;
 		--gold: #d9a441; --gold-2: #f0cf85; --text: #eadcbc; --muted: #b7a37f; --red: #b0382a; }
 	* { box-sizing: border-box; }
@@ -36,7 +39,7 @@
 	.logo { font-family: Cinzel, serif; font-size: 21px; color: var(--gold); text-decoration: none; }
 	nav a { color: var(--muted); text-decoration: none; margin-left: 16px; font-size: 16px; }
 	.langs { display: inline-flex; gap: 4px; margin-left: 14px; }
-	.langs button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 5px; padding: 2px 7px; font: 13px "EB Garamond", serif; cursor: pointer; }
+	.langs button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 5px; padding: 2px 7px; font: 13px "EB Garamond", serif; }
 	.langs button.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
 	.hero { text-align: center; padding: 48px 0 30px; }
 	.hero h1 { font-size: clamp(34px, 6vw, 54px); color: var(--gold); }
