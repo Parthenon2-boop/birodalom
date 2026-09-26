@@ -70,5 +70,17 @@
         "cimke_en":  "Birodalom",
         "cimke_de":  "Birodalom",
         "datum":  "2026-09-26"
+    },
+    {
+        "cim":  "Heptarchia 1.72 – felbontható házasság, mérsékelt hadisarc",
+        "cimke":  "Heptarchia",
+        "szoveg":  "A királyi házasság mostantól felbontható a diplomáciában: a szövetség megszűnik, a birodalmad stabilitása csökken, és a sértett udvar két évig nehezebben fogadja el az ajánlataidat. A házastársad birodalmának is hadat üzenhetsz – ez előbb felbontja a házasságot. A hadisarc mindenhol 500 és 800 ezüst között van (vagy nincs), a te követelésedben, a gép ajánlatában és a béke végrehajtásában is. A kard alakú egérmutató csak ellenséges tartomány fölött jelenik meg. Ha idegen tartományra kattintasz, az építés helyett Hadüzenet, Béke, Házasság felbontása és Diplomácia gombokat látsz, a Város ablakban pedig csak azt, ami ott már felépült. A Hit és egyház kiegészítő gombja fölött is nyíl van.",
+        "cim_en":  "Heptarchia 1.72 – marriages can end, tribute kept moderate",
+        "szoveg_en":  "A royal marriage can now be dissolved in diplomacy: the alliance ends, your realm loses stability and the offended court accepts your proposals less readily for two years. You can also declare war on your spouse\u0027s realm – this dissolves the marriage first. War tribute is always between 500 and 800 silver (or none) – in your demands, in the computer\u0027s offers and when peace is carried out. The sword cursor now appears only over enemy provinces. Clicking a foreign province shows Declare war, Peace, Dissolve marriage and Diplomacy buttons instead of the build panel, and the City window shows only what is already built there. The Faith and Church add-on\u0027s button shows the arrow too.",
+        "cim_de":  "Heptarchia 1.72 – Ehen lassen sich lösen, maßvoller Tribut",
+        "szoveg_de":  "Eine königliche Ehe lässt sich jetzt in der Diplomatie auflösen: Das Bündnis endet, dein Reich verliert Stabilität, und der gekränkte Hof nimmt zwei Jahre lang deine Angebote schwerer an. Auch dem Reich deines Ehepartners kannst du den Krieg erklären – dabei wird die Ehe zuerst aufgelöst. Der Kriegstribut liegt immer zwischen 500 und 800 Silber (oder entfällt) – bei deinen Forderungen, bei den Angeboten des Computers und beim Friedensschluss. Der Schwert-Mauszeiger erscheint nur noch über feindlichen Provinzen. Ein Klick auf eine fremde Provinz zeigt statt des Baumenüs die Knöpfe Kriegserklärung, Frieden, Ehe auflösen und Diplomatie; das Stadtfenster zeigt dort nur, was bereits gebaut ist. Auch über dem Knopf der Erweiterung Glaube und Kirche erscheint der Pfeil.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-09-26"
     }
 ]
