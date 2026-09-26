@@ -44,3 +44,50 @@ A játék (DLC.gd) csak érvényes, erre a gépre szóló igazolással tölt be 
    - `GITHUB_TOKEN` = az 1. pont tokenje.
 4. Ha a függvény él, és a launcher 37 + Heptarchia 1.59 kint van: a `heptarchia-dlc-csomagok` tárolót
    **privátra** kell állítani (Settings → General → Danger Zone → Change visibility → Private).
+
+## Belépés a weboldalon + admin felület (`fiok.html`, `admin.html`, `admin` függvény)
+
+**Mit tud?** A `fiok.html`-en bárki beléphet a fiókjával (fióknévvel vagy e-mail-címmel): látja a
+fióknevét, a játékokat, a Heptarchia-kiegészítőket (melyik van meg, melyiket lehet megvenni) és a
+Kard és Mágia érmeegyenlegét. Ha a fiók **admin**, megjelenik egy „Admin felület” link → `admin.html`:
+fiókok száma, fióklista kereséssel (fióknév, kitakart e-mail, regisztráció, utolsó belépés, érme,
+kiegészítők), kiegészítő ajándékba adása / visszavonása, érme jóváírása / levonása indoklással, és a
+napló. Az admin-jogot minden kérésnél a szerver ellenőrzi (`public.admins` tábla); a weboldalon nincs
+semmi titok, a `service_role` kulcs csak a függvényben van.
+
+Hol vannak az adatok: kiegészítők → `entitlements` (aktív = `revoked = false`, a fiókhoz `user_id`-vel
+vagy még csak a vásárlási e-mail-címmel kötve); érme → `coin_tx` (az egyenleg a sorok összege, a
+játék a `my_coins` nézetből olvassa); admin-napló → `admin_log`.
+
+### Telepítés (egyszer)
+
+1. **Adatbázis:** SQL Editor → New query → `schema_admin.sql` tartalma → Run.
+   (Ez egyben a `buy_cosmetic` jogosultsági hibáját is javítja – lásd a fájl alját.)
+2. **Tedd magad adminná** (SQL Editor, a fióknevet írd át):
+   ```sql
+   insert into public.admins (user_id)
+   select user_id from public.profiles where username = 'IDE_A_FIOKNEVED'
+   on conflict do nothing;
+   -- ellenőrzés:
+   select a.user_id, p.username from public.admins a left join public.profiles p using (user_id);
+   ```
+   Admin elvétele: `delete from public.admins where user_id = '<uuid>';`
+3. **Függvények** (PowerShell, a `Birodalom_Godot\server` mappából; a token: supabase.com → Account →
+   Access Tokens):
+   ```powershell
+   $env:SUPABASE_ACCESS_TOKEN = Get-Content "<a token fájlja>" -Raw
+   $env:SUPABASE_ACCESS_TOKEN = $env:SUPABASE_ACCESS_TOKEN.Trim()
+   npx --yes supabase@latest functions deploy admin --project-ref gxvepswtairfqvosdcpb --use-api --no-verify-jwt
+   npx --yes supabase@latest functions deploy login-nev --project-ref gxvepswtairfqvosdcpb --use-api --no-verify-jwt
+   ```
+   - `admin`: a `--no-verify-jwt` szándékos – a függvény minden kérésnél maga ellenőrzi a tokent és az
+     admin-jogot (a böngésző token nélküli CORS-előkérése így nem akad el a kapun).
+   - `login-nev`: CORS-fejlécet kapott, hogy a weboldal is fióknévvel léptethessen be. **A
+     `--no-verify-jwt` itt KÖTELEZŐ**, különben a launcher belépése elromlik.
+   - Új titok nem kell: a `SUPABASE_URL`, `SUPABASE_ANON_KEY` és a szerveroldali kulcs magától ott van.
+     Ha a weboldalt más címről is el akarod érni (pl. helyi teszt), az `ADMIN_ORIGINS` titokba vesszővel
+     elválasztva írhatsz további címeket (alapból csak `https://parthenon2-boop.github.io`).
+4. **Weboldal:** a `docs/` változásai (fiok.html, admin.html, a menü) a szokásos pusholással kerülnek ki.
+   Az `admin.html` nincs a menüben és a sitemapben, `noindex` – de a védelmet nem ez adja, hanem a szerver.
+
+Beállítás a függvényben: `SHOW_FULL_EMAIL` (alapból `false` → a listában csak `pa•••@gmail.com` látszik).

@@ -84,4 +84,6 @@ begin
 end;
 $$;
 
-revoke all on function public.buy_cosmetic(uuid, text, text, int) from anon, authenticated;
+-- a PUBLIC-tól is el kell venni: a Postgres alapból mindenkinek ad futtatási jogot, és az anon azt örökli
+revoke all on function public.buy_cosmetic(uuid, text, text, int) from public, anon, authenticated;
+grant execute on function public.buy_cosmetic(uuid, text, text, int) to service_role;

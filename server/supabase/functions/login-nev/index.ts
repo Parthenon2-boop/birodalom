@@ -21,10 +21,20 @@ function serviceKey(): string {
 	} catch { return ""; }
 }
 
-const json = (body: unknown, status = 200) =>
-	new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+// A weboldal (docs/fiok.html) is ezzel lép be: a böngészőnek CORS-fejléc kell, de csak a saját oldalunkról.
+// (A launcher nem böngésző, neki ez közömbös.)
+const WEB_ORIGIN = "https://parthenon2-boop.github.io";
 
 Deno.serve(async (req: Request) => {
+	// kérésenként számoljuk (a függvény egyszerre több kérést is kiszolgálhat)
+	const CORS: Record<string, string> = req.headers.get("Origin") === WEB_ORIGIN ? {
+		"Access-Control-Allow-Origin": WEB_ORIGIN, "Vary": "Origin",
+		"Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+		"Access-Control-Allow-Methods": "POST, OPTIONS",
+	} : { "Vary": "Origin" };
+	const json = (body: unknown, status = 200) =>
+		new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
+	if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 	let body: { nev?: string; password?: string };
 	try { body = await req.json(); } catch { return json({ error: "bad_request" }, 400); }
 

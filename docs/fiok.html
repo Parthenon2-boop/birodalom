@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ParthLauncher – fiók</title>
-<meta name="description" content="ParthLauncher-fiók: regisztráció és elfelejtett jelszó.">
+<meta name="description" content="ParthLauncher-fiók: belépés, regisztráció, elfelejtett jelszó, a játékaid és kiegészítőid.">
 <link rel="icon" href="ikon.png" type="image/png">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
-	:root { --bg: #1d1510; --panel: #2f2219; --line: #6b4f2a; --gold: #d9a441; --gold-2: #f0cf85;
+	:root { --bg: #1d1510; --panel: #2f2219; --panel-2: #251a13; --line: #6b4f2a; --gold: #d9a441; --gold-2: #f0cf85;
 		--text: #eadcbc; --muted: #b7a37f; --ok: #9fcf7a; --err: #f08a74; }
 	* { box-sizing: border-box; }
 	body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font: 18px/1.55 "EB Garamond", Georgia, serif;
@@ -22,18 +22,22 @@
 	.logo { font-family: Cinzel, serif; font-size: 22px; color: var(--gold); text-decoration: none; }
 	header nav a { color: var(--muted); text-decoration: none; font-size: 16px; margin-left: 16px; }
 	main { max-width: 480px; margin: 40px auto; padding: 0 16px; }
+	main.wide { max-width: 820px; }
 	h1 { font-family: Cinzel, serif; color: var(--gold); text-align: center; font-size: 30px; margin: 0 0 18px; }
+	h2 { font-family: Cinzel, serif; color: var(--gold-2); font-size: 20px; margin: 0 0 10px; }
 	.box { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 	.tabs { display: flex; border-bottom: 1px solid var(--line); }
-	.tabs button { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--muted); padding: 14px 8px; font: 16px Cinzel, serif; cursor: pointer; border-bottom: 3px solid transparent; }
+	.tabs button { flex: 1; min-width: 0; background: transparent; border: 0; color: var(--muted); padding: 14px 6px; font: 15px Cinzel, serif; cursor: pointer; border-bottom: 3px solid transparent; }
 	.tabs button[aria-selected="true"] { color: var(--gold-2); border-bottom-color: var(--gold); background: rgba(217,164,65,.07); }
 	form { padding: 22px 20px 24px; display: flex; flex-direction: column; gap: 12px; }
-	form[hidden] { display: none; }
+	form[hidden], [hidden] { display: none !important; }
 	label { font-size: 16px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 	input { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); background: #1a130e; color: var(--text); font: 17px "EB Garamond", serif; }
-	input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
-	button.main { margin-top: 6px; padding: 12px; border-radius: 7px; border: 1px solid var(--gold); background: linear-gradient(#e7b95a, #b98326); color: var(--bg); font: 17px Cinzel, serif; cursor: pointer; }
+	input:focus, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+	button.main, a.main { margin-top: 6px; padding: 12px; border-radius: 7px; border: 1px solid var(--gold); background: linear-gradient(#e7b95a, #b98326); color: var(--bg); font: 17px Cinzel, serif; cursor: pointer; text-align: center; text-decoration: none; }
 	button.main:disabled { opacity: .6; cursor: wait; }
+	.ghost { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--gold-2); font: 15px Cinzel, serif; cursor: pointer; text-decoration: none; display: inline-block; }
+	.ghost:hover { border-color: var(--gold); }
 	.hint { font-size: 15px; color: var(--muted); margin: 0; }
 	.msg { font-size: 16px; margin: 0; padding: 10px 12px; border-radius: 6px; }
 	.msg:empty { display: none; }
@@ -44,24 +48,56 @@
 	.langs button:hover { color: var(--gold-2); border-color: var(--gold); }
 	.langs button.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
 	.back { text-align: center; margin-top: 18px; font-size: 16px; }
+	/* ── a belépett fiók nézete ── */
+	.acc { display: flex; flex-direction: column; gap: 16px; }
+	.acc .box { padding: 18px 20px; overflow: visible; }
+	.acc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+	.acc-head .name { font: 700 24px Cinzel, serif; color: var(--gold); }
+	.acc-head .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+	.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 12px; }
+	.fact { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+	.fact b { display: block; font: 700 22px Cinzel, serif; color: var(--gold-2); }
+	.fact span { color: var(--muted); font-size: 15px; }
+	.dl-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+	.game { border-top: 1px solid rgba(107,79,42,.55); padding: 14px 0 4px; }
+	.game:first-of-type { border-top: 0; padding-top: 4px; }
+	.game h3 { font-family: Cinzel, serif; color: var(--gold-2); font-size: 18px; margin: 0 0 2px; }
+	.game h3 a { color: inherit; text-decoration: none; }
+	.game p { margin: 0 0 8px; font-size: 16px; color: var(--muted); }
+	.item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px dashed rgba(107,79,42,.45); font-size: 17px; }
+	.item .st { font-size: 14px; padding: 1px 9px; border-radius: 10px; white-space: nowrap; }
+	.st.have { color: var(--ok); border: 1px solid rgba(127,174,90,.5); background: rgba(127,174,90,.1); }
+	.st.free { color: var(--muted); border: 1px solid var(--line); }
+	.item a.buy { white-space: nowrap; }
 </style>
 </head>
 <body>
 <header>
 	<div class="wrap">
 		<a class="logo" href="./">ParthLauncher</a>
-		<nav><a href="./" data-i18n="nav.home">Főoldal</a><a href="./#letoltes" data-i18n="nav.download">Letöltés</a><span class="langs" id="langs"></span></nav>
+		<nav><a href="./" data-i18n="nav.home">Főoldal</a><a href="./#letoltes" data-i18n="nav.download">Letöltés</a><a href="heptarchia.html">Heptarchia</a><span class="langs" id="langs"></span></nav>
 	</div>
 </header>
-<main>
+<main id="main">
 	<h1 data-i18n="title">Fiók</h1>
-	<div class="box">
+
+	<!-- ── belépés előtt: belépés / regisztráció / elfelejtett jelszó ── -->
+	<div class="box" id="authBox">
 		<div class="tabs" role="tablist" id="tabs">
-			<button role="tab" data-tab="reg" aria-selected="true" data-i18n="tab.reg">Regisztráció</button>
+			<button role="tab" data-tab="login" aria-selected="true" data-i18n="tab.login">Belépés</button>
+			<button role="tab" data-tab="reg" aria-selected="false" data-i18n="tab.reg">Regisztráció</button>
 			<button role="tab" data-tab="forgot" aria-selected="false" data-i18n="tab.forgot">Elfelejtett jelszó</button>
 		</div>
 
-		<form id="reg" novalidate>
+		<form id="login" novalidate>
+			<p class="hint" data-i18n="login.hint">Lépj be a ParthLauncher-fiókoddal: itt látod a játékaidat és a megvásárolt kiegészítőidet.</p>
+			<label><span data-i18n="f.login">Fióknév vagy e-mail-cím</span><input type="text" name="nev" autocomplete="username" required></label>
+			<label><span data-i18n="f.pwcur">Jelszó</span><input type="password" name="pw" autocomplete="current-password" required></label>
+			<button class="main" type="submit" data-i18n="tab.login">Belépés</button>
+			<p class="msg" role="status"></p>
+		</form>
+
+		<form id="reg" novalidate hidden>
 			<p class="hint" data-i18n="reg.hint">A fiókkal játszhatsz a ParthLauncherben, és a megvásárolt kiegészítők bármelyik gépen megjelennek. Vásárláskor ugyanezt az e-mail-címet add meg a Gumroadon.</p>
 			<label><span data-i18n="f.user">Fióknév (ezzel lépsz be)</span><input type="text" name="user" autocomplete="username" minlength="3" maxlength="20" required></label>
 			<label><span data-i18n="f.email">E-mail-cím</span><input type="email" name="email" autocomplete="email" required></label>
@@ -86,7 +122,38 @@
 			<p class="msg" role="status"></p>
 		</form>
 	</div>
-	<p class="back" data-i18n="back" data-i18n-html="1">A belépés a ParthLauncherben történik. <a href="./#letoltes">Letöltés</a></p>
+	<p class="back" id="backNote" data-i18n="back" data-i18n-html="1">Játszani a ParthLauncherben tudsz. <a href="./#letoltes">Letöltés</a></p>
+
+	<!-- ── belépés után: a fiók ── -->
+	<div class="acc" id="accView" hidden>
+		<div class="box">
+			<div class="acc-head">
+				<div>
+					<div class="name" id="accName"></div>
+					<div class="hint" id="accEmail"></div>
+				</div>
+				<div class="actions">
+					<a class="ghost" id="adminLink" href="admin.html" hidden data-i18n="acc.admin">Admin felület</a>
+					<button class="ghost" type="button" id="logoutBtn" data-i18n="acc.logout">Kijelentkezés</button>
+				</div>
+			</div>
+			<div class="facts">
+				<div class="fact"><b id="accDlcCount">–</b><span data-i18n="acc.dlcs">megvásárolt kiegészítő</span></div>
+				<div class="fact"><b id="accCoins">–</b><span data-i18n="acc.coins">érme (Kard és Mágia)</span></div>
+			</div>
+			<p class="msg" id="accMsg" role="status" style="margin-top:12px"></p>
+		</div>
+
+		<div class="box">
+			<h2 data-i18n="acc.games">Játékok</h2>
+			<p class="hint" data-i18n="acc.games.hint">Mindegyik ingyenes: a ParthLauncher tölti le és frissíti őket, a megvásárolt kiegészítőket is.</p>
+			<div class="dl-row">
+				<a class="ghost" href="https://github.com/Parthenon2-boop/birodalom/releases/latest/download/ParthLauncher-Setup.exe" data-i18n="acc.dl.win">ParthLauncher – Windows</a>
+				<a class="ghost" href="https://github.com/Parthenon2-boop/birodalom/releases/latest/download/ParthLauncher-macos.zip" data-i18n="acc.dl.mac">ParthLauncher – macOS</a>
+			</div>
+			<div id="gameList" style="margin-top:14px"></div>
+		</div>
+	</div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -96,7 +163,8 @@
 	const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmVwc3d0YWlyZnF2b3NkY3BiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4MzQyMzYsImV4cCI6MjEwNTQxMDIzNn0.9A86POfj49aRynE3rerz4nMbfds7xny6GLuRePpgSSI";
 	const BASE = location.origin + location.pathname.replace(/[^/]*$/, "");
 	const SPAM = () => T("spam");
-	const sb = window.supabase.createClient(URL_, ANON, { auth: { persistSession: false, detectSessionInUrl: true, flowType: "implicit" } });
+	// A munkamenet a böngészőben marad (localStorage) – az admin.html is ezt használja.
+	const sb = window.supabase.createClient(URL_, ANON, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "implicit" } });
 
 	// ── Nyelvek: magyar, angol, német ──
 	const LANGS = { hu: "Magyar", en: "English", de: "Deutsch" };
@@ -104,24 +172,37 @@
 		hu: {},
 		en: {
 			"nav.home": "Home", "nav.download": "Download", "title": "Account",
-			"tab.reg": "Sign up", "tab.forgot": "Forgot password",
+			"tab.login": "Sign in", "tab.reg": "Sign up", "tab.forgot": "Forgot password",
+			"login.hint": "Sign in with your ParthLauncher account to see your games and the add-ons you bought.",
+			"f.login": "Account name or e-mail address", "f.pwcur": "Password",
 			"reg.hint": "With an account you can play in the ParthLauncher, and the add-ons you bought show up on any computer. Use this same e-mail address when you buy on Gumroad.",
 			"f.user": "Account name (you sign in with this)",
 			"f.email": "E-mail address", "f.pw": "Password (at least 8 characters)", "f.pw2": "Password again",
 			"forgot.hint": "Enter your account's e-mail address: we send you a message where you can set a new password.",
 			"forgot.send": "Send e-mail", "new.hint": "Enter your new password.",
 			"new.pw": "New password (at least 8 characters)", "new.pw2": "New password again", "new.save": "Save password",
-			"back": "You sign in inside the ParthLauncher. <a href=\"./#letoltes\">Download</a>",
+			"back": "You play in the ParthLauncher. <a href=\"./#letoltes\">Download</a>",
+			"acc.admin": "Admin area", "acc.logout": "Sign out", "acc.dlcs": "add-ons owned", "acc.coins": "coins (Kard és Mágia)",
+			"acc.games": "Games", "acc.games.hint": "All free: the ParthLauncher downloads and updates them, and the add-ons you bought too.",
+			"acc.dl.win": "ParthLauncher – Windows", "acc.dl.mac": "ParthLauncher – macOS",
 			"spam": " If you don't see it, check your Spam folder – the message comes from ParthLauncher.",
 			"m.email": "Please enter a valid e-mail address.", "m.short": "The password must be at least 8 characters.",
 			"m.user": "The account name must be 3–20 characters, using only letters, digits, underscore or hyphen.",
 			"m.usertaken": "That account name is already taken. Please choose another.",
 			"m.nomatch": "The two passwords do not match.",
-			"m.exists": "An account with this e-mail address already exists. Sign in from the ParthLauncher, or request a new password.",
-			"m.sent": "We sent the confirmation e-mail to ", "m.sent2": ". Click the button in it, then sign in from the ParthLauncher with your account name.",
+			"m.exists": "An account with this e-mail address already exists. Sign in, or request a new password.",
+			"m.sent": "We sent the confirmation e-mail to ", "m.sent2": ". Click the button in it, then sign in here or in the ParthLauncher with your account name.",
 			"m.reset": "If an account exists with this address, we sent the message for changing the password.",
-			"m.saved": "Done, your new password is saved. You can sign in with it in the ParthLauncher now.",
+			"m.saved": "Done, your new password is saved. You can sign in with it now.",
 			"m.expired": "This link has expired or was already used. Please request a new e-mail.",
+			"m.login": "Enter your account name (or e-mail address) and password.",
+			"m.badlogin": "Wrong account name / e-mail address or password.",
+			"m.unconfirmed": "This account is not confirmed yet. Click the button in the confirmation e-mail first.",
+			"m.usenamefail": "Signing in with the account name did not work just now. Try your e-mail address instead.",
+			"m.loadfail": "Could not load all of your account data. Please try again later.",
+			"g.hep": "Anglo-Saxon grand strategy from 790.", "g.bir": "Real-time strategy, 1400 – 1945.", "g.kard": "Roguelike adventure with five depths.",
+			"g.free": "free", "g.have": "owned", "g.buy": "Buy", "g.coinpack": "coins", "g.nodlc": "No add-ons.",
+			"g.coinshop": "Coins for the cosmetics shop (outfits only):",
 			"e.rate": "Too many requests in a short time. Wait a minute and try again.",
 			"e.same": "The new password must be different from the old one.",
 			"e.weak": "This password is too weak. Use at least 8 characters.",
@@ -131,24 +212,37 @@
 		},
 		de: {
 			"nav.home": "Startseite", "nav.download": "Download", "title": "Konto",
-			"tab.reg": "Registrieren", "tab.forgot": "Passwort vergessen",
+			"tab.login": "Anmelden", "tab.reg": "Registrieren", "tab.forgot": "Passwort vergessen",
+			"login.hint": "Melde dich mit deinem ParthLauncher-Konto an, um deine Spiele und gekauften Erweiterungen zu sehen.",
+			"f.login": "Kontoname oder E-Mail-Adresse", "f.pwcur": "Passwort",
 			"reg.hint": "Mit einem Konto kannst du im ParthLauncher spielen, und gekaufte Erweiterungen erscheinen auf jedem Rechner. Gib beim Kauf auf Gumroad dieselbe E-Mail-Adresse an.",
 			"f.user": "Kontoname (damit meldest du dich an)",
 			"f.email": "E-Mail-Adresse", "f.pw": "Passwort (mindestens 8 Zeichen)", "f.pw2": "Passwort wiederholen",
 			"forgot.hint": "Gib die E-Mail-Adresse deines Kontos ein: Wir senden dir eine Nachricht, in der du ein neues Passwort festlegen kannst.",
 			"forgot.send": "E-Mail senden", "new.hint": "Gib dein neues Passwort ein.",
 			"new.pw": "Neues Passwort (mindestens 8 Zeichen)", "new.pw2": "Neues Passwort wiederholen", "new.save": "Passwort speichern",
-			"back": "Die Anmeldung erfolgt im ParthLauncher. <a href=\"./#letoltes\">Download</a>",
+			"back": "Gespielt wird im ParthLauncher. <a href=\"./#letoltes\">Download</a>",
+			"acc.admin": "Admin-Bereich", "acc.logout": "Abmelden", "acc.dlcs": "gekaufte Erweiterungen", "acc.coins": "Münzen (Kard és Mágia)",
+			"acc.games": "Spiele", "acc.games.hint": "Alle kostenlos: Der ParthLauncher lädt und aktualisiert sie – auch die gekauften Erweiterungen.",
+			"acc.dl.win": "ParthLauncher – Windows", "acc.dl.mac": "ParthLauncher – macOS",
 			"spam": " Falls du sie nicht siehst, schau auch im Spam-Ordner nach – die Nachricht kommt von ParthLauncher.",
 			"m.email": "Bitte gib eine gültige E-Mail-Adresse ein.", "m.short": "Das Passwort muss mindestens 8 Zeichen haben.",
 			"m.user": "Der Kontoname muss 3–20 Zeichen lang sein und darf nur Buchstaben, Ziffern, Unterstrich oder Bindestrich enthalten.",
 			"m.usertaken": "Dieser Kontoname ist bereits vergeben. Bitte wähle einen anderen.",
 			"m.nomatch": "Die beiden Passwörter stimmen nicht überein.",
-			"m.exists": "Mit dieser E-Mail-Adresse gibt es bereits ein Konto. Melde dich im ParthLauncher an oder fordere ein neues Passwort an.",
-			"m.sent": "Wir haben die Bestätigungsmail an ", "m.sent2": " gesendet. Klicke auf die Schaltfläche darin und melde dich dann mit deinem Kontonamen im ParthLauncher an.",
+			"m.exists": "Mit dieser E-Mail-Adresse gibt es bereits ein Konto. Melde dich an oder fordere ein neues Passwort an.",
+			"m.sent": "Wir haben die Bestätigungsmail an ", "m.sent2": " gesendet. Klicke auf die Schaltfläche darin und melde dich dann hier oder im ParthLauncher mit deinem Kontonamen an.",
 			"m.reset": "Falls ein Konto mit dieser Adresse existiert, haben wir die Nachricht zum Ändern des Passworts gesendet.",
-			"m.saved": "Fertig, dein neues Passwort ist gespeichert. Du kannst dich damit jetzt im ParthLauncher anmelden.",
+			"m.saved": "Fertig, dein neues Passwort ist gespeichert. Du kannst dich jetzt damit anmelden.",
 			"m.expired": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Fordere bitte eine neue E-Mail an.",
+			"m.login": "Gib deinen Kontonamen (oder deine E-Mail-Adresse) und dein Passwort ein.",
+			"m.badlogin": "Falscher Kontoname / falsche E-Mail-Adresse oder falsches Passwort.",
+			"m.unconfirmed": "Dieses Konto ist noch nicht bestätigt. Klicke zuerst auf die Schaltfläche in der Bestätigungsmail.",
+			"m.usenamefail": "Die Anmeldung mit dem Kontonamen hat gerade nicht geklappt. Versuche es mit deiner E-Mail-Adresse.",
+			"m.loadfail": "Nicht alle Kontodaten konnten geladen werden. Bitte versuche es später erneut.",
+			"g.hep": "Angelsächsische Großstrategie ab 790.", "g.bir": "Echtzeitstrategie, 1400 – 1945.", "g.kard": "Roguelike-Abenteuer in fünf Tiefen.",
+			"g.free": "kostenlos", "g.have": "gekauft", "g.buy": "Kaufen", "g.coinpack": "Münzen", "g.nodlc": "Keine Erweiterungen.",
+			"g.coinshop": "Münzen für den Kosmetik-Shop (nur Aussehen):",
 			"e.rate": "Zu viele Anfragen in kurzer Zeit. Warte eine Minute und versuche es erneut.",
 			"e.same": "Das neue Passwort darf nicht dasselbe wie das alte sein.",
 			"e.weak": "Dieses Passwort ist zu schwach. Verwende mindestens 8 Zeichen.",
@@ -164,11 +258,19 @@
 		"m.usertaken": "Ez a fióknév már foglalt. Válassz másikat.",
 		"m.short": "A jelszó legalább 8 karakter legyen.",
 		"m.nomatch": "A két jelszó nem egyezik.",
-		"m.exists": "Ezzel az e-mail-címmel már van fiók. Lépj be a ParthLauncherben, vagy kérj új jelszót.",
-		"m.sent": "Elküldtük a megerősítő levelet a(z) ", "m.sent2": " címre. Kattints a benne lévő gombra, aztán lépj be a ParthLauncherben a fiókneveddel és a jelszavaddal.",
+		"m.exists": "Ezzel az e-mail-címmel már van fiók. Lépj be, vagy kérj új jelszót.",
+		"m.sent": "Elküldtük a megerősítő levelet a(z) ", "m.sent2": " címre. Kattints a benne lévő gombra, aztán lépj be itt vagy a ParthLauncherben a fiókneveddel és a jelszavaddal.",
 		"m.reset": "Ha van fiók ezzel a címmel, elküldtük a levelet a jelszó módosításához.",
-		"m.saved": "Kész, az új jelszavad mentve. Most már beléphetsz vele a ParthLauncherben.",
+		"m.saved": "Kész, az új jelszavad mentve. Most már beléphetsz vele.",
 		"m.expired": "A link lejárt vagy már felhasználták. Kérj új levelet.",
+		"m.login": "Add meg a fióknevedet (vagy e-mail-címedet) és a jelszavadat.",
+		"m.badlogin": "Hibás fióknév / e-mail-cím vagy jelszó.",
+		"m.unconfirmed": "Ez a fiók még nincs megerősítve. Előbb kattints a megerősítő levélben lévő gombra.",
+		"m.usenamefail": "A fióknévvel most nem sikerült belépni. Próbáld az e-mail-címeddel.",
+		"m.loadfail": "Nem sikerült betölteni minden adatot a fiókodról. Próbáld újra később.",
+		"g.hep": "Angolszász nagystratégia 790-től.", "g.bir": "Valós idejű stratégia, 1400 – 1945.", "g.kard": "Roguelike kaland öt mélységgel.",
+		"g.free": "ingyenes", "g.have": "megvan", "g.buy": "Megvásárlás", "g.coinpack": "érme", "g.nodlc": "Nincs kiegészítő.",
+		"g.coinshop": "Érme a kinézet-bolthoz (csak külsőség):",
 		"e.rate": "Túl sok kérés rövid időn belül. Várj egy percet, és próbáld újra.",
 		"e.same": "Az új jelszó nem lehet ugyanaz, mint a régi.",
 		"e.weak": "Ez a jelszó túl gyenge. Legalább 8 karakter legyen.",
@@ -192,20 +294,22 @@
 		});
 		document.querySelectorAll("#langs button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
 		try { localStorage.setItem("parth_lang", lang); } catch (e) {}
+		if (acct) renderGames();
 	}
 	document.getElementById("langs").innerHTML = Object.keys(LANGS)
 		.map(k => `<button type="button" data-lang="${k}" title="${LANGS[k]}">${k.toUpperCase()}</button>`).join("");
 	document.querySelectorAll("#langs button").forEach(b => b.onclick = () => { lang = b.dataset.lang; applyLang(); });
-	applyLang();
 	const $ = id => document.getElementById(id);
-	const forms = ["reg", "forgot", "newpw"];
+	const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+	const pick = o => (o && (o[lang] ?? o.hu)) ?? "";
+	const forms = ["login", "reg", "forgot", "newpw"];
 	function show(name) {
 		forms.forEach(f => $(f).hidden = f !== name);
 		document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
 		$("tabs").hidden = name === "newpw";
 	}
 	document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => show(b.dataset.tab));
-	function say(form, text, ok) { const m = form.querySelector(".msg"); m.textContent = text; m.className = "msg " + (ok ? "ok" : "err"); }
+	function say(form, text, ok) { const m = form.querySelector ? form.querySelector(".msg") || form : form; m.textContent = text; m.className = "msg " + (ok ? "ok" : "err"); }
 	const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 	async function busy(form, fn) { const b = form.querySelector("button.main"); b.disabled = true; try { await fn(); } finally { b.disabled = false; } }
 	// reg = igaz, ha a regisztrációs űrlapról jön: ilyenkor azt is megírjuk, hogy fiók nem készült
@@ -224,6 +328,40 @@
 	// A fióknév ezzel lép be a ParthLauncherben, ezért szűk a szabály: 3–20
 	// karakter, betű / szám / aláhúzás / kötőjel (ékezetes betű is mehet).
 	const validUser = u => u.length >= 3 && u.length <= 20 && /^[\p{L}\p{N}_-]+$/u.test(u);
+
+	// ── Belépés: fióknévvel a login-nev szerverfüggvényen át (az e-mail-cím sosem jön ki a szerverről),
+	//    e-mail-címmel közvetlenül a Supabase-szel ──
+	$("login").onsubmit = e => { e.preventDefault(); const f = e.target;
+		const nev = f.nev.value.trim(), pw = f.pw.value;
+		if (!nev || !pw) return say(f, T("m.login"));
+		busy(f, async () => {
+			if (nev.includes("@")) {
+				const { error } = await sb.auth.signInWithPassword({ email: nev, password: pw });
+				if (error) {
+					const m = String(error.message).toLowerCase();
+					if (m.includes("confirm")) return say(f, T("m.unconfirmed"));
+					if (m.includes("invalid")) return say(f, T("m.badlogin"));
+					return say(f, friendly(error));
+				}
+			} else {
+				let r, d;
+				try {
+					r = await fetch(URL_ + "/functions/v1/login-nev", { method: "POST",
+						headers: { "Content-Type": "application/json", apikey: ANON, Authorization: "Bearer " + ANON },
+						body: JSON.stringify({ nev, password: pw }) });
+					d = await r.json().catch(() => ({}));
+				} catch (err) { return say(f, T("m.usenamefail")); }
+				if (!r.ok || !d.access_token) {
+					if (d.error === "nincs_megerositve") return say(f, T("m.unconfirmed"));
+					if (d.error === "rossz_belepes") return say(f, T("m.badlogin"));
+					return say(f, T("m.usenamefail"));
+				}
+				const { error } = await sb.auth.setSession({ access_token: d.access_token, refresh_token: d.refresh_token });
+				if (error) return say(f, friendly(error));
+			}
+			f.reset(); say(f, "");
+		});
+	};
 
 	$("reg").onsubmit = e => { e.preventDefault(); const f = e.target;
 		const user = f.user.value.trim(), email = f.email.value.trim(), pw = f.pw.value, pw2 = f.pw2.value;
@@ -261,6 +399,7 @@
 		});
 	};
 
+	let recovering = false;
 	$("newpw").onsubmit = e => { e.preventDefault(); const f = e.target;
 		const pw = f.pw.value, pw2 = f.pw2.value;
 		if (pw.length < 8) return say(f, T("m.short"));
@@ -268,11 +407,97 @@
 		busy(f, async () => {
 			const { error } = await sb.auth.updateUser({ password: pw });
 			if (error) return say(f, friendly(error));
+			recovering = false;
 			await sb.auth.signOut();
 			f.reset(); f.querySelector("button.main").hidden = true;
 			say(f, T("m.saved"), true);
 		});
 	};
+
+	// ── A fiók nézete ──
+	const GAMES = [
+		{ key: "heptarchia", name: "Heptarchia", page: "heptarchia.html", desc: "g.hep" },
+		{ key: "birodalom", name: "Birodalom", page: "./#jatekok", desc: "g.bir" },
+		{ key: "kard", name: "Kard és Mágia", page: "./#jatekok", desc: "g.kard" },
+	];
+	// ugyanaz, mint az index.html DLCS-e és a launcher DLCS táblája
+	const DLCS = {
+		heptarchia: [
+			{ key: "skandinavia", price: "4 $", url: "https://parthenon62.gumroad.com/l/ltsalt", name: { hu: "Skandinávia", en: "Scandinavia", de: "Skandinavien" } },
+			{ key: "vikingek", price: "3 $", url: "https://parthenon62.gumroad.com/l/fxtisw", name: { hu: "A vikingek kora", en: "The Viking Age", de: "Das Zeitalter der Wikinger" } },
+			{ key: "vallas", price: "3 $", url: "https://parthenon62.gumroad.com/l/iwqkt", name: { hu: "Hit és egyház", en: "Faith and Church", de: "Glaube und Kirche" } },
+			{ key: "varegok", price: "5 $", url: "https://parthenon62.gumroad.com/l/jrzwus", name: { hu: "A varégok útja", en: "The Varangian Road", de: "Der Warägerweg" } },
+		],
+	};
+	// Kard és Mágia érmecsomagok (a játék fiok.gd-je és a gumroad-ping szerint)
+	const COIN_PACKS = [
+		{ coins: 100, price: "0,99 $", url: "https://parthenon62.gumroad.com/l/iszcby" },
+		{ coins: 220, price: "1,99 $", url: "https://parthenon62.gumroad.com/l/zwaqr" },
+		{ coins: 600, price: "4,99 $", url: "https://parthenon62.gumroad.com/l/bnjaw" },
+	];
+
+	let acct = null;           // { user, username, owned: Set, coins }
+	function renderGames() {
+		$("gameList").innerHTML = GAMES.map(g => {
+			const dl = DLCS[g.key] || [];
+			const items = dl.map(d => {
+				const have = acct.owned.has(d.key);
+				return `<div class="item"><span>${esc(pick(d.name))}</span>` + (have
+					? `<span class="st have">✓ ${esc(T("g.have"))}</span>`
+					: `<a class="ghost buy" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(T("g.buy"))} · ${esc(d.price)}</a>`) + `</div>`;
+			}).join("");
+			const coins = g.key === "kard" ? `<p style="margin-top:6px">${esc(T("g.coinshop"))}</p>` + COIN_PACKS.map(c =>
+				`<div class="item"><span>${c.coins} ${esc(T("g.coinpack"))}</span><a class="ghost buy" href="${esc(c.url)}" target="_blank" rel="noopener">${esc(T("g.buy"))} · ${esc(c.price)}</a></div>`).join("") : "";
+			return `<div class="game"><h3><a href="${esc(g.page)}">${esc(g.name)}</a> <span class="st free">${esc(T("g.free"))}</span></h3>
+				<p>${esc(T(g.desc))}</p>${items}${coins}</div>`;
+		}).join("");
+	}
+
+	async function showAccount(session) {
+		const user = session.user;
+		acct = { user, username: null, owned: new Set(), coins: null };
+		$("authBox").hidden = true; $("backNote").hidden = true; $("accView").hidden = false;
+		$("main").classList.add("wide");
+		$("accName").textContent = (user.user_metadata && user.user_metadata.username) || user.email;
+		$("accEmail").textContent = user.email || "";
+		renderGames();
+		let failed = false;
+		const [prof, ent, coins] = await Promise.all([
+			sb.from("profiles").select("username").eq("user_id", user.id).maybeSingle(),
+			sb.from("entitlements").select("dlc_key"),
+			sb.from("my_coins").select("coins"),
+		]);
+		if (acct.user !== user) return;           // közben kijelentkezett
+		if (prof.data && prof.data.username) { acct.username = prof.data.username; $("accName").textContent = prof.data.username; }
+		if (ent.error) failed = true; else (ent.data || []).forEach(r => acct.owned.add(String(r.dlc_key)));
+		if (coins.error) failed = true; else acct.coins = (coins.data && coins.data[0] && coins.data[0].coins) || 0;
+		$("accDlcCount").textContent = ent.error ? "–" : acct.owned.size;
+		$("accCoins").textContent = acct.coins == null ? "–" : acct.coins;
+		failed ? say($("accMsg"), T("m.loadfail")) : say($("accMsg"), "");
+		renderGames();
+		checkAdmin(session.access_token);
+	}
+
+	// Az „Admin” link csak akkor jelenik meg, ha a SZERVER megerősíti a jogot (az admin függvény 200-at ad).
+	// A link maga semmit nem nyit meg: az admin.html minden adatot a szervertől kér, és ott is ellenőrzés van.
+	async function checkAdmin(token) {
+		$("adminLink").hidden = true;
+		try {
+			const r = await fetch(URL_ + "/functions/v1/admin", { method: "POST",
+				headers: { "Content-Type": "application/json", apikey: ANON, Authorization: "Bearer " + token },
+				body: JSON.stringify({ action: "whoami" }) });
+			if (r.ok && (await r.json()).admin === true) $("adminLink").hidden = false;
+		} catch (e) { /* nincs admin függvény vagy nincs jog: nincs link */ }
+	}
+
+	function showAuth() {
+		acct = null;
+		$("accView").hidden = true; $("authBox").hidden = false; $("backNote").hidden = false;
+		$("main").classList.remove("wide");
+		$("adminLink").hidden = true;
+	}
+
+	$("logoutBtn").onclick = async () => { await sb.auth.signOut(); showAuth(); show("login"); };
 
 	// a jelszó-visszaállító levél linkje ide vezet: a Supabase a címsor „#” utáni részében adja át az adatokat
 	const h = new URLSearchParams(location.hash.slice(1));
@@ -281,13 +506,23 @@
 		say($("forgot"), T("m.expired"));
 		history.replaceState(null, "", location.pathname);
 	} else if (h.get("type") === "recovery") {
+		recovering = true;
 		show("newpw");
 	} else if (location.hash === "#elfelejtett") {
 		show("forgot");
+	} else if (location.hash === "#regisztracio") {
+		show("reg");
 	}
-	sb.auth.onAuthStateChange(ev => {
-		if (ev === "PASSWORD_RECOVERY") { show("newpw"); history.replaceState(null, "", location.pathname); }
+	sb.auth.onAuthStateChange((ev, session) => {
+		if (ev === "PASSWORD_RECOVERY") { recovering = true; showAuth(); show("newpw"); history.replaceState(null, "", location.pathname); return; }
+		// setTimeout: a Supabase kéri, hogy ebben a visszahívásban ne indítsunk rögtön újabb Supabase-hívást
+		setTimeout(() => {
+			if (recovering) return;                       // jelszócsere közben a fiók nézete ne takarja el az űrlapot
+			if (session && session.user) { if (!acct || acct.user.id !== session.user.id) showAccount(session); }
+			else if (acct) showAuth();
+		}, 0);
 	});
+	applyLang();
 </script>
 </body>
 </html>
