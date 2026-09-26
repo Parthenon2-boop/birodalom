@@ -58,5 +58,17 @@
         "cimke_en":  "Kard és Mágia",
         "cimke_de":  "Kard és Mágia",
         "datum":  "2026-09-26"
+    },
+    {
+        "cim":  "Birodalom – teljesen angolul és németül",
+        "cimke":  "Birodalom",
+        "szoveg":  "A Birodalom mostantól végig játszható angolul és németül is. Lefordítottuk a nemzetek és államok korszakonkénti nevét, az uralkodókat és címeiket (például Hunyadi Mátyás – Matthias Corvinus, király / king / König), a korszakneveket és a karibi városokat is. A nyelv már játék közben is átváltható a Beállításokban, és minden képernyő azonnal követi. A hosszabb angol és német épület- és egységnevek sem lógnak rá többé az ikonokra.",
+        "cim_en":  "Birodalom – fully in English and German",
+        "szoveg_en":  "Birodalom can now be played all the way through in English and German. Nation and state names for every age, the rulers and their titles (for example Matthias Corvinus, king), the age names and the Caribbean towns are all translated. The language can now be switched mid-game in Settings, and every screen follows at once. Longer building and unit names no longer run over the icons.",
+        "cim_de":  "Birodalom – vollständig auf Englisch und Deutsch",
+        "szoveg_de":  "Birodalom lässt sich jetzt durchgehend auf Englisch und Deutsch spielen. Die Namen der Nationen und Staaten in jedem Zeitalter, die Herrscher und ihre Titel (etwa Matthias Corvinus, König), die Zeitalternamen und die karibischen Städte sind übersetzt. Die Sprache lässt sich jetzt auch während des Spiels in den Einstellungen wechseln, und jeder Bildschirm folgt sofort. Längere Gebäude- und Einheitennamen ragen nicht mehr über die Symbole.",
+        "cimke_en":  "Birodalom",
+        "cimke_de":  "Birodalom",
+        "datum":  "2026-09-26"
     }
 ]
