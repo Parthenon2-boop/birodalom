@@ -1,12 +1,26 @@
-[{
-    "cim":  "Heptarchia 1.68 – Város tulajdonságai, átlátható diplomácia",
-    "cimke":  "Heptarchia",
-    "szoveg":  "A jobb oldali panelen a város nevére, épületeire vagy adataira kattintva megnyílik a Város tulajdonságai ablak: piktogramokkal látszik, mi épült meg, és minden épületfajtánál nyíl mutatja a következő fejlesztést az árával (pl. Kápolna → Kistemplom → Templom). A diplomáciában az ajánlatoknál csak az esély látszik, és ha az legalább 60%, a másik fél biztosan elfogadja. A király neve alatt „Nincs több teendő” áll, a görgetősávok a játék stílusát kapták, a nemzetválasztóban a hosszú nevek sem vágódnak le, és egy gyors dupla kattintás a Kör vége gombon nem léptet két kört. A vallás kiegészítőben a keresztszülő stabilitása nem mehet 100 fölé.",
-    "cim_en":  "Heptarchia 1.68 – city details, clearer diplomacy",
-    "szoveg_en":  "Click the city\u0027s name, buildings or details on the right panel to open the City details window: pictograms show what has been built, and for every kind of building an arrow points to the next upgrade and its cost (e.g. Chapel → Small church → Church). In diplomacy only the chance is shown for offers, and if it is at least 60% the other side will surely accept. Under the king\u0027s name it now says \"Nothing left to do\", scrollbars match the game\u0027s style, long names no longer get cut off in the nation picker, and a quick double click on End turn no longer advances two turns. In the religion add-on a godfather\u0027s stability can no longer go above 100.",
-    "cim_de":  "Heptarchia 1.68 – Stadtdetails, klarere Diplomatie",
-    "szoveg_de":  "Ein Klick auf Namen, Gebäude oder Angaben der Stadt in der rechten Leiste öffnet das Fenster Stadtdetails: Piktogramme zeigen, was gebaut ist, und bei jeder Gebäudeart zeigt ein Pfeil den nächsten Ausbau samt Kosten (z. B. Kapelle → Kleine Kirche → Kirche). In der Diplomatie wird bei Angeboten nur noch die Chance angezeigt, und liegt sie bei mindestens 60 %, nimmt die Gegenseite sicher an. Unter dem Namen des Königs steht nun „Nichts mehr zu tun“, die Bildlaufleisten haben den Stil des Spiels, lange Namen werden in der Volksauswahl nicht mehr abgeschnitten, und ein schneller Doppelklick auf Rundenende lässt nicht mehr zwei Runden verstreichen. In der Religions-Erweiterung steigt die Stabilität eines Paten nicht mehr über 100.",
-    "cimke_en":  "Heptarchia",
-    "cimke_de":  "Heptarchia",
-    "datum":  "2026-09-26"
-}]
+[
+    {
+        "cim":  "Heptarchia 1.68 – Város tulajdonságai, átlátható diplomácia",
+        "cimke":  "Heptarchia",
+        "szoveg":  "A jobb oldali panelen a város nevére, épületeire vagy adataira kattintva megnyílik a Város tulajdonságai ablak: piktogramokkal látszik, mi épült meg, és minden épületfajtánál nyíl mutatja a következő fejlesztést az árával (pl. Kápolna → Kistemplom → Templom). A diplomáciában az ajánlatoknál csak az esély látszik, és ha az legalább 60%, a másik fél biztosan elfogadja. A király neve alatt „Nincs több teendő” áll, a görgetősávok a játék stílusát kapták, a nemzetválasztóban a hosszú nevek sem vágódnak le, és egy gyors dupla kattintás a Kör vége gombon nem léptet két kört. A vallás kiegészítőben a keresztszülő stabilitása nem mehet 100 fölé.",
+        "cim_en":  "Heptarchia 1.68 – city details, clearer diplomacy",
+        "szoveg_en":  "Click the city\u0027s name, buildings or details on the right panel to open the City details window: pictograms show what has been built, and for every kind of building an arrow points to the next upgrade and its cost (e.g. Chapel → Small church → Church). In diplomacy only the chance is shown for offers, and if it is at least 60% the other side will surely accept. Under the king\u0027s name it now says \"Nothing left to do\", scrollbars match the game\u0027s style, long names no longer get cut off in the nation picker, and a quick double click on End turn no longer advances two turns. In the religion add-on a godfather\u0027s stability can no longer go above 100.",
+        "cim_de":  "Heptarchia 1.68 – Stadtdetails, klarere Diplomatie",
+        "szoveg_de":  "Ein Klick auf Namen, Gebäude oder Angaben der Stadt in der rechten Leiste öffnet das Fenster Stadtdetails: Piktogramme zeigen, was gebaut ist, und bei jeder Gebäudeart zeigt ein Pfeil den nächsten Ausbau samt Kosten (z. B. Kapelle → Kleine Kirche → Kirche). In der Diplomatie wird bei Angeboten nur noch die Chance angezeigt, und liegt sie bei mindestens 60 %, nimmt die Gegenseite sicher an. Unter dem Namen des Königs steht nun „Nichts mehr zu tun“, die Bildlaufleisten haben den Stil des Spiels, lange Namen werden in der Volksauswahl nicht mehr abgeschnitten, und ein schneller Doppelklick auf Rundenende lässt nicht mehr zwei Runden verstreichen. In der Religions-Erweiterung steigt die Stabilität eines Paten nicht mehr über 100.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-09-26"
+    },
+    {
+        "cim":  "Heptarchia 1.69 – a város gombja",
+        "cimke":  "Heptarchia",
+        "szoveg":  "A jobb oldali panelen az épületek felsorolása helyett egy gomb áll a város nevével (pl. „Exeter – tulajdonságok”): ez nyitja meg a Város tulajdonságai ablakot.",
+        "cim_en":  "Heptarchia 1.69 – the city button",
+        "szoveg_en":  "Instead of listing the buildings, the right-hand panel now has a button with the city name (e.g. \"Exeter – details\") that opens the City details window.",
+        "cim_de":  "Heptarchia 1.69 – die Stadtschaltfläche",
+        "szoveg_de":  "Statt der Gebäudeliste zeigt die rechte Leiste jetzt eine Schaltfläche mit dem Stadtnamen (z. B. „Exeter – Eigenschaften“), die das Fenster Stadtdetails öffnet.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-09-26"
+    }
+]
