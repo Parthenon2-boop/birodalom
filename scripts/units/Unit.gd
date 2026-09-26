@@ -1,9 +1,6 @@
 class_name Unit
 extends CharacterBody2D
 
-const EgysegRajz := preload("res://scripts/units/UnitSprite.gd")
-const Holttest := preload("res://scripts/units/Holttest.gd")
-
 @export var role      : String  = "melee"
 @export var owner_id  : int     = 0
 @export var age       : int     = 0
@@ -489,11 +486,8 @@ func _draw_heal_fx() -> void:
 func _head_y() -> float:
 	# A gép a talajárnyéka FÖLÖTT repül, ezért az életsávja is följebb kell
 	# hogy kerüljön — különben a szárnyára esne.
-	if air: return -(AIR_HEIGHT + 20.0)
-	# Az eredeti arányai (drawUnit): a gyalogos életsávja 25·s-sel a talp
-	# fölött, a hajóé a vitorlák fölött (s = r / 9.2).
-	if naval: return -(EgysegRajz.ship_bar_height(role) - 6.0)
-	return -19.0 * radius / 9.2
+	if air: return -(AIR_HEIGHT + 46.0)
+	return -maxf(46.0, radius * 2.4)
 
 func _draw_hp_bar() -> void:
 	if hp >= max_hp: return
@@ -1375,10 +1369,6 @@ func take_damage(amount: float, tamado: Node = null) -> void:
 		if fo2 != null and fo2.scars != null and is_instance_valid(fo2.scars):
 			fo2.scars.add_scar(global_position,
 				"fegyver" if randf() < 0.55 else "eges")
-		# Az elesett a földre dől, vértócsa marad utána (az eredeti
-		# dropCorpse-a; a hajó és a gép nem hagy holttestet).
-		if not naval and not air and Settings.lively():
-			Holttest.ejt(self, role, age, owner_id, face, radius)
 		# A kalózvilágban a zsákmány hírnevet hoz: a hajó többet ér.
 		if GameState.hostile(GameState.en_id, owner_id):
 			GameState.kills += 1

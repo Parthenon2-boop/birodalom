@@ -265,19 +265,12 @@ func _style_top_bar() -> void:
 # Kis épületrajz az építési gombokra. Nem külön rajz: a BuildArt ugyanazt
 # a sziluettet, palettát és tust teszi le, mint a pályán — csak textúra
 # nélkül, mert 26 képponton úgyis eltűnne.
-const HtmlEpulet := preload("res://scripts/buildings/HtmlEpulet.gd")
-
 class BldIcon extends Control:
 	var tipus: String = "house"
 	var age: int = 0
 
-	func _init() -> void:
-		texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-
 	func _draw() -> void:
-		# Ugyanaz a kép, ami a pályán áll (az eredeti épületrajza).
-		if not HtmlEpulet.ikon(self, tipus, age, GameState.nation, Rect2(Vector2.ZERO, size)):
-			BuildArt.ikon(self, tipus, age, Rect2(Vector2.ZERO, size))
+		BuildArt.ikon(self, tipus, age, Rect2(Vector2.ZERO, size))
 
 # --- KIS EGYSÉGRAJZ A KÉPZÉSI GOMBOKRA ---
 #
@@ -320,13 +313,13 @@ static func _egyseg_ikon_keszit(role: String, age: int) -> Texture2D:
 		if lo == null: return null
 		# A ló lapján oldalnézet van: a 3. sor 1. kockája az álló ló.
 		return _kivag(lo, Rect2(KOCKA, 3.0 * KOCKA + 8.0, KOCKA, 38.0))
-	# Gyalogos: a korszak lapja. 0 = LPC vitézek, 1 = napóleoni
-	# vonalgyalogság, 2-3 = világháborús katona — ugyanaz a rend, mint az
-	# UnitSprite.setup()-ban (és az eredeti drawLPC-ben).
+	# Gyalogos: a korszak lapja. 0 = LPC vitézek, 1-2 = napóleoni
+	# vonalgyalogság, 3 = világháborús katona — ugyanaz a rend, mint az
+	# UnitSprite.setup()-ban.
 	var kulcs := ""
 	var ut := ""
 	var sor := 0
-	if age >= 2:
+	if age >= 3:
 		kulcs = "ww2"
 		ut = "res://assets/sprites/ww2/ally.png"
 		sor = int(EgysegLap.ROWS_WW2[IRANY_DEL])
