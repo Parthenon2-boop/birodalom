@@ -43,7 +43,9 @@ func _read(c: String) -> Dictionary:
 	f.close()
 	return parsed if parsed is Dictionary else {}
 
-func set_language(c: String) -> void:
+# persist = false: csak erre a futásra (a fejlesztői --lang= kapcsoló ne írja
+# felül a játékos mentett nyelvét).
+func set_language(c: String, persist: bool = true) -> void:
 	if not c in CODES: c = DEFAULT
 	var d := _read(c)
 	if d.is_empty() and c != DEFAULT:
@@ -51,7 +53,7 @@ func set_language(c: String) -> void:
 		d = _read(c)
 	code = c
 	_strings = d
-	_save_setting()
+	if persist: _save_setting()
 	language_changed.emit(code)
 
 # A kulcs fordítása. Ismeretlen kulcsnál magát a kulcsot adja vissza —

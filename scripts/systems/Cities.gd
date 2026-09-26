@@ -329,7 +329,12 @@ func _capture(kulcs: String, a: Dictionary, uj: int, regi: int) -> void:
 	a["gazda"] = uj
 	SFX.play("age")
 
+# A város neve a választott nyelven (varos_<kulcs>); ha nincs fordítás,
+# a táblázat neve marad.
 func _name_of(kulcs: String) -> String:
+	var k := "varos_" + kulcs
+	var s := Lang.t(k)
+	if s != k: return s
 	for v in KIKOTOK:
 		if str(v["kulcs"]) == kulcs: return str(v["nev"])
 	return kulcs
@@ -354,7 +359,7 @@ func _draw() -> void:
 			var szog := -PI * 0.5 + (float(i) - (tornyok - 1) * 0.5) * 0.5
 			draw_circle(p + Vector2(0, -34) + Vector2(cos(szog), sin(szog)) * 13.0,
 				2.6, Color("e8dcc0"))
-		var nev := str(v["nev"])
+		var nev := _name_of(kulcs)
 		if bool(v["feszek"]): nev = "★ " + nev
 		var w := font.get_string_size(nev, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
 		draw_string(font, p + Vector2(-w * 0.5, -44), nev,

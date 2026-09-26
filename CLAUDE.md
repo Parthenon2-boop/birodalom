@@ -56,6 +56,10 @@ Godot_v4.7.2-stable_win64_console.exe --headless --path . --quit-after 8000 -- -
 ```
 
 A selftest kilépési kódja 0, ha minden rendben. Változtatás után ezt futtasd.
+Nyelvi fájlok (hu/en/de egyezés, formázójelek, a kódban használt kulcsok):
+`Godot_v4.7.2-stable_win64_console.exe --headless --path . --script res://scripts/dev/LangCheck.gd`
+— új felirat csak nyelvi kulccsal kerüljön a kódba. Képernyőkép adott nyelven: `-- --lang=en`
+(a játékos mentett nyelvét nem írja felül).
 További kapcsolók (`Main.gd`): `--pirate`, `--tutorial`, `--replay`, `--nethost`, `--reveal`,
 `--nocull`, `--nobloom`, valamint képernyőképes nézetek: `--showcase`, `--shiptest`,
 `--weapontest`, `--jellegtest`, `--bloomtest`, `--portmenu`, `--gamemenu`, `--gamemenu-settings`

@@ -1165,6 +1165,27 @@ func _test_hud() -> void:
 		return
 	check("a zászló megjelenik a HUD-on", hud.flag_icon.texture != null)
 
+	# NYELVVÁLTÁS JÁTÉK KÖZBEN: a beállítások panel nyelvgombja a HUD-ot is
+	# átírja. A mentett nyelvet nem bántjuk (persist = false).
+	var eredeti := Lang.code
+	for kod in ["en", "de"]:
+		Lang.set_language(kod, false)
+		check("nyelvváltás (%s): a nyersanyagsor átíródik" % kod,
+			hud.wood_label.text.begins_with(Lang.t("fa")), hud.wood_label.text)
+		check("nyelvváltás (%s): a korszakfelirat átíródik" % kod,
+			hud.era_bar.text == hud.era_label(GameState.get_age())
+				or GameState.pirate, hud.era_bar.text)
+		check("nyelvváltás (%s): a menügombok átíródnak" % kod,
+			hud.resume_btn.text == Lang.t("folytatas_jatek"), hud.resume_btn.text)
+		check("nyelvváltás (%s): a nemzet és az uralkodó neve lefordul" % kod,
+			Style.nation_era("hu", 0) != "Magyar Királyság"
+				and Style.ruler_name("hu", 0) != "Hunyadi Mátyás",
+			"%s / %s" % [Style.nation_era("hu", 0), Style.ruler_name("hu", 0)])
+	Lang.set_language(eredeti, false)
+	check("visszaváltás után a magyar név áll", Lang.code != "hu"
+		or Style.ruler_with_title("hu", 0) == "Hunyadi Mátyás király",
+		Style.ruler_with_title("hu", 0))
+
 	# Épület kijelölése -> képzési gombok
 	hud.select_building(hq)
 	await _frames(2)
@@ -2679,6 +2700,18 @@ func showcase() -> void:
 			main.selected_units.append(mu)
 			mu.set_selected(true)
 			main.hud.update_selection([mu])
+	# `--showcase --kijelol=market`: más épület panelje (piac, kovács,
+	# akadémia) — a hosszú idegen nyelvű feliratok ellenőrzéséhez.
+	for a in Main.dev_args():
+		if not a.begins_with("--kijelol="): continue
+		for b3 in get_tree().get_nodes_in_group("player_buildings"):
+			if b3.tipus != a.substr(10): continue
+			for b4 in get_tree().get_nodes_in_group("player_buildings"):
+				if b4.is_selected(): b4.set_selected(false)
+			main.selected_bld = b3
+			b3.set_selected(true)
+			main.hud.select_building(b3)
+			break
 	# `--showcase --tisztakep`: a felület nélküli, álló kép — így az
 	# épületek sziluettjét semmi nem takarja.
 	if "--tisztakep" in Main.dev_args():

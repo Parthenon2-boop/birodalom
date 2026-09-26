@@ -38,8 +38,13 @@ const AGE_STYLE := [
 	 "wall": "8e8e86", "wallDark": "63635c", "roof": "4a4f45", "wood": "5f5645", "metal": "8a9198"},
 ]
 
-const ERA_NAME := ["15. század", "17. század", "19. század", "20. század"]
-const ERA_SUB  := ["Késő középkor", "Kora újkor", "Ipari forradalom", "Világháborús kor"]
+# A korszak neve és alcíme a nyelvi fájlokban van (kor_nev_<n>, kor_alcim_<n>).
+static func era_name(age: int) -> String:
+	return Lang.t("kor_nev_%d" % clampi(age, 0, 3))
+
+static func era_sub(age: int) -> String:
+	return Lang.t("kor_alcim_%d" % clampi(age, 0, 3))
+
 const ERA_COST := [
 	{"food": 760, "gold": 520},
 	{"food": 1250, "gold": 980},
@@ -89,12 +94,38 @@ const NATION_UI := {
 
 ## A nemzet korszaknévi alakja ("Magyar Királyság", "Osztrák–Magyar
 ## Monarchia"). A korszakváltás ünnepe és a ponttábla ezt írja ki.
+## A választott nyelven: allam_<nemzet>_<korszak>; ha nincs fordítás, az
+## adattábla (magyar) neve marad.
 static func nation_era(nation: String, age: int) -> String:
 	var n: Dictionary = NATIONS.get(nation, PIRATES.get(nation, {}))
 	var lista: Array = n.get("eras", [])
 	if lista.is_empty():
-		return ERA_NAME[clampi(age, 0, 3)]
-	return str(lista[clampi(age, 0, lista.size() - 1)])
+		return era_name(age)
+	var i := clampi(age, 0, lista.size() - 1)
+	return _forditott("allam_%s_%d" % [nation, i], str(lista[i]))
+
+## Az uralkodó neve a választott nyelven (r_<nemzet>_<korszak>): „Hunyadi
+## Mátyás” / „Matthias Corvinus”.
+static func ruler_name(key: String, age: int) -> String:
+	var lista: Array = nation(key).get("rulers", [])
+	if lista.is_empty(): return ""
+	var i := clampi(age, 0, lista.size() - 1)
+	return _forditott("r_%s_%d" % [key, i], str(lista[i]))
+
+## Az uralkodó rangja az adott korszakban, a választott nyelven.
+static func ruler_title(key: String, age: int) -> String:
+	var lista: Array = nation(key).get("titles", [])
+	if lista.is_empty(): return ""
+	return title_name(str(lista[clampi(age, 0, lista.size() - 1)]))
+
+## „Név rang” — magyarul „Hunyadi Mátyás király”, angolul/németül
+## „Matthias Corvinus, king”. A sorrendet a nyelvi fájl adja (uralkodo_rang).
+static func ruler_with_title(key: String, age: int) -> String:
+	return Lang.t("uralkodo_rang") % [ruler_name(key, age), ruler_title(key, age)]
+
+static func _forditott(kulcs: String, alap: String) -> String:
+	var s := Lang.t(kulcs)
+	return alap if s == kulcs else s
 
 ## Egy nemzet építészeti színe ("roof" / "wall" / "trim"). Ismeretlen kulcsra
 ## a magyar palettát adja, hogy sose maradjon szín nélkül egy ház.

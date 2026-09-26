@@ -65,6 +65,7 @@ func _ready() -> void:
 	cont_btn.visible = false
 	_build_lang_tab()
 	_apply_language()
+	Lang.language_changed.connect(_on_language_changed)
 	_sel_era(0)
 	_sel_diff(0)
 	# Fejlesztői indítás adott módban:  godot -- --menumode=2
@@ -216,6 +217,7 @@ func _build_battle_screen(center: CenterContainer) -> void:
 	taj_sor.add_theme_constant_override("separation", 10)
 	var tl := Label.new()
 	tl.text = Lang.t("valassz_tajat")
+	_kulcs(tl, "valassz_tajat")
 	tl.custom_minimum_size = Vector2(150, 0)
 	taj_sor.add_child(tl)
 	_battle_map = OptionButton.new()
@@ -243,6 +245,7 @@ func _pick_row(box: VBoxContainer, cim: String, keys: Array,
 		on_pick: Callable, get_idx: Callable) -> HBoxContainer:
 	var l := Label.new()
 	l.text = Lang.t(cim)
+	_kulcs(l, cim)
 	box.add_child(l)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
@@ -251,6 +254,7 @@ func _pick_row(box: VBoxContainer, cim: String, keys: Array,
 		var idx := i
 		var b := Button.new()
 		b.text = Lang.t(str(keys[i]))
+		_kulcs(b, str(keys[i]))
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.custom_minimum_size = Vector2(0, 30)
 		b.pressed.connect(func() -> void:
@@ -355,7 +359,7 @@ var _replay_note : Label = null
 func _build_replay_screen(center: CenterContainer) -> void:
 	_replay_box = _new_screen(center)
 	_replay_box.custom_minimum_size = Vector2(560, 0)
-	_replay_title = _title_of(_replay_box, Lang.t("visszajatszas_nyit"), 26)
+	_replay_title = _kulcs(_title_of(_replay_box, Lang.t("visszajatszas_nyit"), 26), "visszajatszas_nyit") as Label
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(540, 300)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -425,13 +429,14 @@ var _mp_sections : Array = []       # [felirat, nyelvi kulcs] párok
 func _build_mp_screen(center: CenterContainer) -> void:
 	_mp_box = _new_screen(center)
 	_mp_box.custom_minimum_size = Vector2(540, 0)
-	_mp_title = _title_of(_mp_box, Lang.t("tobbjatekos"), 26)
+	_mp_title = _kulcs(_title_of(_mp_box, Lang.t("tobbjatekos"), 26), "tobbjatekos") as Label
 
 	# Név, amivel a lobbiban látszol.
 	var nev_sor := HBoxContainer.new()
 	nev_sor.add_theme_constant_override("separation", 10)
 	var nl := Label.new()
 	nl.text = Lang.t("jatekos_nev")
+	_kulcs(nl, "jatekos_nev")
 	nl.custom_minimum_size = Vector2(120, 0)
 	nev_sor.add_child(nl)
 	_name_edit = LineEdit.new()
@@ -452,6 +457,7 @@ func _build_mp_screen(center: CenterContainer) -> void:
 	gazda_sor.add_theme_constant_override("separation", 10)
 	var pl := Label.new()
 	pl.text = Lang.t("net_kapu")
+	_kulcs(pl, "net_kapu")
 	pl.custom_minimum_size = Vector2(120, 0)
 	gazda_sor.add_child(pl)
 	_host_port = _port_box(gazda_sor, Settings.net_port)
@@ -467,6 +473,7 @@ func _build_mp_screen(center: CenterContainer) -> void:
 	cim_sor.add_theme_constant_override("separation", 10)
 	var kl := Label.new()
 	kl.text = Lang.t("net_hazigazda_cime")
+	_kulcs(kl, "net_hazigazda_cime")
 	kl.custom_minimum_size = Vector2(120, 0)
 	cim_sor.add_child(kl)
 	_mp_code = LineEdit.new()
@@ -496,7 +503,7 @@ func _build_mp_screen(center: CenterContainer) -> void:
 			szoveg = "%s:%d" % [szoveg, int(_join_port.value)]
 		if Net.join_game(szoveg, _name_edit.text):
 			show_screen("lobby"))
-	_mp_note = _note(vendeg, Lang.t("net_sugo"))
+	_mp_note = _kulcs(_note(vendeg, Lang.t("net_sugo")), "net_sugo") as Label
 
 	# --- KÖZVETÍTŐN ÁT (senkinek nem kell kaput nyitnia) ---
 	var relay := _mp_section("net_relay_szakasz", "net_relay_sugo")
@@ -504,12 +511,14 @@ func _build_mp_screen(center: CenterContainer) -> void:
 	relay_sor.add_theme_constant_override("separation", 10)
 	var rl := Label.new()
 	rl.text = Lang.t("net_relay_cim")
+	_kulcs(rl, "net_relay_cim")
 	rl.custom_minimum_size = Vector2(120, 0)
 	relay_sor.add_child(rl)
 	_relay_edit = LineEdit.new()
 	_relay_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_relay_edit.max_length = 40
-	_relay_edit.placeholder_text = "kozvetito.gep.hu:27020"
+	_relay_edit.placeholder_text = Lang.t("net_relay_pelda")
+	_kulcs(_relay_edit, "net_relay_pelda")
 	_relay_edit.text = Settings.relay_address
 	_relay_edit.text_changed.connect(func(t: String) -> void:
 		Settings.set_relay_address(t))
@@ -572,7 +581,7 @@ var _lobby_mode_row : HBoxContainer = null
 func _build_lobby_screen(center: CenterContainer) -> void:
 	_lobby_box = _new_screen(center)
 	_lobby_box.custom_minimum_size = Vector2(560, 0)
-	_lobby_title = _title_of(_lobby_box, Lang.t("lobbi"), 26)
+	_lobby_title = _kulcs(_title_of(_lobby_box, Lang.t("lobbi"), 26), "lobbi") as Label
 	_lobby_code = Label.new()
 	_lobby_code.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lobby_code.add_theme_font_size_override("font_size", 22)
@@ -606,6 +615,7 @@ func _build_lobby_screen(center: CenterContainer) -> void:
 	taj_sor.add_theme_constant_override("separation", 10)
 	var tl := Label.new()
 	tl.text = Lang.t("valassz_tajat")
+	_kulcs(tl, "valassz_tajat")
 	tl.custom_minimum_size = Vector2(150, 0)
 	taj_sor.add_child(tl)
 	_lobby_map = OptionButton.new()
@@ -1071,9 +1081,28 @@ func _toggle_lang_list() -> void:
 func _sel_lang(code: String) -> void:
 	_lang_list.visible = false
 	if code == Lang.code: return
+	# A feliratokat a Lang.language_changed jel frissíti (lásd _ready) — így
+	# a beállítások panel nyelvválasztója ugyanezt váltja ki.
 	Lang.set_language(code)
-	_apply_language()
 	SFX.play("click")
+
+func _on_language_changed(_code: String) -> void:
+	_apply_language()
+
+# A kódból épített feliratok nyelvi kulcsa: nyelvváltáskor ebből írjuk át.
+func _kulcs(n: Control, key: String) -> Control:
+	n.set_meta("lang_key", key)
+	return n
+
+func _relabel_meta(node: Node) -> void:
+	for c in node.get_children():
+		if c.has_meta("lang_key"):
+			var s := Lang.t(str(c.get_meta("lang_key")))
+			if c is LineEdit: (c as LineEdit).placeholder_text = s
+			elif c is Label: (c as Label).text = s
+			elif c is Button: (c as Button).text = s
+		if c.get_child_count() > 0:
+			_relabel_meta(c)
 
 # A fülön a jelenlegi nyelv zászlaja és neve áll, a végén a lenyíló jele.
 func _update_lang_tab() -> void:
@@ -1115,7 +1144,7 @@ func _apply_language() -> void:
 # ezért nyelvváltáskor elég végigfutni rajtuk.
 func _apply_screen_language() -> void:
 	for box in [_home_box, _single_box, _settings_box, _setup_box,
-			_battle_box, _ach_box, _mp_box, _lobby_box]:
+			_battle_box, _ach_box, _mp_box, _lobby_box, _replay_box]:
 		if box == null: continue
 		# Mélyen is keresünk: a többjátékos képernyő gombjai keretezett
 		# szakaszokban ülnek, nem közvetlenül a dobozban.
@@ -1129,16 +1158,18 @@ func _apply_screen_language() -> void:
 	if _home_lead != null: _home_lead.text = Lang.t("evszamok")
 	if _single_title != null: _single_title.text = Lang.t("egyjatekos")
 	if _settings_title != null: _settings_title.text = Lang.t("beallitasok")
-	# A beállítás-panel feliratait a felépítéskor kapja; nyelvváltáskor
-	# egyszerűbb újraépíteni, mint minden sorát külön nyilvántartani.
-	if _settings_box != null:
-		for c in _settings_box.get_children():
-			if c is SettingsPanel:
-				_settings_box.remove_child(c)
-				c.queue_free()
-		var sp := SettingsPanel.new()
-		_settings_box.add_child(sp)
-		_settings_box.move_child(sp, 0)
+	# A beállítás-panel a nyelvváltás jelére magától újraépül.
+	# A kulccsal megjelölt feliratok (szakaszcímek, gombsorok, mezőnevek).
+	_relabel_meta(self)
+	# A nemzetgombokon a nemzet neve áll: újra kell rakni őket.
+	if nat_btns != null and not _nat_buttons.is_empty():
+		_build_nation_buttons()
+		var ord := _order()
+		for i in _nat_buttons.size():
+			_mark(_nat_buttons[i], ord[i] == chosen_nation)
+		_refresh_nation_art()
+	if _screen == "lobby": _refresh_lobby()
+	if _screen == "replay": _refresh_replay_list()
 	# A tájválasztó feliratai
 	if _map_title != null: _map_title.text = Lang.t("valassz_tajat")
 	if not _map_btns.is_empty():
@@ -1291,12 +1322,11 @@ func _refresh_nation_art() -> void:
 		_show_briefing()
 		return
 	var rulers: Array = nat.get("rulers", [])
-	var titles: Array = nat.get("titles", [])
-	var eras: Array   = nat.get("eras", [])
 	var i2 := clampi(art_era, 0, 3)
 	if i2 < rulers.size():
-		ruler_name.text = "%s\n%s %s" % [str(eras[i2]), str(rulers[i2]),
-			Style.title_name(str(titles[i2]))]
+		# Az állam neve, az uralkodó és a rangja — mind a választott nyelven.
+		ruler_name.text = "%s\n%s" % [Style.nation_era(key, i2),
+			Style.ruler_with_title(key, i2)]
 	else:
 		ruler_name.text = Style.nation_name(key)
 

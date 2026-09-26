@@ -12,12 +12,29 @@ var _rows: Array[Control] = []
 var _title: Label = null
 
 func _ready() -> void:
+	_build()
+	# Nyelvváltáskor (akár innen, akár a főmenü fülén) a panel újraépül,
+	# így minden felirata az új nyelven áll.
+	Lang.language_changed.connect(_on_language_changed)
+
+func _on_language_changed(_code: String) -> void:
+	_kb_varakozik = ""
+	_kb_gombok.clear()
+	_rows.clear()
+	for c in get_children():
+		remove_child(c)
+		c.queue_free()
+	_build()
+
+func _build() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	add_child(box)
 	# A panel a saját címét hozza, hogy bárhová beilleszthető legyen.
 	_title = _section(box, "beallitasok")
 	_title.add_theme_font_size_override("font_size", 20)
+	box.add_child(HSeparator.new())
+	_lang_row(box)
 	box.add_child(HSeparator.new())
 	_section(box, "beall_grafika")
 	_detail_row(box)
@@ -149,6 +166,34 @@ func _input(event: InputEvent) -> void:
 		SFX.play("deny")
 	_kb_varakozik = ""
 	_kb_frissit()
+
+# NYELV: a játék közben is átváltható. Minden nyelv egy gomb a zászlajával;
+# a választott ki van emelve. A felületek a Lang.language_changed jelre
+# frissítik magukat.
+func _lang_row(box: VBoxContainer) -> void:
+	_section(box, "valassz_nyelvet")
+	var sor := HBoxContainer.new()
+	sor.add_theme_constant_override("separation", 4)
+	for c in Lang.codes():
+		var kod: String = c
+		var b := Button.new()
+		b.name = "Lang_" + kod
+		b.text = Lang.language_name(kod)
+		b.icon = Style.flag_texture(Lang.flag_of(kod), 3)
+		b.add_theme_constant_override("icon_max_width", 20)
+		b.add_theme_font_size_override("font_size", 12)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size = Vector2(0, 28)
+		b.clip_text = true
+		if kod == Lang.code:
+			b.add_theme_stylebox_override("normal",
+				Style.button_box(Style.HOVER, Style.GOLD))
+			b.add_theme_color_override("font_color", Color.WHITE)
+		b.pressed.connect(func() -> void:
+			SFX.play("click")
+			if kod != Lang.code: Lang.set_language(kod))
+		sor.add_child(b)
+	box.add_child(sor)
 
 func _section(box: VBoxContainer, key: String) -> Label:
 	var l := Label.new()

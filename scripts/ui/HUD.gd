@@ -124,6 +124,39 @@ func _ready() -> void:
 	_update_fame(GameState.fame)
 	_update_resources()
 	_update_era(0, GameState.get_age())
+	Lang.language_changed.connect(_on_language_changed)
+
+# Nyelvváltás játék közben (a beállítások panelről): minden felirat, amit
+# a HUD maga rak ki, újra az új nyelven épül fel.
+func _on_language_changed(_code: String) -> void:
+	_apply_language()
+	_apply_menu_language()
+	menu_btn.tooltip_text = Lang.t("menu")
+	_update_fame(GameState.fame)
+	_update_resources()
+	_update_era_button()
+	# A korszakfelirat, a zászló súgója, az építőgombok és a kijelölt épület.
+	_update_era(0, GameState.get_age())
+	if not _selected.is_empty():
+		var elok: Array = []
+		for u in _selected:
+			if is_instance_valid(u): elok.append(u)
+		update_selection(elok)
+	if is_instance_valid(_res): select_resource(_res)
+	_fleet_sig = ""
+	if _offer_panel != null:
+		_offer_panel.queue_free()
+		_offer_panel = null
+	if game_menu.visible: _refresh_diplomacy()
+	# A hadjárat címe és a tananyag lépése is nyelvfüggő.
+	if mission_panel.visible:
+		var main := get_tree().get_first_node_in_group("main")
+		if Campaign.active:
+			mission_title.text = "%d. %s" % [Campaign.index + 1,
+				Campaign.name_of(Campaign.current())]
+		elif main != null and main.get("_tutorial") != null:
+			var tut: Node = main.get("_tutorial")
+			show_tutorial(tut.title(), tut.text())
 
 # A jelenetben magyar alapszövegek állnak; a tényleges nyelvet innen
 # írjuk rájuk, hogy a .tscn ne duplázza a fordításokat.
@@ -334,6 +367,7 @@ static func _kivag(t: Texture2D, r: Rect2) -> Texture2D:
 func _egyseg_ikon_gombra(btn: Button, role: String, age: int) -> void:
 	var tex := egyseg_ikon(role, age)
 	if tex == null: return
+	_ikon_hely_gombra(btn)
 	var kep := TextureRect.new()
 	# FIGYELEM a sorrendre: amíg az expand_mode nem IGNORE_SIZE, a TextureRect
 	# legkisebb mérete a TEXTÚRA mérete, és a `size` nem tud alá menni — így
@@ -346,6 +380,28 @@ func _egyseg_ikon_gombra(btn: Button, role: String, age: int) -> void:
 	btn.add_child(kep)
 	kep.position = IKON_HELY
 	kep.size = IKON_MERET
+
+# HELY AZ IKONNAK A GOMB SZÖVEGE ELŐTT
+#
+# A kis rajz a gomb GYEREKE, a gomb maga nem tud róla: a szöveget a teljes
+# szélességen középre teszi. Rövid magyar névnél ez nem látszik, de a
+# hosszú német/angol név (Zuckerrohrplantage, Sugar plantation) ráfutott a
+# rajzra. Egy átlátszó, ikonméretű „helyfoglaló” ikon a gomb saját
+# ikonhelyére kerül — így a szöveg a rajz UTÁNI részen áll középen, és a
+# gomb szükség esetén szélesebbre nő, ahelyett hogy a szöveg rácsúszna.
+static var _ures_ikon: Texture2D = null
+
+func _ikon_hely_gombra(btn: Button) -> void:
+	if _ures_ikon == null:
+		var img := Image.create(int(IKON_MERET.x), int(IKON_MERET.y), false,
+			Image.FORMAT_RGBA8)
+		img.fill(Color(0, 0, 0, 0))
+		_ures_ikon = ImageTexture.create_from_image(img)
+	btn.icon = _ures_ikon
+	btn.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	# A stílus bal margója (14) + a helyfoglaló már az IKON_HELY-en túlra
+	# tolja a szöveget; a margót a rajz helyéhez igazítjuk.
+	btn.add_theme_constant_override("h_separation", 4)
 
 # Kis rajzolt ikonok a nyersanyagokhoz.
 class ResIcon extends Control:
@@ -541,6 +597,7 @@ func _build_build_panel() -> void:
 		ico.size = IKON_MERET
 		ico.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(ico)
+		_ikon_hely_gombra(btn)
 		build_panel.add_child(btn)
 
 # Az építőmenü a keretével (BuildBox) együtt jelenik meg és tűnik el —
@@ -578,9 +635,7 @@ func _update_army() -> void:
 func _update_era(_owner_id: int, new_age: int) -> void:
 	if GameState.pirate:
 		# A kalózfrakcióknál nincs korszak: a frakció neve áll a helyén.
-		var nat: Dictionary = Style.nation(GameState.nation)
-		var eras: Array = nat.get("eras", [])
-		era_bar.text = str(eras[0]) if not eras.is_empty() else str(nat.get("name", ""))
+		era_bar.text = Style.nation_era(GameState.nation, 0)
 	else:
 		era_bar.text = era_label(new_age)
 	_update_flag()
@@ -802,7 +857,7 @@ func _update_flag() -> void:
 		0 if GameState.pirate else GameState.get_age())
 	flag_icon.texture = tex
 	if tex != null:
-		flag_icon.tooltip_text = str(Style.nation(GameState.nation)["name"])
+		flag_icon.tooltip_text = Style.nation_name(GameState.nation)
 
 # --- Kijelölés ---
 

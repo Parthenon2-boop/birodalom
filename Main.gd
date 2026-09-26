@@ -126,7 +126,7 @@ func _ready() -> void:
 	# Részletesség méréshez:   godot -- --detail=0
 	for arg in dev_args():
 		if arg.begins_with("--lang="):
-			Lang.set_language(arg.substr(7))
+			Lang.set_language(arg.substr(7), false)
 		if arg.begins_with("--detail="):
 			Settings.detail = clampi(int(arg.substr(9)), 0, 2)
 		# Rögzített világ a méréshez: enélkül minden futás más pályán mér.
@@ -431,7 +431,8 @@ func _korszak_unnep(new_age: int) -> void:
 	# A nemzet saját korszakneve ("Magyar Királyság", "Osztrák–Magyar
 	# Monarchia"), alatta a század — ettől lesz a pillanat személyes.
 	var nemzeti := Style.nation_era(GameState.nation, a)
-	for sor in [[nemzeti, 34, gold], [Style.ERA_NAME[a] + " · " + Style.ERA_SUB[a], 18, Style.INK]]:
+	var szazad := Lang.t("kor_nev_%d" % a) + " · " + Lang.t("kor_alcim_%d" % a)
+	for sor in [[nemzeti, 34, gold], [szazad, 18, Style.INK]]:
 		var l := Label.new()
 		l.text = str(sor[0])
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
