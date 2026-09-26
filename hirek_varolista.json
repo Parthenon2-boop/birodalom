@@ -22,5 +22,17 @@
         "cimke_en":  "Heptarchia",
         "cimke_de":  "Heptarchia",
         "datum":  "2026-09-26"
+    },
+    {
+        "cim":  "Heptarchia 1.70 – a föld vallása",
+        "cimke":  "Heptarchia",
+        "szoveg":  "A jobb oldali panelen a templom szintje helyett a tartomány vallása látszik: Katolikus, Ortodox, Skandináv pogány, Szláv pogány, Tengrizmus, Iszlám, Zsidó és a többi. A gépi népek a történelmi évben térnek át (a dánok 965-ben, a Rusz 988-ban, a magyarok 1000-ben…). A Város tulajdonságai ablakban a piktogramok nem lógnak ki a kártyákból.",
+        "cim_en":  "Heptarchia 1.70 – the faith of the land",
+        "szoveg_en":  "The right-hand panel now shows the province\u0027s religion instead of its church level: Catholic, Orthodox, Norse pagan, Slavic pagan, Tengrism, Islam, Jewish and more. Computer-run peoples convert in their historical year (the Danes in 965, the Rus in 988, the Hungarians in 1000…). In the City details window the pictograms no longer stick out of the cards.",
+        "cim_de":  "Heptarchia 1.70 – der Glaube des Landes",
+        "szoveg_de":  "Die rechte Leiste zeigt statt der Kirchenstufe nun die Religion der Provinz: katholisch, orthodox, nordisch-heidnisch, slawisch-heidnisch, Tengrismus, Islam, jüdisch und weitere. Vom Computer geführte Völker treten im historischen Jahr über (die Dänen 965, die Rus 988, die Ungarn 1000…). Im Fenster Stadtdetails ragen die Piktogramme nicht mehr aus den Karten.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-09-26"
     }
 ]
