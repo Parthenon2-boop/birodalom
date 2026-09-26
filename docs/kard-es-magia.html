@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kard és Mágia – roguelike kaland öt mélységen át | ingyenes játék</title>
+<meta name="description" content="Kard és Mágia: ingyenes roguelike kaland a katakombákban. Lovag, mágus vagy íjász, öt mélység és öt főellenség a Sárkányig, képességek, csapdák, titkos ajtók és kinézet bolt. Windows és macOS.">
+<link rel="icon" href="ikon.png" type="image/png">
+<link rel="canonical" href="https://parthenon2-boop.github.io/birodalom/kard-es-magia.html">
+<link rel="alternate" hreflang="hu" href="https://parthenon2-boop.github.io/birodalom/kard-es-magia.html?lang=hu">
+<link rel="alternate" hreflang="en" href="https://parthenon2-boop.github.io/birodalom/kard-es-magia.html?lang=en">
+<link rel="alternate" hreflang="de" href="https://parthenon2-boop.github.io/birodalom/kard-es-magia.html?lang=de">
+<link rel="alternate" hreflang="x-default" href="https://parthenon2-boop.github.io/birodalom/kard-es-magia.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ParthLauncher">
+<meta property="og:title" content="Kard és Mágia – roguelike kaland öt mélységen át">
+<meta property="og:description" content="Ingyenes roguelike: lovag, mágus vagy íjász, öt mélység és öt főellenség a Sárkányig. Windows és macOS.">
+<meta property="og:image" content="https://parthenon2-boop.github.io/birodalom/kepek/borito_kard_es_magia.jpg">
+<meta property="og:url" content="https://parthenon2-boop.github.io/birodalom/kard-es-magia.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://parthenon2-boop.github.io/birodalom/kepek/borito_kard_es_magia.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+	html, body { cursor: url(kurzor/nyil_32.png) 1 1, auto; cursor: -webkit-image-set(url(kurzor/nyil_32.png) 1x, url(kurzor/nyil_64.png) 2x) 1 1, auto; cursor: image-set(url(kurzor/nyil_32.png) 1x, url(kurzor/nyil_64.png) 2x) 1 1, auto; }
+	a, button, [role=button], label, select, summary, .btn, input[type=submit], input[type=button], input[type=checkbox] { cursor: url(kurzor/kard_32.png) 1 1, pointer; cursor: -webkit-image-set(url(kurzor/kard_32.png) 1x, url(kurzor/kard_64.png) 2x) 1 1, pointer; cursor: image-set(url(kurzor/kard_32.png) 1x, url(kurzor/kard_64.png) 2x) 1 1, pointer; }
+	input[type=text], input[type=email], input[type=password], input[type=search], input[type=number], textarea { cursor: text; }
+	:root { --bg: #1d1510; --bg2: #271c14; --panel: #2f2219; --line: #6b4f2a;
+		--gold: #d9a441; --gold-2: #f0cf85; --text: #eadcbc; --muted: #b7a37f; --red: #b0382a; }
+	* { box-sizing: border-box; }
+	body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.6 "EB Garamond", Georgia, serif;
+		background-image: radial-gradient(ellipse at top, #3a2818 0%, var(--bg) 60%); background-attachment: fixed; }
+	a { color: var(--gold-2); }
+	h1, h2, h3 { font-family: Cinzel, Georgia, serif; margin: 0; letter-spacing: .03em; }
+	.wrap { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+	header { border-bottom: 1px solid var(--line); background: rgba(20,14,10,.75); position: sticky; top: 0; z-index: 5; }
+	header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+	.logo { font-family: Cinzel, serif; font-size: 21px; color: var(--gold); text-decoration: none; }
+	nav a { color: var(--muted); text-decoration: none; margin-left: 16px; font-size: 16px; }
+	nav details.lenyilo { margin-left: 16px; }
+	.langs { display: inline-flex; gap: 4px; margin-left: 14px; }
+	.langs button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 5px; padding: 2px 7px; font: 13px "EB Garamond", serif; }
+	.langs button.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
+	.hero { text-align: center; padding: 48px 0 30px; }
+	.hero h1 { font-size: clamp(34px, 6vw, 54px); color: var(--gold); }
+	.hero p { font-size: 20px; max-width: 700px; margin: 14px auto 24px; }
+	.hero p.note { font-size: 15px; color: var(--muted); margin-top: -6px; }
+	.btn { display: inline-block; padding: 14px 30px; border-radius: 8px; border: 1px solid var(--gold);
+		background: linear-gradient(#e7b95a, #b98326); color: #1d1510; text-decoration: none; font: 18px Cinzel, serif; }
+	.btn.alt { background: transparent; color: var(--gold-2); }
+	.dl { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+	section { padding: 34px 0; border-top: 1px solid rgba(107,79,42,.5); }
+	h2 { color: var(--gold); font-size: 26px; margin-bottom: 8px; }
+	.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+	.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
+	.card h3 { color: var(--gold-2); font-size: 19px; margin-bottom: 6px; }
+	.card p { margin: 0; }
+	.hos .stat { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 15px; margin: 0 0 8px; }
+	.hos .stat b { color: var(--gold-2); font-weight: 600; }
+	figure { margin: 0; min-width: 0; }
+	figure img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; display: block; }
+	figcaption { color: var(--muted); font-size: 15px; margin-top: 6px; text-align: center; }
+	.shot { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+	.shot img { transition: border-color .15s; }
+	.shot:hover img { border-color: var(--gold); }
+	dialog#lightbox { padding: 0; border: 1px solid var(--gold); border-radius: 8px; background: #000; max-width: 96vw; max-height: 92vh; overflow: hidden; }
+	dialog#lightbox::backdrop { background: rgba(0,0,0,.85); }
+	dialog#lightbox img { display: block; max-width: 96vw; max-height: 92vh; width: auto; height: auto; border: 0; border-radius: 0; }
+	dialog#lightbox .close { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(20,14,10,.85); color: var(--gold-2); font-size: 18px; }
+	.hirek { display: flex; flex-direction: column; gap: 14px; }
+	.hir { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 8px; padding: 16px 18px; min-width: 0; }
+	.hir .meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+	.hir h3 { font-size: 19px; color: var(--gold-2); margin-bottom: 6px; overflow-wrap: anywhere; }
+	.hir p { margin: 0; overflow-wrap: anywhere; }
+	.pill { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 14px; color: var(--gold-2); }
+	.hir-ures { color: var(--muted); margin: 0; }
+	.hir-mind { margin: 6px 0 0; }
+	.faq dt { color: var(--gold-2); font-weight: 600; margin-top: 14px; }
+	.faq dd { margin: 4px 0 0; }
+	footer { border-top: 1px solid var(--line); padding: 22px 0 40px; color: var(--muted); font-size: 15px; text-align: center; }
+		.platformok { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 0 0 16px; } .plat { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px; color: inherit; text-decoration: none; font-size: 15px; transition: border-color .15s, transform .15s; } .plat:hover, .plat:focus-visible { border-color: currentColor; transform: translateY(-1px); } .plat svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+	.cta { text-align: center; padding: 30px 0 40px; }
+	@media (max-width: 560px) { .btn { width: 100%; } nav a, nav details.lenyilo { margin-left: 10px; } }
+	/* Játékok lenyíló menü (a fejlécben) */
+	details.lenyilo { position: relative; display: inline-block; }
+	details.lenyilo > summary { list-style: none; color: var(--muted, #b7a37f); font-size: 16px; }
+	details.lenyilo > summary::-webkit-details-marker { display: none; }
+	details.lenyilo > summary::after { content: " ▾"; font-size: 12px; }
+	details.lenyilo > summary:hover, details.lenyilo[open] > summary { color: var(--gold-2, #f0cf85); }
+	.lenyilo-menu { position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 10px); z-index: 40; min-width: 190px;
+		display: flex; flex-direction: column; padding: 6px; background: var(--panel, #2f2219); border: 1px solid var(--gold, #d9a441);
+		border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,.55); }
+	.lenyilo-menu a { display: block; padding: 8px 12px; border-radius: 5px; color: var(--text, #eadcbc) !important; text-decoration: none; font-size: 16px; margin: 0 !important; white-space: nowrap; }
+	.lenyilo-menu a:hover { background: rgba(217,164,65,.12); color: var(--gold-2, #f0cf85) !important; }
+	.lenyilo-menu a:last-child { border-top: 1px solid var(--line, #6b4f2a); border-radius: 0 0 5px 5px; margin-top: 4px !important; color: var(--muted, #b7a37f) !important; }
+</style>
+</head>
+<body>
+<header>
+	<div class="wrap">
+		<a class="logo" href="./">ParthLauncher</a>
+		<nav>
+			<a href="./" data-i18n="nav.home">Főoldal</a>
+			<a href="./#letoltes" data-i18n="nav.download">Letöltés</a>
+			<details class="lenyilo"><summary data-i18n="nav.games">Játékok</summary><div class="lenyilo-menu"><a href="heptarchia.html">Heptarchia</a><a href="birodalom.html">Birodalom</a><a href="kard-es-magia.html">Kard és Mágia</a><a href="./#jatekok" data-i18n="nav.allgames">Összes játék</a></div></details>
+			<a href="./#kiegeszitok" data-i18n="nav.dlc">Kiegészítők</a>
+			<a href="fiok.html" data-i18n="nav.account">Fiók / belépés</a>
+			<span class="langs" id="langs"></span>
+		</nav>
+	</div>
+</header>
+
+<main>
+	<div class="hero">
+		<div class="wrap">
+			<h1>Kard és Mágia</h1>
+			<p data-i18n="lead">Roguelike kaland a katakombákban. Válassz lovagot, mágust vagy íjászt, és harcold le magad öt mélységen át a Sárkányig – három élettel, kincsesládákkal, rejtett csapdákkal és falnak látszó titkos ajtókkal.</p>
+			<div class="dl">
+				<a class="btn" href="https://github.com/Parthenon2-boop/birodalom/releases/latest/download/ParthLauncher-Setup.exe" data-i18n="cta.win">Letöltés Windowsra</a>
+				<a class="btn alt" href="https://github.com/Parthenon2-boop/birodalom/releases/latest/download/ParthLauncher-macos.zip" data-i18n="cta.mac">Letöltés macOS-re</a>
+			</div>
+			<p style="color:var(--muted);font-size:16px;margin-top:18px" data-i18n="free">Ingyenes · Windows és macOS · a ParthLauncher telepíti és frissíti</p>
+			<p class="note" data-i18n="macnote">Mac: első indításkor egyszer engedélyezni kell az <i>Adatvédelem és biztonság</i> beállításban – <a href="./#mac">így csináld</a>.</p>
+		</div>
+	</div>
+
+	<section>
+		<div class="wrap">
+			<h2 data-i18n="what.title">Miről szól a játék?</h2>
+			<p data-i18n="what.body">Körökre osztott, mezőről mezőre haladó kazamatakaland. Minden mélység új, véletlenül épülő pálya, a végén egy főellenséggel: a Goblin Király, a Nekromanta, a Kő Titán, az Árnyak Ura, és legalul a Sárkány. A szörnyek akkor is lépnek, ha te tétovázol, így minden mozdulat számít. Három nehézségi szint közül választhatsz.</p>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap">
+			<h2 data-i18n="heroes.title">Három hős</h2>
+			<div class="grid" style="margin-top:12px">
+				<article class="card hos"><h3 data-i18n="h1.t">Lovag</h3><p class="stat"><span>♥ <b>46</b></span><span>⚔ <b>9</b></span><span>🛡 <b>5</b></span></p><p data-i18n="h1.b">A közelharc mestere: nagyobbat üt, és 20% eséllyel pajzzsal fogja fel az ütés felét. Neki van a legtöbb életereje.</p></article>
+				<article class="card hos"><h3 data-i18n="h2.t">Mágus</h3><p class="stat"><span>♥ <b>26</b></span><span>✦ <b>11</b></span><span>🛡 <b>1</b></span></p><p data-i18n="h2.b">Kék varázsgömböt lő öt mező messzire, és a varázssebzés nagyrészt átüt a páncélon. Törékeny, ezért távolról kell harcolnia.</p></article>
+				<article class="card hos"><h3 data-i18n="h3.t">Íjász</h3><p class="stat"><span>♥ <b>32</b></span><span>⚔ <b>6</b></span><span>🛡 <b>2</b></span></p><p data-i18n="h3.b">Íjjal indul és messziről sebez, gyakori kritikus találattal. A rejtett csapdákat is ő veszi észre a legkönnyebben – közelről viszont gyengébb.</p></article>
+			</div>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap">
+			<h2 data-i18n="feat.title">Ami a mélyben vár</h2>
+			<div class="grid" style="margin-top:12px">
+				<article class="card"><h3 data-i18n="f1.t">Képesség minden szintlépésnél</h3><p data-i18n="f1.b">Három lap közül választasz: közös képességek, mint a Vérszívás vagy a Kincsvadász, és hősönként sajátok – a lovagnak Pajzsdöfés, az íjásznak Sasszem, a mágusnak Átütő gömb. A képességek halmozódnak.</p></article>
+				<article class="card"><h3 data-i18n="f2.t">Különleges termek</h3><p data-i18n="f2.b">Kincstár erős őrrel és értékes ládákkal, szentély egyszeri áldással, kereskedő, akinél a szörnyektől szerzett aranyért vásárolhatsz, és csapdaterem garantált ládával.</p></article>
+				<article class="card"><h3 data-i18n="f3.t">Csapdák és titkos ajtók</h3><p data-i18n="f3.b">Tüske, méreg és riasztó lapul a szobákban, egyes falak mögött pedig rövidítés vagy ládás kamra rejtőzik. A K billentyűvel kutathatsz a környező mezőkön.</p></article>
+				<article class="card"><h3 data-i18n="f4.t">Ritka tárgyak</h3><p data-i18n="f4.b">Fegyver, páncél és pajzs külön helyen, bájitalok és tekercsek, amelyek ereje a ritkasággal nő. A legendás fegyver életet lop, a legendás páncél minden körben gyógyít.</p></article>
+				<article class="card"><h3 data-i18n="f5.t">Automata térkép és mentés</h3><p data-i18n="f5.b">A Tab kis térképet nyit a bejárt részekről. A kaland magától ment minden szintváltáskor, és a főmenüben bármikor folytatható.</p></article>
+				<article class="card"><h3 data-i18n="f6.t">Sosem zárul be az út</h3><p data-i18n="f6.b">Generálás után a játék ellenőrzi, hogy a lépcső és minden láda elérhető-e, és ha kell, folyosót vág. Egyik pálya sem lesz bejárhatatlan.</p></article>
+			</div>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap">
+			<h2 data-i18n="shop.title">Kinézet bolt</h2>
+			<p data-i18n="shop.body">A hős négy darabból áll össze – fej, test, láb és fegyver –, és ezek szabadon keverhetők: a lovag kaphat lángkardot és szarvas sisakot, a mágus kristálybotot és csillagos kalapot, az íjász csontíjat és tollas kalapot. A darabokat érméért lehet megvenni, és a kiválasztott öltözék mindenhol látszik: a menüben, a hősválasztónál és játék közben is.</p>
+			<p data-i18n="shop.note">A kinézet soha nem ad előnyt, csak a rajzot változtatja meg. Az egész játék végigjátszható egyetlen érme nélkül is.</p>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap">
+			<h2 data-i18n="shots.title">Képek</h2>
+			<div class="grid">
+				<figure><button class="shot" type="button" data-full="kepek/borito_kard_es_magia.jpg"><img src="kepek/borito_kard_es_magia.jpg" alt="Kard és Mágia – borítókép a három hőssel" loading="lazy" width="960" height="540"></button><figcaption data-i18n="s1">A három hős</figcaption></figure>
+				<figure><button class="shot" type="button" data-full="kepek/kard_menu.jpg"><img src="kepek/kard_menu.jpg" alt="Kard és Mágia – főmenü" loading="lazy" width="1028" height="642"></button><figcaption data-i18n="s2">A főmenü</figcaption></figure>
+				<figure><button class="shot" type="button" data-full="kepek/kard_play.jpg"><img src="kepek/kard_play.jpg" alt="Kard és Mágia – hősválasztó" loading="lazy" width="1028" height="642"></button><figcaption data-i18n="s3">Válassz hőst</figcaption></figure>
+				<figure><button class="shot" type="button" data-full="kepek/kard_bolt.jpg"><img src="kepek/kard_bolt.jpg" alt="Kard és Mágia – kinézet bolt" loading="lazy" width="1028" height="642"></button><figcaption data-i18n="s4">A kinézet bolt</figcaption></figure>
+			</div>
+		</div>
+	</section>
+
+	<section id="hirek">
+		<div class="wrap">
+			<h2 data-i18n="news.title">Hírek és frissítések</h2>
+			<div class="hirek" id="jatek-hirek"><p class="hir-ures">…</p></div>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap">
+			<h2 data-i18n="faq.title">Gyakori kérdések</h2>
+			<dl class="faq">
+				<dt data-i18n="q1">Tényleg ingyenes?</dt>
+				<dd data-i18n="a1">Igen. Csak a kinézet bolt érméi kerülnek pénzbe (100 érme 0,99 $-tól), de azok kizárólag a hős külsejét változtatják meg.</dd>
+				<dt data-i18n="q2">Milyen gépen fut?</dt>
+				<dd data-i18n="a2">Windowson és macOS-en (Intel és Apple Silicon). Bármilyen mai gépen elfut.</dd>
+				<dt data-i18n="q3">Milyen nyelven van?</dt>
+				<dd data-i18n="a3">A játék szövegei egyelőre magyarul vannak.</dd>
+				<dt data-i18n="q4">Hogyan kell irányítani?</dt>
+				<dd data-i18n="a4">Billentyűzettel: WASD vagy a nyilak a mozgás és a támadás, Ctrl a lépcső, I a táska, Tab a térkép, K a kutatás. A billentyűk az Irányítás menüben átköthetők.</dd>
+				<dt data-i18n="q5">Kell hozzá fiók?</dt>
+				<dd data-i18n="a5">Igen, egy ingyenes ParthLauncher-fiók; a bejelentkezést az indító intézi. A megvett kinézetek és az érmeegyenleg ehhez a fiókhoz kötődnek.</dd>
+			</dl>
+		</div>
+	</section>
+
+	<div class="cta">
+		<a class="btn" href="./#letoltes" data-i18n="cta2">Töltsd le a ParthLaunchert</a>
+		<p style="color:var(--muted);font-size:16px" data-i18n="cta2sub">Az indító telepíti és frissíti a Kard és Mágiát.</p>
+	</div>
+</main>
+
+<dialog id="lightbox"><img alt=""><button class="close" type="button" aria-label="Bezárás">✕</button></dialog>
+
+<footer><div class="wrap">
+	<nav class="platformok" aria-label="Kard és Mágia">
+		<a class="plat" href="https://github.com/Parthenon2-boop/birodalom/releases/latest" target="_blank" rel="noopener" title="ParthLauncher – GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7l-5 5 5 5"/><path d="M16 7l5 5-5 5"/><path d="M14 4l-4 16"/></svg>GitHub</a>
+		<a class="plat" href="https://www.facebook.com/profile.php?id=61594544291572" target="_blank" rel="noopener" title="ParthLauncher – Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h-2.5A3.5 3.5 0 0 0 9 6.5V21"/><path d="M6 10.5h8"/></svg>Facebook</a>
+	</nav>	ParthLauncher · Birodalom · Heptarchia · Kard és Mágia</div></footer>
+
+<script src="jatek_hirek.js"></script>
+<script>
+	const LANGS = { hu: "Magyar", en: "English", de: "Deutsch" };
+	const I18N = {
+		hu: {},
+		en: {
+			"nav.home": "Home", "nav.download": "Download", "nav.games": "Games", "nav.allgames": "All games", "nav.dlc": "Add-ons", "nav.account": "Account / sign in",
+			"lead": "A roguelike adventure in the catacombs. Pick a knight, a mage or an archer and fight your way down five depths to the Dragon – with three lives, treasure chests, hidden traps and secret doors that look like plain wall.",
+			"cta.win": "Download for Windows", "cta.mac": "Download for macOS",
+			"free": "Free · Windows and macOS · installed and updated by the ParthLauncher",
+			"macnote": "Mac: on first launch you have to allow it once under <i>Privacy &amp; Security</i> – <a href=\"./#mac\">how to do it</a>.",
+			"what.title": "What is it?",
+			"what.body": "A turn-based, tile-by-tile dungeon crawl. Every depth is a new, randomly built level with a boss at the end: the Goblin King, the Necromancer, the Stone Titan, the Lord of Shadows and, at the very bottom, the Dragon. Monsters keep moving even while you hesitate, so every step counts. There are three difficulty levels to choose from.",
+			"heroes.title": "Three heroes",
+			"h1.t": "Knight", "h1.b": "The master of melee: hits harder and has a 20% chance to catch half of a blow on his shield. He has the most health of the three.",
+			"h2.t": "Mage", "h2.b": "Casts a blue arcane orb up to five tiles away, and magic damage mostly ignores armour. He is fragile, so he has to fight from a distance.",
+			"h3.t": "Archer", "h3.b": "Starts with a bow and deals damage from afar, with frequent critical hits. He is also the best at spotting hidden traps – but weaker up close.",
+			"feat.title": "What waits below",
+			"f1.t": "A new skill at every level-up", "f1.b": "You pick one of three cards: shared skills such as Life Drain or Treasure Hunter, and hero-specific ones – Shield Bash for the knight, Eagle Eye for the archer, Piercing Orb for the mage. Skills stack.",
+			"f2.t": "Special rooms", "f2.b": "A treasury with a strong guard and valuable chests, a shrine with a one-time blessing, a merchant who sells for the gold you take from monsters, and a trap room with a guaranteed chest.",
+			"f3.t": "Traps and secret doors", "f3.b": "Spikes, poison and alarm traps lurk in the rooms, and some walls hide a shortcut or a chamber with a chest. Press K to search the tiles around you.",
+			"f4.t": "Rare items", "f4.b": "Weapon, armour and shield in separate slots, plus potions and scrolls that grow stronger with rarity. A legendary weapon drains life, legendary armour heals you every turn.",
+			"f5.t": "Auto-map and saving", "f5.b": "Tab opens a small map of the explored area. The adventure saves itself at every level change and can be continued from the main menu at any time.",
+			"f6.t": "The way never closes", "f6.b": "After generating a level the game checks that the stairs and every chest can be reached, and cuts a corridor if needed. No level is ever impassable.",
+			"shop.title": "Cosmetics shop",
+			"shop.body": "Your hero is put together from four pieces – head, body, legs and weapon – and you can mix them freely: the knight can wear a flame sword and a horned helmet, the mage a crystal staff and a starry hat, the archer a bone bow and a feathered hat. Pieces are bought with coins, and the outfit you pick shows everywhere: in the menu, on the hero picker and in the game.",
+			"shop.note": "Cosmetics never give an advantage; they only change how your hero looks. The whole game can be played through without a single coin.",
+			"shots.title": "Screenshots", "s1": "The three heroes", "s2": "The main menu", "s3": "Choose your hero", "s4": "The cosmetics shop",
+			"news.title": "News and updates",
+			"faq.title": "Frequently asked questions",
+			"q1": "Is it really free?", "a1": "Yes. Only the coins for the cosmetics shop cost money (from 0.99 $ for 100 coins), and they only change how your hero looks.",
+			"q2": "What does it run on?", "a2": "Windows and macOS (Intel and Apple Silicon). Any current computer will do.",
+			"q3": "What language is it in?", "a3": "For now the in-game text is in Hungarian only.",
+			"q4": "How do I control it?", "a4": "With the keyboard: WASD or the arrow keys to move and attack, Ctrl for the stairs, I for the bag, Tab for the map, K to search. Keys can be rebound in the Controls menu.",
+			"q5": "Do I need an account?", "a5": "Yes, a free ParthLauncher account; the launcher handles signing in. Bought cosmetics and your coin balance are tied to that account.",
+			"cta2": "Download the ParthLauncher", "cta2sub": "The launcher installs and updates Kard és Mágia.",
+		},
+		de: {
+			"nav.home": "Startseite", "nav.download": "Download", "nav.games": "Spiele", "nav.allgames": "Alle Spiele", "nav.dlc": "Erweiterungen", "nav.account": "Konto / Anmelden",
+			"lead": "Ein Roguelike-Abenteuer in den Katakomben. Wähle Ritter, Magier oder Bogenschützen und kämpfe dich durch fünf Tiefen hinab bis zum Drachen – mit drei Leben, Schatztruhen, versteckten Fallen und Geheimtüren, die wie gewöhnliche Wand aussehen.",
+			"cta.win": "Download für Windows", "cta.mac": "Download für macOS",
+			"free": "Kostenlos · Windows und macOS · vom ParthLauncher installiert und aktualisiert",
+			"macnote": "Mac: Beim ersten Start musst du es einmal unter <i>Datenschutz &amp; Sicherheit</i> erlauben – <a href=\"./#mac\">so geht es</a>.",
+			"what.title": "Worum geht es?",
+			"what.body": "Ein rundenbasierter Dungeon-Crawler, Feld für Feld. Jede Tiefe ist eine neue, zufällig gebaute Ebene mit einem Endgegner: dem Goblinkönig, dem Nekromanten, dem Steintitan, dem Herrn der Schatten und ganz unten dem Drachen. Die Monster ziehen weiter, auch wenn du zögerst – jeder Schritt zählt. Drei Schwierigkeitsgrade stehen zur Wahl.",
+			"heroes.title": "Drei Helden",
+			"h1.t": "Ritter", "h1.b": "Meister des Nahkampfs: schlägt härter zu und fängt mit 20% Wahrscheinlichkeit die Hälfte eines Treffers mit dem Schild ab. Er hat die meisten Lebenspunkte.",
+			"h2.t": "Magier", "h2.b": "Schleudert eine blaue Zauberkugel bis zu fünf Felder weit, und Zauberschaden geht großteils durch die Rüstung. Er ist zerbrechlich und muss aus der Distanz kämpfen.",
+			"h3.t": "Bogenschütze", "h3.b": "Beginnt mit einem Bogen, trifft aus der Ferne und oft kritisch. Versteckte Fallen entdeckt er am leichtesten – aus der Nähe ist er aber schwächer.",
+			"feat.title": "Was in der Tiefe wartet",
+			"f1.t": "Eine Fähigkeit bei jedem Stufenaufstieg", "f1.b": "Du wählst eine von drei Karten: gemeinsame Fähigkeiten wie Lebensraub oder Schatzjäger und eigene für jeden Helden – Schildstoß für den Ritter, Adlerauge für den Bogenschützen, Durchschlagende Kugel für den Magier. Fähigkeiten stapeln sich.",
+			"f2.t": "Besondere Räume", "f2.b": "Eine Schatzkammer mit starkem Wächter und wertvollen Truhen, ein Schrein mit einmaligem Segen, ein Händler, der gegen das Gold der Monster verkauft, und ein Fallenraum mit sicherer Truhe.",
+			"f3.t": "Fallen und Geheimtüren", "f3.b": "Stachel-, Gift- und Alarmfallen lauern in den Räumen, und manche Wände verbergen eine Abkürzung oder eine Kammer mit Truhe. Mit K durchsuchst du die Felder um dich herum.",
+			"f4.t": "Seltene Gegenstände", "f4.b": "Waffe, Rüstung und Schild in eigenen Plätzen, dazu Tränke und Schriftrollen, die mit der Seltenheit stärker werden. Eine legendäre Waffe raubt Leben, eine legendäre Rüstung heilt jede Runde.",
+			"f5.t": "Automatische Karte und Speichern", "f5.b": "Tab öffnet eine kleine Karte des erkundeten Bereichs. Das Abenteuer speichert bei jedem Ebenenwechsel von selbst und lässt sich im Hauptmenü jederzeit fortsetzen.",
+			"f6.t": "Der Weg schließt sich nie", "f6.b": "Nach dem Erzeugen prüft das Spiel, ob die Treppe und jede Truhe erreichbar sind, und gräbt notfalls einen Gang. Keine Ebene ist je unpassierbar.",
+			"shop.title": "Aussehen-Shop",
+			"shop.body": "Dein Held setzt sich aus vier Teilen zusammen – Kopf, Körper, Beine und Waffe –, die sich frei kombinieren lassen: der Ritter mit Flammenschwert und Hörnerhelm, der Magier mit Kristallstab und Sternenhut, der Bogenschütze mit Knochenbogen und Federhut. Die Teile kauft man mit Münzen, und das gewählte Aussehen ist überall zu sehen: im Menü, bei der Heldenwahl und im Spiel.",
+			"shop.note": "Das Aussehen bringt nie einen Vorteil, es ändert nur die Zeichnung. Das ganze Spiel lässt sich ohne eine einzige Münze durchspielen.",
+			"shots.title": "Bilder", "s1": "Die drei Helden", "s2": "Das Hauptmenü", "s3": "Wähle deinen Helden", "s4": "Der Aussehen-Shop",
+			"news.title": "Neuigkeiten und Updates",
+			"faq.title": "Häufige Fragen",
+			"q1": "Ist es wirklich kostenlos?", "a1": "Ja. Nur die Münzen für den Aussehen-Shop kosten Geld (ab 0,99 $ für 100 Münzen), und sie ändern nur das Aussehen deines Helden.",
+			"q2": "Auf welchen Rechnern läuft es?", "a2": "Windows und macOS (Intel und Apple Silicon). Jeder aktuelle Rechner genügt.",
+			"q3": "In welcher Sprache?", "a3": "Die Texte im Spiel sind vorerst nur auf Ungarisch.",
+			"q4": "Wie steuert man es?", "a4": "Mit der Tastatur: WASD oder Pfeiltasten zum Bewegen und Angreifen, Strg für die Treppe, I für die Tasche, Tab für die Karte, K zum Suchen. Die Tasten lassen sich im Menü Steuerung neu belegen.",
+			"q5": "Brauche ich ein Konto?", "a5": "Ja, ein kostenloses ParthLauncher-Konto; die Anmeldung übernimmt der Launcher. Gekaufte Aussehen und dein Münzguthaben sind an dieses Konto gebunden.",
+			"cta2": "ParthLauncher herunterladen", "cta2sub": "Der Launcher installiert und aktualisiert Kard és Mágia.",
+		},
+	};
+	const META = {
+		hu: ["Kard és Mágia – roguelike kaland öt mélységen át | ingyenes játék", "Kard és Mágia: ingyenes roguelike kaland. Lovag, mágus vagy íjász, öt mélység és öt főellenség a Sárkányig, képességek, csapdák, titkos ajtók és kinézet bolt."],
+		en: ["Kard és Mágia – a roguelike adventure through five depths | free game", "Kard és Mágia: a free roguelike adventure. Knight, mage or archer, five depths and five bosses down to the Dragon, skills, traps, secret doors and a cosmetics shop."],
+		de: ["Kard és Mágia – Roguelike-Abenteuer durch fünf Tiefen | kostenloses Spiel", "Kard és Mágia: kostenloses Roguelike-Abenteuer. Ritter, Magier oder Bogenschütze, fünf Tiefen und fünf Endgegner bis zum Drachen, Fähigkeiten, Fallen, Geheimtüren und Aussehen-Shop."],
+	};
+	let lang = "hu";
+	try { lang = localStorage.getItem("parth_lang") || ""; } catch (e) { lang = ""; }
+	const urlLang = new URLSearchParams(location.search).get("lang");
+	if (LANGS[urlLang]) lang = urlLang;
+	if (!LANGS[lang]) { const n = (navigator.language || "hu").slice(0, 2).toLowerCase(); lang = LANGS[n] ? n : "en"; }
+	const HU_TEXT = new Map();
+	document.querySelectorAll("[data-i18n]").forEach(el => HU_TEXT.set(el, el.innerHTML));
+	function applyLang() {
+		document.documentElement.lang = lang;
+		document.title = META[lang][0];
+		const md = document.querySelector('meta[name="description"]');
+		if (md) md.setAttribute("content", META[lang][1]);
+		document.querySelectorAll("[data-i18n]").forEach(el => {
+			const v = lang === "hu" ? HU_TEXT.get(el) : (I18N[lang] || {})[el.dataset.i18n];
+			if (v != null) el.innerHTML = v;
+		});
+		document.querySelectorAll("#langs button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
+		try { localStorage.setItem("parth_lang", lang); } catch (e) {}
+		if (window.jatekHirek) jatekHirek(document.getElementById("jatek-hirek"), "kard", lang);
+	}
+	document.getElementById("langs").innerHTML = Object.keys(LANGS)
+		.map(k => `<button type="button" data-lang="${k}" title="${LANGS[k]}">${k.toUpperCase()}</button>`).join("");
+	document.querySelectorAll("#langs button").forEach(b => b.onclick = () => { lang = b.dataset.lang; applyLang(); });
+	applyLang();
+
+	// képnagyító
+	const lb = document.getElementById("lightbox");
+	document.addEventListener("click", e => {
+		const b = e.target.closest(".shot");
+		if (!b || !lb.showModal) return;
+		const img = lb.querySelector("img");
+		img.src = b.dataset.full; img.alt = b.querySelector("img").alt;
+		lb.showModal();
+	});
+	lb.onclick = e => { if (e.target === lb || e.target.classList.contains("close")) lb.close(); };
+</script>
+<script type="application/ld+json">
+{
+	"@context": "https://schema.org",
+	"@type": "VideoGame",
+	"name": "Kard és Mágia",
+	"description": "Roguelike kaland a katakombákban: lovag, mágus vagy íjász, öt mélység és öt főellenség a Sárkányig, szintlépéskor választható képességek, különleges termek, csapdák, titkos ajtók és kinézet bolt.",
+	"genre": ["Roguelike", "Adventure", "Dungeon crawler"],
+	"gamePlatform": ["PC", "Windows", "macOS"],
+	"operatingSystem": "Windows, macOS",
+	"inLanguage": "hu",
+	"playMode": "SinglePlayer",
+	"applicationCategory": "Game",
+	"image": "https://parthenon2-boop.github.io/birodalom/kepek/borito_kard_es_magia.jpg",
+	"url": "https://parthenon2-boop.github.io/birodalom/kard-es-magia.html",
+	"downloadUrl": "https://github.com/Parthenon2-boop/birodalom/releases/latest",
+	"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" }
+}
+</script>
+<script>
+// Ha a látogató be van lépve (a fiók oldal munkamenete a localStorage-ban), a menüben a neve látszik a „Fiók / belépés” helyett.
+(() => {
+	try {
+		const s = JSON.parse(localStorage.getItem("sb-gxvepswtairfqvosdcpb-auth-token") || "null");
+		const u = s && s.refresh_token && s.user;
+		if (!u) return;
+		const nev = (u.user_metadata && u.user_metadata.username) || String(u.email || "").split("@")[0];
+		if (!nev) return;
+		document.querySelectorAll('a[href="fiok.html"][data-i18n]').forEach(a => {
+			a.removeAttribute("data-i18n");
+			a.textContent = "👤 " + nev;
+			a.title = u.email || nev;
+		});
+	} catch (e) { /* nincs tároló (privát ablak) – marad a „Fiók / belépés” */ }
+})();
+</script><script src="kileptetes.js?v=2"></script>
+<script>
+// Játékok lenyíló menü: kattintásra nyílik; kívülre kattintva, Esc-re vagy egy pontot választva bezárul
+(() => {
+	const d = document.querySelector("details.lenyilo");
+	if (!d) return;
+	document.addEventListener("click", e => { if (d.open && !d.contains(e.target)) d.open = false; });
+	document.addEventListener("keydown", e => { if (e.key === "Escape") d.open = false; });
+	d.querySelectorAll("a").forEach(a => a.addEventListener("click", () => { d.open = false; }));
+})();
+</script></body>
+</html>

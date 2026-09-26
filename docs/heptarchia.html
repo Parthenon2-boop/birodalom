@@ -61,7 +61,14 @@
 	footer { border-top: 1px solid var(--line); padding: 22px 0 40px; color: var(--muted); font-size: 15px; text-align: center; }
 		.platformok { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 0 0 16px; } .plat { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px; color: inherit; text-decoration: none; font-size: 15px; transition: border-color .15s, transform .15s; } .plat:hover, .plat:focus-visible { border-color: currentColor; transform: translateY(-1px); } .plat svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 	.cta { text-align: center; padding: 30px 0 40px; }
-	/* Játékok lenyíló menü (a fejlécben) */
+	.hirek { display: flex; flex-direction: column; gap: 14px; }
+	.hir { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 8px; padding: 16px 18px; min-width: 0; }
+	.hir .meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+	.hir h3 { font-size: 19px; color: var(--gold-2); margin-bottom: 6px; overflow-wrap: anywhere; }
+	.hir p { margin: 0; overflow-wrap: anywhere; }
+	.pill { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 14px; color: var(--gold-2); }
+	.hir-ures { color: var(--muted); margin: 0; }
+	.hir-mind { margin: 6px 0 0; }	/* Játékok lenyíló menü (a fejlécben) */
 	details.lenyilo { position: relative; display: inline-block; }
 	details.lenyilo > summary { list-style: none; color: var(--muted, #b7a37f); font-size: 16px; }
 	details.lenyilo > summary::-webkit-details-marker { display: none; }
@@ -82,7 +89,7 @@
 		<nav>
 			<a href="./" data-i18n="nav.home">Főoldal</a>
 			<a href="./#letoltes" data-i18n="nav.download">Letöltés</a>
-			<details class="lenyilo"><summary data-i18n="nav.games">Játékok</summary><div class="lenyilo-menu"><a href="heptarchia.html">Heptarchia</a><a href="./#jatek-birodalom">Birodalom</a><a href="./#jatek-kard">Kard és Mágia</a><a href="./#jatekok" data-i18n="nav.allgames">Összes játék</a></div></details>
+			<details class="lenyilo"><summary data-i18n="nav.games">Játékok</summary><div class="lenyilo-menu"><a href="heptarchia.html">Heptarchia</a><a href="birodalom.html">Birodalom</a><a href="kard-es-magia.html">Kard és Mágia</a><a href="./#jatekok" data-i18n="nav.allgames">Összes játék</a></div></details>
 			<a href="./#kiegeszitok" data-i18n="nav.dlc">Kiegészítők</a>
 			<a href="fiok.html" data-i18n="nav.account">Fiók / belépés</a>
 			<span class="langs" id="langs"></span>
@@ -132,6 +139,13 @@
 		</div>
 	</section>
 
+	<section id="hirek">
+		<div class="wrap">
+			<h2 data-i18n="news.title">Hírek és frissítések</h2>
+			<div class="hirek" id="jatek-hirek"><p class="hir-ures">…</p></div>
+		</div>
+	</section>
+
 	<section>
 		<div class="wrap">
 			<h2 data-i18n="faq.title">Gyakori kérdések</h2>
@@ -165,6 +179,7 @@
 		<a class="plat" href="https://www.facebook.com/profile.php?id=61594544291572" target="_blank" rel="noopener" title="ParthLauncher – Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h-2.5A3.5 3.5 0 0 0 9 6.5V21"/><path d="M6 10.5h8"/></svg>Facebook</a>
 	</nav>	ParthLauncher · Birodalom · Heptarchia · Kard és Mágia</div></footer>
 
+<script src="jatek_hirek.js"></script>
 <script>
 	const LANGS = { hu: "Magyar", en: "English", de: "Deutsch" };
 	const I18N = {
@@ -184,6 +199,7 @@
 			"dlc.title": "Add-ons",
 			"dlc.body": "The base game is free. Four add-ons expand it: Scandinavia (Denmark, Norway, the Swedes, Iceland and Greenland), The Viking Age (great raids from Lindisfarne to Paris), Faith and Church (every people with its own religion and doctrine tree) and The Varangian Road (an eastern map with Novgorod, Kiev and Byzantium). They are all compatible with each other.",
 			"dlc.link": "See the add-ons on the main page →",
+			"news.title": "News and updates",
 			"faq.title": "Frequently asked questions",
 			"q1": "Is it really free?", "a1": "Yes, the base game is free. Only the four add-ons are paid (3–5 $).",
 			"q2": "What does it run on?", "a2": "Windows and macOS (Intel and Apple Silicon). It does not need a powerful machine; an office laptop runs it fine.",
@@ -207,6 +223,7 @@
 			"dlc.title": "Erweiterungen",
 			"dlc.body": "Das Grundspiel ist kostenlos. Vier Erweiterungen bauen es aus: Skandinavien (Dänemark, Norwegen, die Schweden, Island und Grönland), Das Zeitalter der Wikinger (große Raubzüge von Lindisfarne bis Paris), Glaube und Kirche (jedes Volk mit eigenem Glauben und Lehrbaum) und Der Warägerweg (östliche Karte mit Nowgorod, Kiew und Byzanz). Alle sind miteinander kompatibel.",
 			"dlc.link": "Die Erweiterungen auf der Startseite →",
+			"news.title": "Neuigkeiten und Updates",
 			"faq.title": "Häufige Fragen",
 			"q1": "Ist es wirklich kostenlos?", "a1": "Ja, das Grundspiel ist kostenlos. Nur die vier Erweiterungen kosten etwas (3–5 $).",
 			"q2": "Auf welchen Rechnern läuft es?", "a2": "Windows und macOS (Intel und Apple Silicon). Es braucht keinen starken Rechner; ein Büro-Laptop genügt.",
@@ -239,6 +256,7 @@
 		});
 		document.querySelectorAll("#langs button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
 		try { localStorage.setItem("parth_lang", lang); } catch (e) {}
+		if (window.jatekHirek) jatekHirek(document.getElementById("jatek-hirek"), "heptarchia", lang);
 	}
 	document.getElementById("langs").innerHTML = Object.keys(LANGS)
 		.map(k => `<button type="button" data-lang="${k}" title="${LANGS[k]}">${k.toUpperCase()}</button>`).join("");

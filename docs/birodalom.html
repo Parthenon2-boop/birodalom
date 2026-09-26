@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Birodalom – valós idejű stratégia 1400-tól 1945-ig | ingyenes játék</title>
+<meta name="description" content="Birodalom: ingyenes valós idejű stratégia 1400-tól 1945-ig. Négy korszak, tizenegy nemzet, tíz tájtípus, karibi kalózvilág, történelmi hadjáratok és hálózati többjátékos mód. Windows és macOS.">
+<link rel="icon" href="ikon.png" type="image/png">
+<link rel="canonical" href="https://parthenon2-boop.github.io/birodalom/birodalom.html">
+<link rel="alternate" hreflang="hu" href="https://parthenon2-boop.github.io/birodalom/birodalom.html?lang=hu">
+<link rel="alternate" hreflang="en" href="https://parthenon2-boop.github.io/birodalom/birodalom.html?lang=en">
+<link rel="alternate" hreflang="de" href="https://parthenon2-boop.github.io/birodalom/birodalom.html?lang=de">
+<link rel="alternate" hreflang="x-default" href="https://parthenon2-boop.github.io/birodalom/birodalom.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ParthLauncher">
+<meta property="og:title" content="Birodalom – valós idejű stratégia 1400-tól 1945-ig">
+<meta property="og:description" content="Ingyenes valós idejű stratégia: négy korszak a késő középkortól a világháborúkig, tizenegy nemzet, kalózvilág, hadjáratok és többjátékos mód. Windows és macOS.">
+<meta property="og:image" content="https://parthenon2-boop.github.io/birodalom/kepek/bir_csata.jpg">
+<meta property="og:url" content="https://parthenon2-boop.github.io/birodalom/birodalom.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://parthenon2-boop.github.io/birodalom/kepek/bir_csata.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+	html, body { cursor: url(kurzor/nyil_32.png) 1 1, auto; cursor: -webkit-image-set(url(kurzor/nyil_32.png) 1x, url(kurzor/nyil_64.png) 2x) 1 1, auto; cursor: image-set(url(kurzor/nyil_32.png) 1x, url(kurzor/nyil_64.png) 2x) 1 1, auto; }
+	a, button, [role=button], label, select, summary, .btn, input[type=submit], input[type=button], input[type=checkbox] { cursor: url(kurzor/kard_32.png) 1 1, pointer; cursor: -webkit-image-set(url(kurzor/kard_32.png) 1x, url(kurzor/kard_64.png) 2x) 1 1, pointer; cursor: image-set(url(kurzor/kard_32.png) 1x, url(kurzor/kard_64.png) 2x) 1 1, pointer; }
+	input[type=text], input[type=email], input[type=password], input[type=search], input[type=number], textarea { cursor: text; }
+	:root { --bg: #1d1510; --bg2: #271c14; --panel: #2f2219; --line: #6b4f2a;
+		--gold: #d9a441; --gold-2: #f0cf85; --text: #eadcbc; --muted: #b7a37f; --red: #b0382a; }
+	* { box-sizing: border-box; }
+	body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.6 "EB Garamond", Georgia, serif;
+		background-image: radial-gradient(ellipse at top, #3a2818 0%, var(--bg) 60%); background-attachment: fixed; }
+	a { color: var(--gold-2); }
+	h1, h2, h3 { font-family: Cinzel, Georgia, serif; margin: 0; letter-spacing: .03em; }
+	.wrap { max-width: 900px; margin: 0 auto; padding: 0 16px; }
+	header { border-bottom: 1px solid var(--line); background: rgba(20,14,10,.75); position: sticky; top: 0; z-index: 5; }
+	header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+	.logo { font-family: Cinzel, serif; font-size: 21px; color: var(--gold); text-decoration: none; }
+	nav a { color: var(--muted); text-decoration: none; margin-left: 16px; font-size: 16px; }
+	nav details.lenyilo { margin-left: 16px; }
+	.langs { display: inline-flex; gap: 4px; margin-left: 14px; }
+	.langs button { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 5px; padding: 2px 7px; font: 13px "EB Garamond", serif; }
+	.langs button.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
+	.hero { text-align: center; padding: 48px 0 30px; }
+	.hero h1 { font-size: clamp(34px, 6vw, 54px); color: var(--gold); }
+	.hero p { font-size: 20px; max-width: 700px; margin: 14px auto 24px; }
+	.hero p.note { font-size: 15px; color: var(--muted); margin-top: -6px; }
+	.btn { display: inline-block; padding: 14px 30px; border-radius: 8px; border: 1px solid var(--gold);
+		background: linear-gradient(#e7b95a, #b98326); color: #1d1510; text-decoration: none; font: 18px Cinzel, serif; }
+	.btn.alt { background: transparent; color: var(--gold-2); }
+	.dl { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+	section { padding: 34px 0; border-top: 1px solid rgba(107,79,42,.5); }
+	h2 { color: var(--gold); font-size: 26px; margin-bottom: 8px; }
+	.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); }
+	.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
+	.card h3 { color: var(--gold-2); font-size: 19px; margin-bottom: 6px; }
+	.card p { margin: 0; }
+	figure { margin: 0; min-width: 0; }
+	figure img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; display: block; }
+	figcaption { color: var(--muted); font-size: 15px; margin-top: 6px; text-align: center; }
+	.shot { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+	.shot img { transition: border-color .15s; }
+	.shot:hover img { border-color: var(--gold); }
+	dialog#lightbox { padding: 0; border: 1px solid var(--gold); border-radius: 8px; background: #000; max-width: 96vw; max-height: 92vh; overflow: hidden; }
+	dialog#lightbox::backdrop { background: rgba(0,0,0,.85); }
+	dialog#lightbox img { display: block; max-width: 96vw; max-height: 92vh; width: auto; height: auto; border: 0; border-radius: 0; }
+	dialog#lightbox .close { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--gold); background: rgba(20,14,10,.85); color: var(--gold-2); font-size: 18px; }
+	.ages { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)); margin-top: 16px; }
+	.age { border: 1px solid var(--line); border-top: 3px solid var(--gold); border-radius: 8px; padding: 12px 14px; background: rgba(47,34,25,.6); }
+	.age b { display: block; font-family: Cinzel, serif; color: var(--gold-2); font-size: 16px; }
+	.age span { color: var(--muted); font-size: 16px; }
+	.hirek { display: flex; flex-direction: column; gap: 14px; }
+	.hir { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 8px; padding: 16px 18px; min-width: 0; }
+	.hir .meta { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 14px; color: var(--muted); margin-bottom: 4px; }
+	.hir h3 { font-size: 19px; color: var(--gold-2); margin-bottom: 6px; overflow-wrap: anywhere; }
+	.hir p { margin: 0; overflow-wrap: anywhere; }
+	.pill { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; font-size: 14px; color: var(--gold-2); }
+	.hir-ures { color: var(--muted); margin: 0; }
+	.hir-mind { margin: 6px 0 0; }
+	.faq dt { color: var(--gold-2); font-weight: 600; margin-top: 14px; }
+	.faq dd { margin: 4px 0 0; }
+	footer { border-top: 1px solid var(--line); padding: 22px 0 40px; color: var(--muted); font-size: 15px; text-align: center; }
+		.platformok { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 0 0 16px; } .plat { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px; color: inherit; text-decoration: none; font-size: 15px; transition: border-color .15s, transform .15s; } .plat:hover, .plat:focus-visible { border-color: currentColor; transform: translateY(-1px); } .plat svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+	.cta { text-align: center; padding: 30px 0 40px; }
+	@media (max-width: 560px) { .btn { width: 100%; } nav a, nav details.lenyilo { margin-left: 10px; } }
+	/* Játékok lenyíló menü (a fejlécben) */
+	details.lenyilo { position: relative; display: inline-block; }
+	details.lenyilo > summary { list-style: none; color: var(--muted, #b7a37f); font-size: 16px; }
+	details.lenyilo > summary::-webkit-details-marker { display: none; }
+	details.lenyilo > summary::after { content: " ▾"; font-size: 12px; }
+	details.lenyilo > summary:hover, details.lenyilo[open] > summary { color: var(--gold-2, #f0cf85); }
+	.lenyilo-menu { position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 10px); z-index: 40; min-width: 190px;
+		display: flex; flex-direction: column; padding: 6px; background: var(--panel, #2f2219); border: 1px solid var(--gold, #d9a441);
+		border-radius: 8px; box-shadow: 0 10px 28px rgba(0,0,0,.55); }
+	.lenyilo-menu a { display: block; padding: 8px 12px; border-radius: 5px; color: var(--text, #eadcbc) !important; text-decoration: none; font-size: 16px; margin: 0 !important; white-space: nowrap; }
+	.lenyilo-menu a:hover { background: rgba(217,164,65,.12); color: var(--gold-2, #f0cf85) !important; }
+	.lenyilo-menu a:last-child { border-top: 1px solid var(--line, #6b4f2a); border-radius: 0 0 5px 5px; margin-top: 4px !important; color: var(--muted, #b7a37f) !important; }
+</style>
+</head>
+<body>
+<header>
+	<div class="wrap">
+		<a class="logo" href="./">ParthLauncher</a>
+		<nav>
+			<a href="./" data-i18n="nav.home">Főoldal</a>
+			<a href="./#letoltes" data-i18n="nav.download">Letöltés</a>
+			<details class="lenyilo"><summary data-i18n="nav.games">Játékok</summary><div class="lenyilo-menu"><a href="heptarchia.html">Heptarchia</a><a href="birodalom.html">Birodalom</a><a href="kard-es-magia.html">Kard és Mágia</a><a href="./#jatekok" data-i18n="nav.allgames">Összes játék</a></div></details>
+			<a href="./#kiegeszitok" data-i18n="nav.dlc">Kiegészítők</a>
+			<a href="fiok.html" data-i18n="nav.account">Fiók / belépés</a>
+			<span class="langs" id="langs"></span>
+		</nav>
+	</div>
+</header>
+
+<main>
+	<div class="hero">
+		<div class="wrap">
+			<h1>Birodalom</h1>
+			<p data-i18n="lead">Valós idejű stratégia 1400-tól 1945-ig. Egy faluval kezdesz a késő középkorban, és ha jól gazdálkodsz, a világháborúk koráig viszed a népedet – a lándzsásoktól a bombázókig, a faltörő kostól a vadászgépig.</p>
+			<div class="dl">
+				<a class="btn" href="https://github.com/Parthenon2-boop/birodalom/releases/latest/download/ParthLauncher-Setup.exe" data-i18n="cta.win">Letöltés Windowsra</a>
+				<a class="btn alt" href="https://github.com/Parthenon2-boop/birodalom/releases/latest/download/ParthLauncher-macos.zip" data-i18n="cta.mac">Letöltés macOS-re</a>
+			</div>
+			<p style="color:var(--muted);font-size:16px;margin-top:18px" data-i18n="free">Ingyenes · Windows és macOS · a ParthLauncher telepíti és frissíti</p>
+			<p class="note" data-i18n="macnote">Mac: első indításkor egyszer engedélyezni kell az <i>Adatvédelem és biztonság</i> beállításban – <a href="./#mac">így csináld</a>.</p>
+		</div>
+	</div>
+
+	<section>
+		<div class="wrap">
+			<h2 data-i18n="what.title">Miről szól a játék?</h2>
+			<p data-i18n="what.body">Klasszikus valós idejű stratégia, ahol a munkásaid fát vágnak, követ fejtenek, aranyat bányásznak és élelmet termelnek, te pedig ebből várost építesz, sereget képzel, és közben felkészülsz a szomszéd támadására. A tét a korszakváltás: aki előbb lép tovább, annak jobb fegyverei, erősebb épületei és új egységei lesznek.</p>
+			<div class="ages">
+				<div class="age"><b data-i18n="age0.t">15. század</b><span data-i18n="age0.b">Késő középkor: lándzsások, íjászok, lovasok, faltörő kos</span></div>
+				<div class="age"><b data-i18n="age1.t">17. század</b><span data-i18n="age1.b">Kora újkor: erősebb seregek, galeonok a tengeren</span></div>
+				<div class="age"><b data-i18n="age2.t">19. század</b><span data-i18n="age2.b">Ipari forradalom: nagyobb hozam, erősebb épületek</span></div>
+				<div class="age"><b data-i18n="age3.t">20. század</b><span data-i18n="age3.b">A világháborúk kora: repülőtér, vadászgépek, bombázók</span></div>
+			</div>
+			<div class="grid" style="margin-top:18px">
+				<article class="card"><h3 data-i18n="f1.t">Tizenegy nemzet</h3><p data-i18n="f1.b">Magyarország, Ausztria, Németország, Franciaország, Nagy-Britannia, Spanyolország, Lengyelország és Oroszország – korszakonként saját zászlóval, uralkodóval és építészettel –, a kalózvilágban pedig Nassau, Fekete Szakáll és Stede Bonnet.</p></article>
+				<article class="card"><h3 data-i18n="f2.t">Tíz tájtípus</h3><p data-i18n="f2.b">Alföld, rengeteg, kopár vidék, sivatag, folyóköz, tóvidék, hegyvidék, szikes puszta, szigetvilág és a Karib-tenger. Mindegyik másképp osztja el a fát, a követ és az aranyat, így más stratégiát kíván.</p></article>
+				<article class="card"><h3 data-i18n="f3.t">Kalózvilág</h3><p data-i18n="f3.b">Nagyobb, rögzített karibi térkép Kubával, Jamaicával, Hispaniolával és Tortugával. Cukornád és rum, tengeri ütközetek, és a zsákmány hírnevet hoz – csakhogy a hírnév a királyi hajóhadat is a nyakadra hozza.</p></article>
+				<article class="card"><h3 data-i18n="f4.t">Hadjáratok</h3><p data-i18n="f4.b">Nemzetenként egy-egy történelmi küldetéssorozat, összesen tizenegy: minden pályának saját célja, korszaka és ellenfele van, a haladásod pedig megmarad.</p></article>
+				<article class="card"><h3 data-i18n="f5.t">Többjátékos mód</h3><p data-i18n="f5.b">Egy gépen legfeljebb kilenc bot ellen, vagy hálózaton barátokkal – legfeljebb nyolc fél egy szobában. Ugyanarról a wifiről egy szobakóddal, távolról a router átirányításával vagy egy közvetítő szerveren át.</p></article>
+				<article class="card"><h3 data-i18n="f6.t">Oktatómód és visszajátszás</h3><p data-i18n="f6.b">Az oktatómód lépésről lépésre mutatja meg az alapokat. A játszmák visszajátszásként elmenthetők és visszanézhetők, a a teljesítmények (Hadvezér, Admirális, Kalózkirály…) megőrzik, mire vitted.</p></article>
+			</div>
+			<p style="margin-top:18px" data-i18n="more">Közben esik az eső és a hó, váltakozik a nappal és az éjszaka, a piacon aranyért cserélheted a fölösleget, a seregednek alakzatot adhatsz (vonal, ék, négyszög), a hajóid pedig golyóval, láncos vagy kartácslövedékkel tüzelnek.</p>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap">
+			<h2 data-i18n="shots.title">Képek</h2>
+			<div class="grid">
+				<figure><button class="shot" type="button" data-full="kepek/bir_csata.jpg"><img src="kepek/bir_csata.jpg" alt="Birodalom – csata egy 15. századi város alatt" loading="lazy" width="1028" height="749"></button><figcaption data-i18n="s1">Csata a 15. században</figcaption></figure>
+				<figure><button class="shot" type="button" data-full="kepek/bir_kozepkor.jpg"><img src="kepek/bir_kozepkor.jpg" alt="Birodalom – középkori város laktanyával" loading="lazy" width="1028" height="749"></button><figcaption data-i18n="s2">Középkori város, a laktanyában képzés folyik</figcaption></figure>
+				<figure><button class="shot" type="button" data-full="kepek/bir_modern.jpg"><img src="kepek/bir_modern.jpg" alt="Birodalom – a világháborúk kora" loading="lazy" width="1028" height="749"></button><figcaption data-i18n="s3">A világháborúk kora</figcaption></figure>
+				<figure><button class="shot" type="button" data-full="kepek/bir_tenger.jpg"><img src="kepek/bir_tenger.jpg" alt="Birodalom – tengeri csata a kalózvilágban" loading="lazy" width="1028" height="749"></button><figcaption data-i18n="s4">Tengeri csata a kalózvilágban</figcaption></figure>
+			</div>
+		</div>
+	</section>
+
+	<section id="hirek">
+		<div class="wrap">
+			<h2 data-i18n="news.title">Hírek és frissítések</h2>
+			<div class="hirek" id="jatek-hirek"><p class="hir-ures">…</p></div>
+		</div>
+	</section>
+
+	<section>
+		<div class="wrap">
+			<h2 data-i18n="faq.title">Gyakori kérdések</h2>
+			<dl class="faq">
+				<dt data-i18n="q1">Tényleg ingyenes?</dt>
+				<dd data-i18n="a1">Igen, teljesen. A Birodalomhoz nincs fizetős kiegészítő.</dd>
+				<dt data-i18n="q2">Milyen gépen fut?</dt>
+				<dd data-i18n="a2">Windowson és macOS-en (Intel és Apple Silicon). Nem kell hozzá erős gép.</dd>
+				<dt data-i18n="q3">Magyarul van?</dt>
+				<dd data-i18n="a3">Igen: magyarul, angolul és németül is játszható.</dd>
+				<dt data-i18n="q4">Hogyan játszhatok a barátaimmal?</dt>
+				<dd data-i18n="a4">Az egyikőtök szobát nyit, a játszma az ő gépén fut; a többiek a kiírt címmel vagy szobakóddal csatlakoznak. Ugyanazon a wifin ez azonnal megy, interneten át a router kapunyitása, egy VPN vagy egy közvetítő kell hozzá.</dd>
+				<dt data-i18n="q5">Hogyan frissül?</dt>
+				<dd data-i18n="a5">A ParthLauncher indításkor megnézi, van-e új változat, és egy gombbal letölti. A mentéseid frissítéskor megmaradnak.</dd>
+			</dl>
+		</div>
+	</section>
+
+	<div class="cta">
+		<a class="btn" href="./#letoltes" data-i18n="cta2">Töltsd le a ParthLaunchert</a>
+		<p style="color:var(--muted);font-size:16px" data-i18n="cta2sub">Az indító telepíti és frissíti a Birodalmat.</p>
+	</div>
+</main>
+
+<dialog id="lightbox"><img alt=""><button class="close" type="button" aria-label="Bezárás">✕</button></dialog>
+
+<footer><div class="wrap">
+	<nav class="platformok" aria-label="Birodalom">
+		<a class="plat" href="https://github.com/Parthenon2-boop/birodalom/releases/latest" target="_blank" rel="noopener" title="ParthLauncher – GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7l-5 5 5 5"/><path d="M16 7l5 5-5 5"/><path d="M14 4l-4 16"/></svg>GitHub</a>
+		<a class="plat" href="https://www.facebook.com/profile.php?id=61594544291572" target="_blank" rel="noopener" title="ParthLauncher – Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h-2.5A3.5 3.5 0 0 0 9 6.5V21"/><path d="M6 10.5h8"/></svg>Facebook</a>
+	</nav>	ParthLauncher · Birodalom · Heptarchia · Kard és Mágia</div></footer>
+
+<script src="jatek_hirek.js"></script>
+<script>
+	const LANGS = { hu: "Magyar", en: "English", de: "Deutsch" };
+	const I18N = {
+		hu: {},
+		en: {
+			"nav.home": "Home", "nav.download": "Download", "nav.games": "Games", "nav.allgames": "All games", "nav.dlc": "Add-ons", "nav.account": "Account / sign in",
+			"lead": "Real-time strategy from 1400 to 1945. You start with a village in the late Middle Ages and, if you manage it well, lead your people all the way to the age of the world wars – from pikemen to bombers, from the battering ram to the fighter plane.",
+			"cta.win": "Download for Windows", "cta.mac": "Download for macOS",
+			"free": "Free · Windows and macOS · installed and updated by the ParthLauncher",
+			"macnote": "Mac: on first launch you have to allow it once under <i>Privacy &amp; Security</i> – <a href=\"./#mac\">how to do it</a>.",
+			"what.title": "What is it?",
+			"what.body": "A classic real-time strategy game: your workers cut wood, quarry stone, mine gold and grow food, and you turn all that into a town and an army while getting ready for your neighbour's attack. The real race is to the next age: whoever advances first gets better weapons, stronger buildings and new units.",
+			"age0.t": "15th century", "age0.b": "Late Middle Ages: pikemen, archers, cavalry, battering rams",
+			"age1.t": "17th century", "age1.b": "Early modern era: stronger armies, galleons at sea",
+			"age2.t": "19th century", "age2.b": "Industrial revolution: higher yields, stronger buildings",
+			"age3.t": "20th century", "age3.b": "The age of the world wars: airfields, fighters, bombers",
+			"f1.t": "Eleven nations", "f1.b": "Hungary, Austria, Germany, France, Great Britain, Spain, Poland and Russia – each with its own flag, ruler and architecture in every age – plus Nassau, Blackbeard and Stede Bonnet in the pirate world.",
+			"f2.t": "Ten landscapes", "f2.b": "Lowland, deep forest, barren land, desert, river country, lake district, highlands, salt steppe, island world and the Caribbean. Each spreads wood, stone and gold differently, so each calls for a different strategy.",
+			"f3.t": "The pirate world", "f3.b": "A larger, fixed Caribbean map with Cuba, Jamaica, Hispaniola and Tortuga. Sugar cane and rum, naval battles, and plunder that brings fame – but fame also brings the royal navy down on you.",
+			"f4.t": "Campaigns", "f4.b": "A historical mission series for every nation, eleven in all: each map has its own goal, age and enemy, and your progress is kept.",
+			"f5.t": "Multiplayer", "f5.b": "Play on one computer against up to nine bots, or over the network with friends – up to eight sides in a room. On the same wifi with a room code, from afar with port forwarding or through a relay server.",
+			"f6.t": "Tutorial and replays", "f6.b": "The tutorial walks you through the basics step by step. Matches can be saved as replays and watched again, and achievements (Warlord, Admiral, Pirate King…) keep track of how far you got.",
+			"more": "Meanwhile rain and snow fall, day turns to night, you can trade your surplus for gold at the market, give your army a formation (line, wedge, square), and your ships fire round shot, chain shot or grapeshot.",
+			"shots.title": "Screenshots", "s1": "A battle in the 15th century", "s2": "A medieval town, with training under way at the barracks",
+			"s3": "The age of the world wars", "s4": "A naval battle in the pirate world",
+			"news.title": "News and updates",
+			"faq.title": "Frequently asked questions",
+			"q1": "Is it really free?", "a1": "Yes, completely. There are no paid add-ons for Birodalom.",
+			"q2": "What does it run on?", "a2": "Windows and macOS (Intel and Apple Silicon). It does not need a powerful machine.",
+			"q3": "What languages?", "a3": "Hungarian, English and German.",
+			"q4": "How do I play with friends?", "a4": "One of you opens a room and the match runs on that computer; the others join with the address or room code it shows. On the same wifi this works right away; over the internet you need port forwarding on the router, a VPN or a relay.",
+			"q5": "How does it update?", "a5": "The ParthLauncher checks for a new version on start and downloads it with one click. Your saves are kept.",
+			"cta2": "Download the ParthLauncher", "cta2sub": "The launcher installs and updates Birodalom.",
+		},
+		de: {
+			"nav.home": "Startseite", "nav.download": "Download", "nav.games": "Spiele", "nav.allgames": "Alle Spiele", "nav.dlc": "Erweiterungen", "nav.account": "Konto / Anmelden",
+			"lead": "Echtzeitstrategie von 1400 bis 1945. Du beginnst mit einem Dorf im Spätmittelalter und führst dein Volk, wenn du gut wirtschaftest, bis ins Zeitalter der Weltkriege – vom Pikenier bis zum Bomber, vom Rammbock bis zum Jagdflugzeug.",
+			"cta.win": "Download für Windows", "cta.mac": "Download für macOS",
+			"free": "Kostenlos · Windows und macOS · vom ParthLauncher installiert und aktualisiert",
+			"macnote": "Mac: Beim ersten Start musst du es einmal unter <i>Datenschutz &amp; Sicherheit</i> erlauben – <a href=\"./#mac\">so geht es</a>.",
+			"what.title": "Worum geht es?",
+			"what.body": "Klassische Echtzeitstrategie: Deine Arbeiter fällen Holz, brechen Stein, schürfen Gold und bauen Nahrung an, und du machst daraus eine Stadt und ein Heer – immer mit Blick auf den Angriff des Nachbarn. Das eigentliche Rennen gilt dem nächsten Zeitalter: Wer zuerst aufsteigt, bekommt bessere Waffen, stärkere Gebäude und neue Einheiten.",
+			"age0.t": "15. Jahrhundert", "age0.b": "Spätmittelalter: Pikeniere, Bogenschützen, Reiter, Rammböcke",
+			"age1.t": "17. Jahrhundert", "age1.b": "Frühe Neuzeit: stärkere Heere, Galeonen auf See",
+			"age2.t": "19. Jahrhundert", "age2.b": "Industrielle Revolution: höhere Erträge, stärkere Gebäude",
+			"age3.t": "20. Jahrhundert", "age3.b": "Das Zeitalter der Weltkriege: Flugplätze, Jäger, Bomber",
+			"f1.t": "Elf Nationen", "f1.b": "Ungarn, Österreich, Deutschland, Frankreich, Großbritannien, Spanien, Polen und Russland – in jedem Zeitalter mit eigener Flagge, eigenem Herrscher und eigener Architektur – dazu in der Piratenwelt Nassau, Blackbeard und Stede Bonnet.",
+			"f2.t": "Zehn Landschaften", "f2.b": "Tiefebene, Urwald, karges Land, Wüste, Flussland, Seenplatte, Bergland, Salzsteppe, Inselwelt und die Karibik. Jede verteilt Holz, Stein und Gold anders und verlangt eine andere Strategie.",
+			"f3.t": "Die Piratenwelt", "f3.b": "Eine größere, feste Karibikkarte mit Kuba, Jamaika, Hispaniola und Tortuga. Zuckerrohr und Rum, Seeschlachten und Beute, die Ruhm bringt – doch der Ruhm hetzt dir auch die königliche Flotte auf den Hals.",
+			"f4.t": "Feldzüge", "f4.b": "Für jede Nation eine historische Missionsreihe, elf insgesamt: Jede Karte hat ihr eigenes Ziel, Zeitalter und ihren eigenen Gegner, und dein Fortschritt bleibt erhalten.",
+			"f5.t": "Mehrspieler", "f5.b": "Auf einem Rechner gegen bis zu neun Bots oder im Netzwerk mit Freunden – bis zu acht Parteien in einem Raum. Im selben WLAN per Raumcode, aus der Ferne per Portweiterleitung oder über einen Relay-Server.",
+			"f6.t": "Tutorial und Wiederholungen", "f6.b": "Das Tutorial zeigt die Grundlagen Schritt für Schritt. Partien lassen sich als Wiederholung speichern und noch einmal ansehen, und Erfolge (Feldherr, Admiral, Piratenkönig…) halten fest, wie weit du gekommen bist.",
+			"more": "Dabei fallen Regen und Schnee, Tag und Nacht wechseln sich ab, auf dem Markt tauschst du Überschüsse gegen Gold, dein Heer bekommt eine Formation (Linie, Keil, Karree), und deine Schiffe feuern Vollkugeln, Kettenkugeln oder Kartätschen.",
+			"shots.title": "Bilder", "s1": "Eine Schlacht im 15. Jahrhundert", "s2": "Eine mittelalterliche Stadt, in der Kaserne wird ausgebildet",
+			"s3": "Das Zeitalter der Weltkriege", "s4": "Eine Seeschlacht in der Piratenwelt",
+			"news.title": "Neuigkeiten und Updates",
+			"faq.title": "Häufige Fragen",
+			"q1": "Ist es wirklich kostenlos?", "a1": "Ja, vollständig. Für Birodalom gibt es keine kostenpflichtigen Erweiterungen.",
+			"q2": "Auf welchen Rechnern läuft es?", "a2": "Windows und macOS (Intel und Apple Silicon). Es braucht keinen starken Rechner.",
+			"q3": "Welche Sprachen?", "a3": "Ungarisch, Englisch und Deutsch.",
+			"q4": "Wie spiele ich mit Freunden?", "a4": "Einer von euch eröffnet einen Raum, die Partie läuft auf seinem Rechner; die anderen treten mit der angezeigten Adresse oder dem Raumcode bei. Im selben WLAN klappt das sofort, übers Internet braucht es eine Portweiterleitung am Router, ein VPN oder ein Relay.",
+			"q5": "Wie wird es aktualisiert?", "a5": "Der ParthLauncher prüft beim Start auf eine neue Version und lädt sie mit einem Klick herunter. Deine Spielstände bleiben erhalten.",
+			"cta2": "ParthLauncher herunterladen", "cta2sub": "Der Launcher installiert und aktualisiert Birodalom.",
+		},
+	};
+	const META = {
+		hu: ["Birodalom – valós idejű stratégia 1400-tól 1945-ig | ingyenes játék", "Birodalom: ingyenes valós idejű stratégia 1400-tól 1945-ig. Négy korszak, tizenegy nemzet, tíz tájtípus, kalózvilág, hadjáratok és többjátékos mód."],
+		en: ["Birodalom – real-time strategy from 1400 to 1945 | free game", "Birodalom: a free real-time strategy game from 1400 to 1945. Four ages, eleven nations, ten landscapes, a pirate world, campaigns and multiplayer."],
+		de: ["Birodalom – Echtzeitstrategie von 1400 bis 1945 | kostenloses Spiel", "Birodalom: kostenlose Echtzeitstrategie von 1400 bis 1945. Vier Zeitalter, elf Nationen, zehn Landschaften, Piratenwelt, Feldzüge und Mehrspieler."],
+	};
+	let lang = "hu";
+	try { lang = localStorage.getItem("parth_lang") || ""; } catch (e) { lang = ""; }
+	const urlLang = new URLSearchParams(location.search).get("lang");
+	if (LANGS[urlLang]) lang = urlLang;
+	if (!LANGS[lang]) { const n = (navigator.language || "hu").slice(0, 2).toLowerCase(); lang = LANGS[n] ? n : "en"; }
+	const HU_TEXT = new Map();
+	document.querySelectorAll("[data-i18n]").forEach(el => HU_TEXT.set(el, el.innerHTML));
+	function applyLang() {
+		document.documentElement.lang = lang;
+		document.title = META[lang][0];
+		const md = document.querySelector('meta[name="description"]');
+		if (md) md.setAttribute("content", META[lang][1]);
+		document.querySelectorAll("[data-i18n]").forEach(el => {
+			const v = lang === "hu" ? HU_TEXT.get(el) : (I18N[lang] || {})[el.dataset.i18n];
+			if (v != null) el.innerHTML = v;
+		});
+		document.querySelectorAll("#langs button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
+		try { localStorage.setItem("parth_lang", lang); } catch (e) {}
+		if (window.jatekHirek) jatekHirek(document.getElementById("jatek-hirek"), "birodalom", lang);
+	}
+	document.getElementById("langs").innerHTML = Object.keys(LANGS)
+		.map(k => `<button type="button" data-lang="${k}" title="${LANGS[k]}">${k.toUpperCase()}</button>`).join("");
+	document.querySelectorAll("#langs button").forEach(b => b.onclick = () => { lang = b.dataset.lang; applyLang(); });
+	applyLang();
+
+	// képnagyító
+	const lb = document.getElementById("lightbox");
+	document.addEventListener("click", e => {
+		const b = e.target.closest(".shot");
+		if (!b || !lb.showModal) return;
+		const img = lb.querySelector("img");
+		img.src = b.dataset.full; img.alt = b.querySelector("img").alt;
+		lb.showModal();
+	});
+	lb.onclick = e => { if (e.target === lb || e.target.classList.contains("close")) lb.close(); };
+</script>
+<script type="application/ld+json">
+{
+	"@context": "https://schema.org",
+	"@type": "VideoGame",
+	"name": "Birodalom",
+	"description": "Valós idejű stratégia 1400-tól 1945-ig: négy korszak, tizenegy nemzet, tíz tájtípus, karibi kalózvilág, történelmi hadjáratok és hálózati többjátékos mód.",
+	"genre": ["Strategy", "Real-time strategy"],
+	"gamePlatform": ["PC", "Windows", "macOS"],
+	"operatingSystem": "Windows, macOS",
+	"inLanguage": ["hu", "en", "de"],
+	"playMode": ["SinglePlayer", "MultiPlayer"],
+	"applicationCategory": "Game",
+	"image": "https://parthenon2-boop.github.io/birodalom/kepek/bir_csata.jpg",
+	"url": "https://parthenon2-boop.github.io/birodalom/birodalom.html",
+	"downloadUrl": "https://github.com/Parthenon2-boop/birodalom/releases/latest",
+	"offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" }
+}
+</script>
+<script>
+// Ha a látogató be van lépve (a fiók oldal munkamenete a localStorage-ban), a menüben a neve látszik a „Fiók / belépés” helyett.
+(() => {
+	try {
+		const s = JSON.parse(localStorage.getItem("sb-gxvepswtairfqvosdcpb-auth-token") || "null");
+		const u = s && s.refresh_token && s.user;
+		if (!u) return;
+		const nev = (u.user_metadata && u.user_metadata.username) || String(u.email || "").split("@")[0];
+		if (!nev) return;
+		document.querySelectorAll('a[href="fiok.html"][data-i18n]').forEach(a => {
+			a.removeAttribute("data-i18n");
+			a.textContent = "👤 " + nev;
+			a.title = u.email || nev;
+		});
+	} catch (e) { /* nincs tároló (privát ablak) – marad a „Fiók / belépés” */ }
+})();
+</script><script src="kileptetes.js?v=2"></script>
+<script>
+// Játékok lenyíló menü: kattintásra nyílik; kívülre kattintva, Esc-re vagy egy pontot választva bezárul
+(() => {
+	const d = document.querySelector("details.lenyilo");
+	if (!d) return;
+	document.addEventListener("click", e => { if (d.open && !d.contains(e.target)) d.open = false; });
+	document.addEventListener("keydown", e => { if (e.key === "Escape") d.open = false; });
+	d.querySelectorAll("a").forEach(a => a.addEventListener("click", () => { d.open = false; }));
+})();
+</script></body>
+</html>

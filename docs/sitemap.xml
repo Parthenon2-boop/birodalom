@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 	<url>
 		<loc>https://parthenon2-boop.github.io/birodalom/</loc>
-		<lastmod>2026-09-25</lastmod>
+		<lastmod>2026-09-26</lastmod>
 		<xhtml:link rel="alternate" hreflang="hu" href="https://parthenon2-boop.github.io/birodalom/?lang=hu"/>
 		<xhtml:link rel="alternate" hreflang="en" href="https://parthenon2-boop.github.io/birodalom/?lang=en"/>
 		<xhtml:link rel="alternate" hreflang="de" href="https://parthenon2-boop.github.io/birodalom/?lang=de"/>
@@ -13,10 +13,30 @@
 	<url><loc>https://parthenon2-boop.github.io/birodalom/fiok.html</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
 	<url>
 		<loc>https://parthenon2-boop.github.io/birodalom/heptarchia.html</loc>
-		<lastmod>2026-09-25</lastmod>
+		<lastmod>2026-09-26</lastmod>
 		<xhtml:link rel="alternate" hreflang="hu" href="https://parthenon2-boop.github.io/birodalom/heptarchia.html?lang=hu"/>
 		<xhtml:link rel="alternate" hreflang="en" href="https://parthenon2-boop.github.io/birodalom/heptarchia.html?lang=en"/>
 		<xhtml:link rel="alternate" hreflang="de" href="https://parthenon2-boop.github.io/birodalom/heptarchia.html?lang=de"/>
+		<changefreq>weekly</changefreq>
+		<priority>0.9</priority>
+	</url>
+	<url>
+		<loc>https://parthenon2-boop.github.io/birodalom/birodalom.html</loc>
+		<lastmod>2026-09-26</lastmod>
+		<xhtml:link rel="alternate" hreflang="hu" href="https://parthenon2-boop.github.io/birodalom/birodalom.html?lang=hu"/>
+		<xhtml:link rel="alternate" hreflang="en" href="https://parthenon2-boop.github.io/birodalom/birodalom.html?lang=en"/>
+		<xhtml:link rel="alternate" hreflang="de" href="https://parthenon2-boop.github.io/birodalom/birodalom.html?lang=de"/>
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://parthenon2-boop.github.io/birodalom/birodalom.html"/>
+		<changefreq>weekly</changefreq>
+		<priority>0.9</priority>
+	</url>
+	<url>
+		<loc>https://parthenon2-boop.github.io/birodalom/kard-es-magia.html</loc>
+		<lastmod>2026-09-26</lastmod>
+		<xhtml:link rel="alternate" hreflang="hu" href="https://parthenon2-boop.github.io/birodalom/kard-es-magia.html?lang=hu"/>
+		<xhtml:link rel="alternate" hreflang="en" href="https://parthenon2-boop.github.io/birodalom/kard-es-magia.html?lang=en"/>
+		<xhtml:link rel="alternate" hreflang="de" href="https://parthenon2-boop.github.io/birodalom/kard-es-magia.html?lang=de"/>
+		<xhtml:link rel="alternate" hreflang="x-default" href="https://parthenon2-boop.github.io/birodalom/kard-es-magia.html"/>
 		<changefreq>weekly</changefreq>
 		<priority>0.9</priority>
 	</url>
