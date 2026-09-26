@@ -53,7 +53,16 @@
 	.tabs button[aria-selected="true"] { color: var(--gold-2); border-bottom-color: var(--gold); background: rgba(217,164,65,.07); }
 	.pane { padding: 16px; }
 	.bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
-	.bar input { flex: 1 1 220px; width: auto; }
+	.bar input { flex: 1 1 220px; width: auto; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; padding: 8px 2px; }
+	.bar input:focus { outline: none; border-bottom-color: var(--gold); }
+	.tag.warn { color: var(--err); border-color: rgba(176,56,42,.6); }
+	.acts { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
+	button.ico { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; border: 1px solid var(--line); background: transparent; color: var(--gold-2); }
+	button.ico:hover { border-color: var(--gold); background: rgba(217,164,65,.08); }
+	button.ico.del { color: var(--err); border-color: rgba(176,56,42,.55); }
+	button.ico.del:hover { background: rgba(176,56,42,.15); border-color: var(--err); }
+	button.ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+	#act { width: min(460px, calc(100vw - 32px)); }
 	.scroll { overflow-x: auto; }
 	table { width: 100%; border-collapse: collapse; font-size: 15px; }
 	th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid rgba(107,79,42,.55); vertical-align: top; }
@@ -190,6 +199,21 @@
 	</div>
 </dialog>
 
+<!-- ── felfüggesztés / aktiválás / törlés megerősítése ── -->
+<dialog id="act">
+	<div class="dlg-head"><h2 id="actTitle" style="margin:0"></h2></div>
+	<form class="dlg-body" id="actForm" novalidate style="gap:12px">
+		<p class="hint" id="actInfo"></p>
+		<label>Indoklás (a naplóba kerül)<input type="text" name="note" maxlength="300" autocomplete="off"></label>
+		<label id="actConfirmL">Végleges törléshez írd be: <b>TÖRLÉS</b><input type="text" name="confirm" maxlength="10" autocomplete="off"></label>
+		<p class="msg" id="actMsg" role="status"></p>
+		<div style="display:flex; gap:10px; justify-content:flex-end">
+			<button class="ghost" type="button" id="actCancel">Mégse</button>
+			<button class="main" type="submit" id="actOk">OK</button>
+		</div>
+	</form>
+</dialog>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 "use strict";
@@ -218,6 +242,16 @@
 		db_error: "Adatbázis-hiba.",
 		server_error: "Szerverhiba. Próbáld újra később.",
 		net: "Nem sikerült elérni a szervert. Van internet?",
+		sajat_fiok: "A saját fiókodat nem függesztheted fel és nem törölheted.",
+		admin_fiok: "Admin fiókot nem lehet felfüggeszteni vagy törölni.",
+		rossz_megerosites: "A törléshez írd be pontosan: TÖRLÉS",
+	};
+	// ikonok (a szöveg helyett a gombokon; a jelentésük a súgóban / felolvasónak)
+	const svg = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+	const IKON = {
+		zart: svg('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'),
+		nyitott: svg('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>'),
+		kuka: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
 	};
 	const errText = e => ERR[e && e.error] || ERR[e && e.message] || (e && (e.message || e.error)) || "Nem sikerült.";
 
@@ -276,13 +310,19 @@
 			acc.total = d.total; acc.size = d.page_size; acc.rows = d.rows;
 			$("stFound").textContent = d.total;
 			$("accRows").innerHTML = d.rows.length ? d.rows.map(r => `<tr>
-				<td>${r.username ? esc(r.username) : '<span class="dim">(nincs név)</span>'}</td>
+				<td>${r.username ? esc(r.username) : '<span class="dim">(nincs név)</span>'}${r.suspended ? ' <span class="tag warn">felfüggesztve</span>' : ""}</td>
 				<td class="dim">${esc(r.email)}${r.confirmed ? "" : ' <span class="tag off" title="nincs megerősítve">nem megerősített</span>'}</td>
 				<td>${fmtDate(r.created_at)}</td>
 				<td>${fmtDate(r.last_sign_in_at)}</td>
 				<td class="num">${esc(r.coins)}</td>
 				<td>${(r.dlcs || []).map(k => `<span class="tag">${esc(dlcName(k))}</span>`).join("") || '<span class="dim">–</span>'}</td>
-				<td><button class="ghost" type="button" data-open="${esc(r.id)}">Kezelés</button></td>
+				<td><div class="acts">
+					<button class="ghost" type="button" data-open="${esc(r.id)}">Kezelés</button>
+					${r.suspended
+						? `<button class="ico" type="button" data-act="felold" data-id="${esc(r.id)}" title="Aktiválás" aria-label="Aktiválás">${IKON.nyitott}</button>`
+						: `<button class="ico" type="button" data-act="felfuggeszt" data-id="${esc(r.id)}" title="Felfüggesztés" aria-label="Felfüggesztés">${IKON.zart}</button>`}
+					<button class="ico del" type="button" data-act="torles" data-id="${esc(r.id)}" title="Törlés" aria-label="Törlés">${IKON.kuka}</button>
+				</div></td>
 			</tr>`).join("") : '<tr><td colspan="7" class="dim">Nincs találat.</td></tr>';
 			const pages = Math.max(1, Math.ceil(acc.total / acc.size));
 			$("accPage").textContent = `${acc.page + 1}. / ${pages} oldal`;
@@ -296,7 +336,45 @@
 	$("accNext").onclick = () => { acc.page++; loadAccounts(); };
 	$("accRows").onclick = e => {
 		const b = e.target.closest("button[data-open]");
-		if (b) openUser(acc.rows.find(r => r.id === b.dataset.open));
+		if (b) return openUser(acc.rows.find(r => r.id === b.dataset.open));
+		const a = e.target.closest("button[data-act]");
+		if (a) openAct(a.dataset.act, acc.rows.find(r => r.id === a.dataset.id));
+	};
+
+	// ── felfüggesztés / aktiválás / törlés ──
+	const act = { kind: "", row: null };
+	const ACT_TXT = {
+		felfuggeszt: { t: "Felfüggesztés", i: "A fiókkal nem lehet belépni, sem kiegészítőt letölteni, amíg nem aktiválod. Minden adata megmarad.", ok: "Felfüggesztés" },
+		felold: { t: "Aktiválás", i: "A fiók újra használható lesz.", ok: "Aktiválás" },
+		torles: { t: "Fiók törlése", i: "VÉGLEGES: a fiók, a fióknév, az érmék és a kiegészítők (a vásárlások is) megszűnnek. Nem vonható vissza.", ok: "Törlés" },
+	};
+	function openAct(kind, row) {
+		if (!row) return;
+		act.kind = kind; act.row = row;
+		const t = ACT_TXT[kind];
+		$("actTitle").textContent = t.t + ": " + (row.username || row.email);
+		$("actInfo").textContent = t.i;
+		$("actForm").reset(); say($("actMsg"), "");
+		$("actConfirmL").hidden = kind !== "torles";
+		$("actOk").textContent = t.ok;
+		$("actOk").className = kind === "torles" ? "danger" : "main";
+		$("act").showModal();
+	}
+	$("actCancel").onclick = () => $("act").close();
+	$("actForm").onsubmit = async e => {
+		e.preventDefault();
+		const f = e.target, note = f.note.value.trim(), btn = $("actOk");
+		if (act.kind !== "felold" && note.length < 3) return say($("actMsg"), ERR.kell_indoklas);
+		if (act.kind === "torles" && !["TÖRLÉS", "TORLES"].includes(f.confirm.value.trim().toUpperCase())) return say($("actMsg"), ERR.rossz_megerosites);
+		btn.disabled = true;
+		try {
+			if (act.kind === "torles") await call("delete", { id: act.row.id, confirm: f.confirm.value.trim(), note });
+			else await call("suspend", { id: act.row.id, on: act.kind === "felfuggeszt", note });
+			$("act").close();
+			const kesz = act.kind === "torles" ? "Fiók törölve." : act.kind === "felold" ? "Fiók aktiválva." : "Fiók felfüggesztve.";
+			loadAccounts().then(() => say($("accMsg"), kesz, true));
+		} catch (err) { say($("actMsg"), errText(err)); }
+		finally { btn.disabled = false; }
 	};
 
 	// fülek
@@ -308,10 +386,18 @@
 	});
 
 	// ── napló ──
-	const ACTION = { dlc_ad: "kiegészítő adása", dlc_elvesz: "kiegészítő visszavonása", erme: "érme" };
+	const ACTION = { dlc_ad: "kiegészítő adása", dlc_elvesz: "kiegészítő visszavonása", erme: "érme",
+		felfuggeszt: "felfüggesztés", felold: "aktiválás", torles: "fiók törlése" };
 	function logDetails(r) {
 		const d = r.details || {};
 		const parts = [];
+		if (r.action === "torles") {
+			if (d.email) parts.push(d.email);
+			if (d.dlc && d.dlc.length) parts.push("kiegészítők: " + d.dlc.map(dlcName).join(", "));
+			if (d.erme) parts.push(d.erme + " érme");
+			if (d.megjegyzes) parts.push("„" + d.megjegyzes + "”");
+			return esc(parts.join(" · "));
+		}
 		if (d.dlc) parts.push(dlcName(d.dlc));
 		if (d.osszeg != null) parts.push((d.osszeg > 0 ? "+" : "") + d.osszeg + " érme (" + d.elotte + " → " + d.utana + ")");
 		if (d.megjegyzes) parts.push("„" + d.megjegyzes + "”");

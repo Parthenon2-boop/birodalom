@@ -73,6 +73,8 @@ Deno.serve(async (req: Request) => {
 	if (!res.ok) {
 		const msg = String(data?.msg ?? data?.error_description ?? "").toLowerCase();
 		if (msg.includes("confirm")) return json({ error: "nincs_megerositve" }, 400);
+		// az admin felfüggesztette (Supabase „ban”) – ezt megmondhatjuk, a jelszó ugyanis jó volt
+		if (msg.includes("banned") || String(data?.error_code ?? "") === "user_banned") return json({ error: "felfuggesztve" }, 403);
 		return json({ error: "rossz_belepes" }, 400);
 	}
 	return json(data, 200);

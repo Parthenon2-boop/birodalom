@@ -78,6 +78,8 @@ Deno.serve(async (req: Request) => {
 	const { data: u } = await db.auth.getUser(auth.replace(/^Bearer\s+/i, ""));
 	const user = u?.user;
 	if (!user) return json({ error: "not_logged_in" }, 401);
+	// felfüggesztett fiók (admin) nem tölthet le és nem kap igazolást
+	if (user.banned_until && new Date(user.banned_until).getTime() > Date.now()) return json({ error: "felfuggesztve" }, 403);
 
 	let body: { game?: string; machine?: string; download?: string };
 	try { body = await req.json(); } catch { return json({ error: "bad_request" }, 400); }

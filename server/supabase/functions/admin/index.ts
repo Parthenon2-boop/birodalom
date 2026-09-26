@@ -8,6 +8,8 @@
 //   user     { id }                       – egy fiók részletei: jogosultság-sorok, érmetörténet
 //   dlc      { id, dlc, grant, note? }    – kiegészítő adása (grant=true) / visszavonása (false)
 //   coins    { id, amount, note }         – érme jóváírása (+) / levonása (−); indoklás kötelező
+//   suspend  { id, on, note }             – fiók felfüggesztése (on=true, indoklás kötelező) / feloldása
+//   delete   { id, confirm:"TÖRLÉS", note } – fiók végleges törlése (kiegészítőkkel, érmékkel együtt)
 //   log      { page? }                    – az admin-napló (50/oldal)
 // Mindegyikhez a fiók tokenje kell (Authorization: Bearer <access_token>), és a fióknak benne kell
 // lennie a public.admins táblában (lásd schema_admin.sql). Minden módosítás naplózódik (public.admin_log).
@@ -91,14 +93,52 @@ async function accountsPage(db: SupabaseClient, search: string, page: number) {
 	});
 	if (error) throw new Error(error.message);
 	const rows = (data ?? []) as Record<string, unknown>[];
+	const tiltva = await felfuggesztettek(db);
 	return {
 		total: rows.length ? Number(rows[0].total) : 0,
 		rows: rows.map((r) => ({
 			id: r.user_id, username: r.username ?? null, email: maskEmail(String(r.email ?? "")),
 			created_at: r.created_at, last_sign_in_at: r.last_sign_in_at, confirmed: r.confirmed,
-			coins: r.coins, dlcs: r.dlcs ?? [],
+			coins: r.coins, dlcs: r.dlcs ?? [], suspended: tiltva.has(String(r.user_id)),
 		})),
 	};
+}
+
+// felfüggesztés = a Supabase „ban” (nem tud belépni, a munkamenete sem frissül); ~100 év, feloldás: "none"
+const FELFUGG_IDO = "876000h";
+const felfuggesztve = (u: { banned_until?: string | null }) =>
+	!!u.banned_until && new Date(u.banned_until).getTime() > Date.now();
+
+// a felfüggesztett fiókok azonosítói (a fióklistához; kevés fiók van, 1000-esével lapozunk)
+async function felfuggesztettek(db: SupabaseClient): Promise<Set<string>> {
+	const ki = new Set<string>();
+	for (let page = 1; page <= 20; page++) {
+		const { data, error } = await db.auth.admin.listUsers({ page, perPage: 1000 });
+		if (error || !data) break;
+		for (const u of data.users) if (felfuggesztve(u)) ki.add(u.id);
+		if (data.users.length < 1000) break;
+	}
+	return ki;
+}
+
+async function naplo(db: SupabaseClient, admin: Admin, action: string, targetId: string | null, targetName: string,
+	details: Record<string, unknown>) {
+	await db.from("admin_log").insert({
+		admin_id: admin.id, admin_name: admin.name, action, target_id: targetId, target_name: targetName, details,
+	});
+}
+
+// a célfiók adatai + védelem: saját magát és másik admint nem lehet felfüggeszteni / törölni
+async function celFiok(db: SupabaseClient, admin: Admin, id: string) {
+	if (!UUID_RE.test(id)) return { hiba: "bad_request" as const };
+	if (id === admin.id) return { hiba: "sajat_fiok" as const };
+	const { data: adm } = await db.from("admins").select("user_id").eq("user_id", id).maybeSingle();
+	if (adm) return { hiba: "admin_fiok" as const };
+	const { data: u } = await db.auth.admin.getUserById(id);
+	if (!u?.user) return { hiba: "nincs_fiok" as const };
+	const { data: prof } = await db.from("profiles").select("username").eq("user_id", id).maybeSingle();
+	const email = String(u.user.email ?? "").toLowerCase();
+	return { user: u.user, email, name: String(prof?.username ?? maskEmail(email)) };
 }
 
 async function handle(db: SupabaseClient, admin: Admin, action: string, body: Body): Promise<[unknown, number]> {
@@ -134,7 +174,7 @@ async function handle(db: SupabaseClient, admin: Admin, action: string, body: Bo
 				q("entitlements", "dlc_key, source, revoked, created_at"),
 				q("coin_tx", "amount, reason, item_key, created_at"),
 			]);
-			return [{ entitlements: ent, coin_tx: tx }, 200];
+			return [{ entitlements: ent, coin_tx: tx, suspended: felfuggesztve(u.user) }, 200];
 		}
 		case "dlc": {
 			const id = String(body.id ?? "");
@@ -164,6 +204,52 @@ async function handle(db: SupabaseClient, admin: Admin, action: string, body: Bo
 			const row = Array.isArray(data) ? data[0] : data;
 			if (!row?.ok) return [{ error: row?.hiba || "hiba", coins: row?.coins ?? null }, 400];
 			return [{ ok: true, coins: row.coins }, 200];
+		}
+		case "suspend": {
+			// { id, on: true = felfüggeszt, false = felold, note }
+			if (typeof body.on !== "boolean") return [{ error: "bad_request" }, 400];
+			const note = String(body.note ?? "").trim().slice(0, 300);
+			if (body.on && note.length < 3) return [{ error: "kell_indoklas" }, 400];
+			const c = await celFiok(db, admin, String(body.id ?? ""));
+			if ("hiba" in c) return [{ error: c.hiba }, c.hiba === "nincs_fiok" ? 404 : 400];
+			const { error } = await db.auth.admin.updateUserById(c.user.id, { ban_duration: body.on ? FELFUGG_IDO : "none" });
+			if (error) return [{ error: "db_error", message: error.message }, 500];
+			await naplo(db, admin, body.on ? "felfuggeszt" : "felold", c.user.id, c.name, { megjegyzes: note });
+			return [{ ok: true, suspended: body.on }, 200];
+		}
+		case "delete": {
+			// { id, confirm: "TÖRLÉS", note } – végleges: a fiók, a fióknév, az érmék,
+			// a kozmetikumok és a kiegészítők (a vásárlások is) törlődnek; a naplóban megmarad egy összegzés
+			const note = String(body.note ?? "").trim().slice(0, 300);
+			if (note.length < 3) return [{ error: "kell_indoklas" }, 400];
+			const c = await celFiok(db, admin, String(body.id ?? ""));
+			if ("hiba" in c) return [{ error: c.hiba }, c.hiba === "nincs_fiok" ? 404 : 400];
+			const megerosit = String(body.confirm ?? "").trim().toUpperCase();
+			if (megerosit !== "TÖRLÉS" && megerosit !== "TORLES") return [{ error: "rossz_megerosites" }, 400];
+
+			const [ent, tx] = await Promise.all([
+				db.from("entitlements").select("dlc_key").eq("revoked", false).or(`user_id.eq.${c.user.id},email.eq."${c.email}"`),
+				db.from("coin_tx").select("amount").or(`user_id.eq.${c.user.id},email.eq."${c.email}"`),
+			]);
+			const osszegzes = {
+				megjegyzes: note,
+				fiok_id: c.user.id,
+				email: maskEmail(c.email),
+				regisztralt: c.user.created_at,
+				dlc: [...new Set(((ent.data ?? []) as { dlc_key: string }[]).map((e) => e.dlc_key))].sort(),
+				erme: ((tx.data ?? []) as { amount: number }[]).reduce((s, t) => s + Number(t.amount), 0),
+			};
+
+			const { error } = await db.auth.admin.deleteUser(c.user.id);
+			if (error) return [{ error: "db_error", message: error.message }, 500];
+			// a fiókhoz kötött sorok (profil, érme, kozmetikum) a törléssel együtt mennek; az e-mail-címmel
+			// jóváírt vásárlások külön, hogy ugyanazzal a címmel újraregisztrálva se jöjjenek vissza
+			await Promise.all([
+				db.from("entitlements").delete().eq("email", c.email),
+				db.from("coin_tx").delete().is("user_id", null).eq("email", c.email),
+			]);
+			await naplo(db, admin, "torles", null, c.name, osszegzes);
+			return [{ ok: true }, 200];
 		}
 		case "log": {
 			const page = Math.max(0, Math.floor(Number(body.page ?? 0)) || 0);

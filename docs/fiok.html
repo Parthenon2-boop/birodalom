@@ -200,6 +200,7 @@
 			"m.expired": "This link has expired or was already used. Please request a new e-mail.",
 			"m.login": "Enter your account name (or e-mail address) and password.",
 			"m.badlogin": "Wrong account name / e-mail address or password.",
+			"m.banned": "This account has been suspended. If you think this is a mistake, write to us via Support.",
 			"m.unconfirmed": "This account is not confirmed yet. Click the button in the confirmation e-mail first.",
 			"m.usenamefail": "Signing in with the account name did not work just now. Try your e-mail address instead.",
 			"m.loadfail": "Could not load all of your account data. Please try again later.",
@@ -240,6 +241,7 @@
 			"m.expired": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Fordere bitte eine neue E-Mail an.",
 			"m.login": "Gib deinen Kontonamen (oder deine E-Mail-Adresse) und dein Passwort ein.",
 			"m.badlogin": "Falscher Kontoname / falsche E-Mail-Adresse oder falsches Passwort.",
+			"m.banned": "Dieses Konto wurde gesperrt. Wenn du das für einen Irrtum hältst, schreib uns über den Support.",
 			"m.unconfirmed": "Dieses Konto ist noch nicht bestätigt. Klicke zuerst auf die Schaltfläche in der Bestätigungsmail.",
 			"m.usenamefail": "Die Anmeldung mit dem Kontonamen hat gerade nicht geklappt. Versuche es mit deiner E-Mail-Adresse.",
 			"m.loadfail": "Nicht alle Kontodaten konnten geladen werden. Bitte versuche es später erneut.",
@@ -268,6 +270,7 @@
 		"m.expired": "A link lejárt vagy már felhasználták. Kérj új levelet.",
 		"m.login": "Add meg a fióknevedet (vagy e-mail-címedet) és a jelszavadat.",
 		"m.badlogin": "Hibás fióknév / e-mail-cím vagy jelszó.",
+		"m.banned": "Ezt a fiókot felfüggesztettük. Ha szerinted tévedés, írj nekünk a Támogatás oldalon.",
 		"m.unconfirmed": "Ez a fiók még nincs megerősítve. Előbb kattints a megerősítő levélben lévő gombra.",
 		"m.usenamefail": "A fióknévvel most nem sikerült belépni. Próbáld az e-mail-címeddel.",
 		"m.loadfail": "Nem sikerült betölteni minden adatot a fiókodról. Próbáld újra később.",
@@ -343,6 +346,7 @@
 				if (error) {
 					const m = String(error.message).toLowerCase();
 					if (m.includes("confirm")) return say(f, T("m.unconfirmed"));
+					if (m.includes("banned")) return say(f, T("m.banned"));
 					if (m.includes("invalid")) return say(f, T("m.badlogin"));
 					return say(f, friendly(error));
 				}
@@ -356,6 +360,7 @@
 				} catch (err) { return say(f, T("m.usenamefail")); }
 				if (!r.ok || !d.access_token) {
 					if (d.error === "nincs_megerositve") return say(f, T("m.unconfirmed"));
+					if (d.error === "felfuggesztve") return say(f, T("m.banned"));
 					if (d.error === "rossz_belepes") return say(f, T("m.badlogin"));
 					return say(f, T("m.usenamefail"));
 				}

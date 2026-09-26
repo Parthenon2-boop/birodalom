@@ -135,7 +135,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 42
+const LAUNCHER_BUILD := 43
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1726,6 +1726,8 @@ func _acc_login_fut(signup: bool) -> void:
 		var msg := str(data.get("msg", data.get("error_description", data.get("message", ""))))
 		if hiba == "nincs_megerositve" or msg.to_lower().contains("confirm"):
 			acc_status.text = "Előbb erősítsd meg az e-mail-címedet (nézd meg a leveleidet – a Spam / Levélszemét mappát is)."
+		elif hiba == "felfuggesztve" or msg.to_lower().contains("banned"):
+			acc_status.text = "Ezt a fiókot felfüggesztettük. Ha szerinted tévedés, írj nekünk a honlapon."
 		elif msg.to_lower().contains("already"):
 			acc_status.text = "Ezzel az e-mail-címmel már van fiók – lépj be (lent: „Van már fiókom – belépés”)."
 		elif msg.to_lower().contains("duplicate") or msg.to_lower().contains("profiles"):
