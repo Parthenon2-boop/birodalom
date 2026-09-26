@@ -1,6 +1,18 @@
 [
 	{
 		"datum": "2026-09-25",
+		"cim": "A nap frissítései: Heptarchia 1.67, Launcher 41",
+		"cimke": "Frissítés",
+		"szoveg": "▸ Heptarchia 1.67 – 1066 és a korhű nevek\n1066 úgy történik, mint a valóságban: ha Angliát a gép irányítja, Stamford Bridge-nél elesik Harald Hardrada, Hastingsnél győz Vilmos, és az angol földekből Normann Anglia lesz. Ha te vezeted az angolokat, mindkét invázió eljön, Harald a csatában mindenképp elesik, de Hastingsnél a te sereged dönt. A népek a saját korukban használt nevükön szerepelnek: 790-ben Frank Királyság, Norvég kiskirályságok, Dál Riata, Walesi királyságok, később Karoling Birodalom, Magyar Fejedelemség, Magyar Királyság, Német-római Birodalom és a többi; Novgorod, Prága, Hamburg vagy Turku is csak az alapítása után jelenik meg. Javítások: a csatajelentés és a támadás ablaka minden képernyőn kifér, és Enterrel vagy Esc-kel is bezárható (rajtaütés után nem ragad be a játék); a jobb oldali panel nem takarja el a Menü gombot; a hűbéressel kötött házasság nem szünteti meg a hűbérséget; a stabilitás nem mehet 100 fölé; Róma mentése pontos.\n\n▸ Launcher 41 – kis képernyőn is kifér\nA launcher ablaka kisebb (pl. 1024×768-as) képernyőn arányosan kisebb lesz, hogy kiférjen. A fiókablak hosszú üzenetnél sem lóg le a képernyőről, szerverhibánál nem írja, hogy rossz a jelszó, és a gyors dupla kattintás nem küldi el kétszer a belépést. Régebbi változatot nem ajánl fel frissítésként.",
+		"cim_en": "Today's updates: Heptarchia 1.67, Launcher 41",
+		"szoveg_en": "▸ Heptarchia 1.67 – 1066 and period names\n1066 happens as it did: if England is run by the computer, Harald Hardrada falls at Stamford Bridge, William wins at Hastings and the English lands become Norman England. If you lead the English, both invasions come and Harald always falls in battle, but at Hastings your army decides. Peoples now carry the names of their own era: in 790 the Kingdom of the Franks, the Norwegian petty kingdoms, Dál Riata and the Welsh kingdoms, later the Carolingian Empire, the Principality and Kingdom of Hungary, the Holy Roman Empire and more; Novgorod, Prague, Hamburg or Turku only appear once founded. Fixes: the battle report and the attack window fit every screen and close with Enter or Esc (the game no longer gets stuck after an ambush); the right-hand panel no longer covers the Menu button; marrying a vassal no longer ends the vassalage; stability cannot exceed 100; Rome is saved exactly.\n\n▸ Launcher 41 – fits small screens\nThe launcher window now scales down to fit smaller screens (such as 1024×768). The account window no longer runs off the screen with long messages, a server error no longer claims your password is wrong, and a quick double click no longer sends the login twice. An older version is never offered as an update.",
+		"cim_de": "Updates des Tages: Heptarchia 1.67, Launcher 41",
+		"szoveg_de": "▸ Heptarchia 1.67 – 1066 und zeitgemäße Namen\n1066 geschieht wie in Wirklichkeit: Wird England vom Computer geführt, fällt Harald Hardrada bei Stamford Bridge, Wilhelm siegt bei Hastings und die englischen Lande werden zum normannischen England. Führst du die Engländer, kommen beide Invasionen, Harald fällt immer in der Schlacht, doch bei Hastings entscheidet dein Heer. Die Völker tragen die Namen ihrer Zeit: 790 Frankenreich, norwegische Kleinkönigreiche, Dál Riata und walisische Königreiche, später Karolingerreich, Ungarisches Fürstentum und Königreich, Heiliges Römisches Reich und weitere; Nowgorod, Prag, Hamburg oder Turku erscheinen erst nach ihrer Gründung. Fehlerbehebungen: Schlachtbericht und Angriffsfenster passen auf jeden Bildschirm und schließen mit Enter oder Esc (nach einem Hinterhalt hängt das Spiel nicht mehr); die rechte Leiste verdeckt den Menü-Knopf nicht mehr; eine Heirat mit einem Vasallen beendet die Vasallität nicht; die Stabilität steigt nicht über 100; Rom wird exakt gespeichert.\n\n▸ Launcher 41 – passt auf kleine Bildschirme\nDas Launcher-Fenster wird auf kleineren Bildschirmen (etwa 1024×768) passend verkleinert. Das Kontofenster ragt auch bei langen Meldungen nicht mehr aus dem Bild, ein Serverfehler wird nicht mehr als falsches Passwort gemeldet, und ein schneller Doppelklick sendet die Anmeldung nicht zweimal. Eine ältere Version wird nie als Update angeboten.",
+		"cimke_en": "Update",
+		"cimke_de": "Update"
+	},
+	{
+		"datum": "2026-09-25",
 		"cim": "Heptarchia 1.66 – festett díszsávok, népi zene, Tab-lista",
 		"cimke": "Heptarchia",
 		"szoveg": "A térkép díszsávjait újrafestettük: minden nép saját, gazdagon festett szegélyt kapott (viking Urnes-kígyó, Sutton Hoo-i gránátberakás, kelta zománcspirálok, a Kells-i könyv fonatai, a bayeux-i kárpit hímzése, bizánci aranymozaik, kozmata márvány, arab csillagminta, honfoglalás kori palmetták, fonott fa). A zene is a népedhez igazodik: a vikingeknek északi líra és kürt, a kelta népeknek hárfa és bodhrán, a frankoknak és latinoknak gregorián ének és orgona, a bizánciaknak ison-kíséretes ének, az araboknak oud és darbuka Hidzsáz makámban, a sztyeppei népeknek lófejes hegedű és torokének, békében és háborúban más-más darab. Többjátékos módban a Tab lenyomva tartva megmutatja a játékosokat: név, nemzet, viszonyuk veled és a pingjük. Az építés és toborzás gombjain a kétsoros nevek szorosabbak lettek. A launcherben a fiókablakban a Tab most mezőről mezőre lép.",
@@ -563,120 +575,120 @@
 		"cimke_en": "Update",
 		"cimke_de": "Update"
 	},
-    {
-        "datum":  "2026-09-20",
-        "cim":  "Új játék: Kard és Mágia – ParthLauncher 1.30",
-        "cimke":  "Kard és Mágia",
-        "szoveg":  "A Kard és Mágia roguelike önálló játék lett a launcherben, saját frissítéssel és stílussal. Három kidolgozott hős: a lovag közelharcban erős és pajzzsal hárít, az íjász messziről sebez, a mágus kék varázsgömböt lő. A ritka tárgyak életlopást és gyógyulást adnak, a pályák mindig bejárhatók. Játszani bejelentkezve lehet.",
-        "cim_en":  "New game: Kard és Mágia – ParthLauncher 1.30",
-        "szoveg_en":  "Kard és Mágia, the roguelike, is now a separate game in the launcher with its own updates and style. Three distinct heroes: the knight is strong in melee and blocks with a shield, the archer strikes from afar, the mage casts a blue arcane orb. Rare items grant lifesteal and healing, and every level is always passable. You need to be signed in to play.",
-        "cim_de":  "Neues Spiel: Kard és Mágia – ParthLauncher 1.30",
-        "szoveg_de":  "Das Roguelike Kard és Mágia ist jetzt ein eigenes Spiel im Launcher, mit eigenen Updates und eigenem Stil. Drei ausgearbeitete Helden: Der Ritter ist im Nahkampf stark und pariert mit dem Schild, der Bogenschütze trifft aus der Ferne, der Magier schleudert eine blaue Zauberkugel. Seltene Gegenstände geben Lebensraub und Heilung, und jede Ebene ist immer begehbar. Zum Spielen ist eine Anmeldung nötig.",
-        "cimke_en":  "Kard és Mágia",
-        "cimke_de":  "Kard és Mágia"
-    },
-    {
-        "datum":  "2026-09-19",
-        "cim":  "ParthLauncher 1.29 – új felület és egy minijáték",
-        "cimke":  "ParthLauncher",
-        "szoveg":  "Megújult az indító: balra a játékok listája, középen a kiválasztott játék képe, jobb felül a bejelentkezés. Bekerült a Kard és Mágia roguelike is, amely a böngésződben indul, telepítés és internet nélkül. A pályái mindig bejárhatók: nem fordulhat elő, hogy bezáródsz egy terembe.",
-        "cim_en":  "ParthLauncher 1.29 – a new layout",
-        "szoveg_en":  "The launcher has been redesigned: the game list on the left, the cover of the selected game in the middle, and sign-in at the top right.",
-        "cim_de":  "ParthLauncher 1.29 – neue Oberfläche",
-        "szoveg_de":  "Der Launcher wurde neu gestaltet: links die Spieleliste, in der Mitte das Titelbild des gewählten Spiels, oben rechts die Anmeldung.",
-        "cimke_en":  "ParthLauncher",
-        "cimke_de":  "ParthLauncher"
-    },
-    {
-        "datum":  "2026-09-19",
-        "cim":  "ParthLauncher 1.27 – egy fiók mindkét játékhoz",
-        "cimke":  "ParthLauncher",
-        "szoveg":  "A bejelentkezés a Birodalom fülén is elérhető. Egyszer lépsz be, és a fiókod a Birodalomra és a Heptarchiára is érvényes.",
-        "cim_en":  "ParthLauncher 1.27 – one account for every game",
-        "szoveg_en":  "Signing in is available on every game\u0027s page. You sign in once and your account works for all the games.",
-        "cim_de":  "ParthLauncher 1.27 – ein Konto für alle Spiele",
-        "szoveg_de":  "Die Anmeldung ist bei jedem Spiel verfügbar. Du meldest dich einmal an, und dein Konto gilt für alle Spiele.",
-        "cimke_en":  "ParthLauncher",
-        "cimke_de":  "ParthLauncher"
-    },
-    {
-        "datum":  "2026-09-19",
-        "cim":  "ParthLauncher 1.26 – regisztráció a weboldalon, elfelejtett jelszó",
-        "cimke":  "ParthLauncher",
-        "szoveg":  "Fiókot mostantól a weboldalon is létrehozhatsz, és ha elfelejtetted a jelszavad, itt vagy a launcher fiókablakában kérhetsz újat. A weboldalra képek is kerültek mindkét játékból.",
-        "cim_en":  "ParthLauncher 1.26 – sign up on the website, password reset",
-        "szoveg_en":  "You can now create an account on the website, and if you forget your password you can request a new one here or in the launcher\u0027s account window. Screenshots from both games were added to the site.",
-        "cim_de":  "ParthLauncher 1.26 – Registrierung auf der Website, Passwort zurücksetzen",
-        "szoveg_de":  "Du kannst jetzt auch auf der Website ein Konto anlegen, und bei vergessenem Passwort hier oder im Kontofenster des Launchers ein neues anfordern. Außerdem gibt es jetzt Bilder aus beiden Spielen auf der Website.",
-        "cimke_en":  "ParthLauncher",
-        "cimke_de":  "ParthLauncher"
-    },
-    {
-        "datum":  "2026-09-19",
-        "cim":  "ParthLauncher 1.25 – fiókok és regisztráció",
-        "cimke":  "ParthLauncher",
-        "szoveg":  "A megvásárolt kiegészítők mostantól a fiókodhoz kötődnek: regisztrálj egyszer, és bármelyik gépen belépve megjelennek. A megerősítő levél a ParthLaunchertől érkezik – ha nem látod, nézd meg a Spam mappát is.",
-        "cim_en":  "ParthLauncher 1.25 – accounts and sign-up",
-        "szoveg_en":  "Add-ons you buy are now tied to your account: sign up once and they appear on any computer you sign in on. The confirmation e-mail comes from ParthLauncher – check your spam folder if you don\u0027t see it.",
-        "cim_de":  "ParthLauncher 1.25 – Konten und Registrierung",
-        "szoveg_de":  "Gekaufte Erweiterungen sind jetzt an dein Konto gebunden: Einmal registrieren, und sie erscheinen auf jedem Rechner, auf dem du dich anmeldest. Die Bestätigungsmail kommt von ParthLauncher – schau auch im Spam-Ordner nach.",
-        "cimke_en":  "ParthLauncher",
-        "cimke_de":  "ParthLauncher"
-    },
-    {
-        "datum":  "2026-09-19",
-        "cim":  "Új kiegészítő: A varégok útja",
-        "cimke":  "Heptarchia DLC",
-        "szoveg":  "Keletre kibővített térkép Novgoroddal, Kijevvel és Miklagarðrral. Kereskedelmi expedíciók a Volgán és a Dnyeperen, besenyő rajtaütések a konvojok ellen, testőrség a kereskedőknek, a Varangi Gárda – és Szicília: Szürakuszai ostroma, az arab invázió, Maniakész hadjárata.",
-        "cimke_en":  "Heptarchia add-on",
-        "cimke_de":  "Heptarchia-Erweiterung"
-    },
-    {
-        "datum":  "2026-09-19",
-        "cim":  "Heptarchia 1.26 – áttekinthetőbb bal panel",
-        "cimke":  "Heptarchia",
-        "szoveg":  "A Witan, a királyi célok és a diplomácia saját ablakban nyílik meg egy-egy gombbal, így semmi nem lóg ki a képernyőről.",
-        "cimke_en":  "Heptarchia",
-        "cimke_de":  "Heptarchia"
-    },
-    {
-        "datum":  "2026-09-19",
-        "cim":  "Lakosság és toborzás",
-        "cimke":  "Heptarchia",
-        "szoveg":  "A sereget a parasztokból toborozod: minden városnak van lakossága, férőhelye és gyarapodása. A falu- és városfejlesztés több embert jelent – az éhínség kevesebbet. Az egyház korhű szintjei: Minster, Püspökség, és érseki székhelyen Érsekség.",
-        "cimke_en":  "Heptarchia",
-        "cimke_de":  "Heptarchia"
-    },
-    {
-        "datum":  "2026-09-19",
-        "cim":  "Portya hadüzenet nélkül",
-        "cimke":  "A vikingek kora",
-        "szoveg":  "Az óészaki népek háború nélkül portyázhatnak ezüstért. Háború csak akkor lesz, ha a portyázókat elkapják és legyőzik. Ahol egyház áll, ott több az ezüst.",
-        "cimke_en":  "The Viking Age",
-        "cimke_de":  "Das Zeitalter der Wikinger"
-    },
-    {
-        "datum":  "2026-09-19",
-        "cim":  "Hit és egyház kiegészítő",
-        "cimke":  "Heptarchia DLC",
-        "szoveg":  "Minden népnek saját vallása és tanfája: Canterbury, Szent Dávid, Columba és Patrik egyháza, Odin, Thor és Frey hite. A hitpontokból bónuszokat fejleszthetsz.",
-        "cimke_en":  "Heptarchia add-on",
-        "cimke_de":  "Heptarchia-Erweiterung"
-    },
-    {
-        "datum":  "2026-09-18",
-        "cim":  "Heptarchia: 790-es kezdés",
-        "cimke":  "Heptarchia",
-        "szoveg":  "Új kezdőév: Kent, Essex, Sussex, a skótok, piktek és írek. Lindisfarne 793, belháborúk, trónkövetelők, nagy küldetések. Új: a pápaság, fejleszthető gazdaság, kereskedelem és gyakoribb építkezés a gépi királyoknál.",
-        "cimke_en":  "Heptarchia",
-        "cimke_de":  "Heptarchia"
-    },
-    {
-        "datum":  "2026-09-17",
-        "cim":  "macOS-támogatás",
-        "cimke":  "ParthLauncher",
-        "szoveg":  "A ParthLauncher és a játékok Macen is futnak (Intel és Apple Silicon). Első indításkor jobb klikk → Megnyitás.",
-        "cimke_en":  "ParthLauncher",
-        "cimke_de":  "ParthLauncher"
-    }
+	{
+		"datum": "2026-09-20",
+		"cim": "Új játék: Kard és Mágia – ParthLauncher 1.30",
+		"cimke": "Kard és Mágia",
+		"szoveg": "A Kard és Mágia roguelike önálló játék lett a launcherben, saját frissítéssel és stílussal. Három kidolgozott hős: a lovag közelharcban erős és pajzzsal hárít, az íjász messziről sebez, a mágus kék varázsgömböt lő. A ritka tárgyak életlopást és gyógyulást adnak, a pályák mindig bejárhatók. Játszani bejelentkezve lehet.",
+		"cim_en": "New game: Kard és Mágia – ParthLauncher 1.30",
+		"szoveg_en": "Kard és Mágia, the roguelike, is now a separate game in the launcher with its own updates and style. Three distinct heroes: the knight is strong in melee and blocks with a shield, the archer strikes from afar, the mage casts a blue arcane orb. Rare items grant lifesteal and healing, and every level is always passable. You need to be signed in to play.",
+		"cim_de": "Neues Spiel: Kard és Mágia – ParthLauncher 1.30",
+		"szoveg_de": "Das Roguelike Kard és Mágia ist jetzt ein eigenes Spiel im Launcher, mit eigenen Updates und eigenem Stil. Drei ausgearbeitete Helden: Der Ritter ist im Nahkampf stark und pariert mit dem Schild, der Bogenschütze trifft aus der Ferne, der Magier schleudert eine blaue Zauberkugel. Seltene Gegenstände geben Lebensraub und Heilung, und jede Ebene ist immer begehbar. Zum Spielen ist eine Anmeldung nötig.",
+		"cimke_en": "Kard és Mágia",
+		"cimke_de": "Kard és Mágia"
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "ParthLauncher 1.29 – új felület és egy minijáték",
+		"cimke": "ParthLauncher",
+		"szoveg": "Megújult az indító: balra a játékok listája, középen a kiválasztott játék képe, jobb felül a bejelentkezés. Bekerült a Kard és Mágia roguelike is, amely a böngésződben indul, telepítés és internet nélkül. A pályái mindig bejárhatók: nem fordulhat elő, hogy bezáródsz egy terembe.",
+		"cim_en": "ParthLauncher 1.29 – a new layout",
+		"szoveg_en": "The launcher has been redesigned: the game list on the left, the cover of the selected game in the middle, and sign-in at the top right.",
+		"cim_de": "ParthLauncher 1.29 – neue Oberfläche",
+		"szoveg_de": "Der Launcher wurde neu gestaltet: links die Spieleliste, in der Mitte das Titelbild des gewählten Spiels, oben rechts die Anmeldung.",
+		"cimke_en": "ParthLauncher",
+		"cimke_de": "ParthLauncher"
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "ParthLauncher 1.27 – egy fiók mindkét játékhoz",
+		"cimke": "ParthLauncher",
+		"szoveg": "A bejelentkezés a Birodalom fülén is elérhető. Egyszer lépsz be, és a fiókod a Birodalomra és a Heptarchiára is érvényes.",
+		"cim_en": "ParthLauncher 1.27 – one account for every game",
+		"szoveg_en": "Signing in is available on every game's page. You sign in once and your account works for all the games.",
+		"cim_de": "ParthLauncher 1.27 – ein Konto für alle Spiele",
+		"szoveg_de": "Die Anmeldung ist bei jedem Spiel verfügbar. Du meldest dich einmal an, und dein Konto gilt für alle Spiele.",
+		"cimke_en": "ParthLauncher",
+		"cimke_de": "ParthLauncher"
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "ParthLauncher 1.26 – regisztráció a weboldalon, elfelejtett jelszó",
+		"cimke": "ParthLauncher",
+		"szoveg": "Fiókot mostantól a weboldalon is létrehozhatsz, és ha elfelejtetted a jelszavad, itt vagy a launcher fiókablakában kérhetsz újat. A weboldalra képek is kerültek mindkét játékból.",
+		"cim_en": "ParthLauncher 1.26 – sign up on the website, password reset",
+		"szoveg_en": "You can now create an account on the website, and if you forget your password you can request a new one here or in the launcher's account window. Screenshots from both games were added to the site.",
+		"cim_de": "ParthLauncher 1.26 – Registrierung auf der Website, Passwort zurücksetzen",
+		"szoveg_de": "Du kannst jetzt auch auf der Website ein Konto anlegen, und bei vergessenem Passwort hier oder im Kontofenster des Launchers ein neues anfordern. Außerdem gibt es jetzt Bilder aus beiden Spielen auf der Website.",
+		"cimke_en": "ParthLauncher",
+		"cimke_de": "ParthLauncher"
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "ParthLauncher 1.25 – fiókok és regisztráció",
+		"cimke": "ParthLauncher",
+		"szoveg": "A megvásárolt kiegészítők mostantól a fiókodhoz kötődnek: regisztrálj egyszer, és bármelyik gépen belépve megjelennek. A megerősítő levél a ParthLaunchertől érkezik – ha nem látod, nézd meg a Spam mappát is.",
+		"cim_en": "ParthLauncher 1.25 – accounts and sign-up",
+		"szoveg_en": "Add-ons you buy are now tied to your account: sign up once and they appear on any computer you sign in on. The confirmation e-mail comes from ParthLauncher – check your spam folder if you don't see it.",
+		"cim_de": "ParthLauncher 1.25 – Konten und Registrierung",
+		"szoveg_de": "Gekaufte Erweiterungen sind jetzt an dein Konto gebunden: Einmal registrieren, und sie erscheinen auf jedem Rechner, auf dem du dich anmeldest. Die Bestätigungsmail kommt von ParthLauncher – schau auch im Spam-Ordner nach.",
+		"cimke_en": "ParthLauncher",
+		"cimke_de": "ParthLauncher"
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "Új kiegészítő: A varégok útja",
+		"cimke": "Heptarchia DLC",
+		"szoveg": "Keletre kibővített térkép Novgoroddal, Kijevvel és Miklagarðrral. Kereskedelmi expedíciók a Volgán és a Dnyeperen, besenyő rajtaütések a konvojok ellen, testőrség a kereskedőknek, a Varangi Gárda – és Szicília: Szürakuszai ostroma, az arab invázió, Maniakész hadjárata.",
+		"cimke_en": "Heptarchia add-on",
+		"cimke_de": "Heptarchia-Erweiterung"
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "Heptarchia 1.26 – áttekinthetőbb bal panel",
+		"cimke": "Heptarchia",
+		"szoveg": "A Witan, a királyi célok és a diplomácia saját ablakban nyílik meg egy-egy gombbal, így semmi nem lóg ki a képernyőről.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "Lakosság és toborzás",
+		"cimke": "Heptarchia",
+		"szoveg": "A sereget a parasztokból toborozod: minden városnak van lakossága, férőhelye és gyarapodása. A falu- és városfejlesztés több embert jelent – az éhínség kevesebbet. Az egyház korhű szintjei: Minster, Püspökség, és érseki székhelyen Érsekség.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "Portya hadüzenet nélkül",
+		"cimke": "A vikingek kora",
+		"szoveg": "Az óészaki népek háború nélkül portyázhatnak ezüstért. Háború csak akkor lesz, ha a portyázókat elkapják és legyőzik. Ahol egyház áll, ott több az ezüst.",
+		"cimke_en": "The Viking Age",
+		"cimke_de": "Das Zeitalter der Wikinger"
+	},
+	{
+		"datum": "2026-09-19",
+		"cim": "Hit és egyház kiegészítő",
+		"cimke": "Heptarchia DLC",
+		"szoveg": "Minden népnek saját vallása és tanfája: Canterbury, Szent Dávid, Columba és Patrik egyháza, Odin, Thor és Frey hite. A hitpontokból bónuszokat fejleszthetsz.",
+		"cimke_en": "Heptarchia add-on",
+		"cimke_de": "Heptarchia-Erweiterung"
+	},
+	{
+		"datum": "2026-09-18",
+		"cim": "Heptarchia: 790-es kezdés",
+		"cimke": "Heptarchia",
+		"szoveg": "Új kezdőév: Kent, Essex, Sussex, a skótok, piktek és írek. Lindisfarne 793, belháborúk, trónkövetelők, nagy küldetések. Új: a pápaság, fejleszthető gazdaság, kereskedelem és gyakoribb építkezés a gépi királyoknál.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia"
+	},
+	{
+		"datum": "2026-09-17",
+		"cim": "macOS-támogatás",
+		"cimke": "ParthLauncher",
+		"szoveg": "A ParthLauncher és a játékok Macen is futnak (Intel és Apple Silicon). Első indításkor jobb klikk → Megnyitás.",
+		"cimke_en": "ParthLauncher",
+		"cimke_de": "ParthLauncher"
+	}
 ]
