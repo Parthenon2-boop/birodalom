@@ -56,7 +56,7 @@
 	.acc .box { padding: 18px 20px; overflow: visible; }
 	.acc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
 	.acc-head .name { font: 700 24px Cinzel, serif; color: var(--gold); }
-	.acc-head .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+	.who { color: var(--muted); font-size: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 	.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 12px; }
 	.fact { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
 	.fact b { display: block; font: 700 22px Cinzel, serif; color: var(--gold-2); }
@@ -79,6 +79,11 @@
 	<div class="wrap">
 		<a class="logo" href="./">ParthLauncher</a>
 		<nav><a href="./" data-i18n="nav.home">Főoldal</a><a href="./#letoltes" data-i18n="nav.download">Letöltés</a><a href="heptarchia.html">Heptarchia</a><span class="langs" id="langs"></span></nav>
+		<div class="who" id="who" hidden>
+			<span id="whoName"></span>
+			<a class="ghost" id="adminLink" href="admin.html" hidden data-i18n="acc.admin">Admin felület</a>
+			<button class="ghost" type="button" id="logoutBtn" data-i18n="acc.logout">Kijelentkezés</button>
+		</div>
 	</div>
 </header>
 <main id="main">
@@ -135,10 +140,7 @@
 					<div class="name" id="accName"></div>
 					<div class="hint" id="accEmail"></div>
 				</div>
-				<div class="actions">
-					<a class="ghost" id="adminLink" href="admin.html" hidden data-i18n="acc.admin">Admin felület</a>
-					<button class="ghost" type="button" id="logoutBtn" data-i18n="acc.logout">Kijelentkezés</button>
-				</div>
+
 			</div>
 			<div class="facts">
 				<div class="fact"><b id="accDlcCount">–</b><span data-i18n="acc.dlcs">megvásárolt kiegészítő</span></div>
@@ -467,6 +469,7 @@
 		$("authBox").hidden = true; $("backNote").hidden = true; $("accView").hidden = false;
 		$("main").classList.add("wide");
 		$("accName").textContent = (user.user_metadata && user.user_metadata.username) || user.email;
+		$("whoName").textContent = "👤 " + $("accName").textContent; $("who").hidden = false;
 		$("accEmail").textContent = user.email || "";
 		renderGames();
 		let failed = false;
@@ -476,7 +479,7 @@
 			sb.from("my_coins").select("coins"),
 		]);
 		if (acct.user !== user) return;           // közben kijelentkezett
-		if (prof.data && prof.data.username) { acct.username = prof.data.username; $("accName").textContent = prof.data.username; }
+		if (prof.data && prof.data.username) { acct.username = prof.data.username; $("accName").textContent = prof.data.username; $("whoName").textContent = "👤 " + prof.data.username; }
 		if (ent.error) failed = true; else (ent.data || []).forEach(r => acct.owned.add(String(r.dlc_key)));
 		if (coins.error) failed = true; else acct.coins = (coins.data && coins.data[0] && coins.data[0].coins) || 0;
 		$("accDlcCount").textContent = ent.error ? "–" : acct.owned.size;
@@ -502,7 +505,7 @@
 		acct = null;
 		$("accView").hidden = true; $("authBox").hidden = false; $("backNote").hidden = false;
 		$("main").classList.remove("wide");
-		$("adminLink").hidden = true;
+		$("adminLink").hidden = true; $("who").hidden = true;
 	}
 
 	$("logoutBtn").onclick = async () => { await sb.auth.signOut(); showAuth(); show("login"); };
