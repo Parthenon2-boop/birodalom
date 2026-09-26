@@ -46,5 +46,17 @@
         "cimke_en":  "Heptarchia",
         "cimke_de":  "Heptarchia",
         "datum":  "2026-09-26"
+    },
+    {
+        "cim":  "Kard és Mágia 3.6 – angolul és németül is",
+        "cimke":  "Kard és Mágia",
+        "szoveg":  "A Kard és Mágia mostantól angolul és németül is játszható. A nyelvet a főmenü bal felső sarkában választhatod ki (HU / EN / DE, vagy az L billentyűvel), és játék közben is azonnal átvált minden felirat: menük, tárgyak, szörnyek, képességek, a kereskedő és a kinézet-bolt. Első indításkor a gép nyelvét veszi alapul. A régi mentések megmaradnak és betölthetők.",
+        "cim_en":  "Kard és Mágia 3.6 – now in English and German",
+        "szoveg_en":  "Kard és Mágia can now be played in English and German. Pick the language in the top-left corner of the main menu (HU / EN / DE, or press L), and every text switches at once, even mid-game: menus, items, monsters, skills, the merchant and the cosmetics shop. On first start the game follows your system language. Old saves are kept and still load.",
+        "cim_de":  "Kard és Mágia 3.6 – jetzt auf Englisch und Deutsch",
+        "szoveg_de":  "Kard és Mágia lässt sich jetzt auch auf Englisch und Deutsch spielen. Die Sprache wählst du oben links im Hauptmenü (HU / EN / DE oder mit der Taste L), und alle Texte wechseln sofort, auch mitten im Spiel: Menüs, Gegenstände, Monster, Fähigkeiten, der Händler und der Kosmetik-Laden. Beim ersten Start richtet sich das Spiel nach der Systemsprache. Alte Spielstände bleiben erhalten und lassen sich laden.",
+        "cimke_en":  "Kard és Mágia",
+        "cimke_de":  "Kard és Mágia",
+        "datum":  "2026-09-26"
     }
 ]
