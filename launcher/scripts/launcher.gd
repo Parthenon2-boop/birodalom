@@ -162,7 +162,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 44
+const LAUNCHER_BUILD := 45
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1461,6 +1461,7 @@ func _draw_dlc_icon(c: Control, owned: bool) -> void:
 # ── Fiók: regisztráció, belépés, a jogosultságok betöltése ───────
 
 var acc_token := ""              # a belépés rövid életű tokenje (csak memóriában)
+var acc_timeout := 30.0          # a fiókszerver-kérések időkorlátja (a játékidő-mérés indítása rövidebbet kér)
 var acc_popup: PopupPanel
 var acc_user_edit: LineEdit
 var acc_email_edit: LineEdit
@@ -1497,7 +1498,7 @@ func _acc_logged_in() -> bool:
 # Egy kérés a fiókszerverhez: [HTTP-kód (0 = nem sikerült elérni), válasz (Dictionary / Array)]
 func _acc_call(method: int, path: String, body = null, token: String = "") -> Array:
 	var req := HTTPRequest.new()
-	req.timeout = 30.0
+	req.timeout = acc_timeout
 	add_child(req)
 	req.set_https_proxy(proxy_host, proxy_port)
 	req.set_http_proxy(proxy_host, proxy_port)
@@ -3138,12 +3139,14 @@ func play() -> void:
 	if _need_login(): return
 	var exe := _game_exe()
 	if exe != "":
+		var pid := -1
 		if _is_mac():
 			_fix_mac_permissions()
 			OS.create_process("/usr/bin/open", ["-a", _find_app(install_dir)])
 		else:
-			OS.create_process(exe, [])
+			pid = OS.create_process(exe, [])
 		_status("A játék elindult.", S.GREEN)
+		await _jelenlet_inditas(pid, exe if _is_mac() else "")
 		await get_tree().create_timer(1.5).timeout
 		get_tree().quit()
 		return
@@ -3157,7 +3160,86 @@ func play() -> void:
 	if _needs_import():
 		_start_import()          # ha még nem futott le, most pótoljuk
 		return
-	OS.create_process(godot_exe, ["--path", project])
+	var godot_pid := OS.create_process(godot_exe, ["--path", project])
 	_status("A játék elindult (Godot).", S.GREEN)
+	await _jelenlet_inditas(godot_pid, "")
 	await get_tree().create_timer(1.5).timeout
 	get_tree().quit()
+
+# ── Játékidő és jelenlét ──────────────────────────────────────────
+# A launcher a játék indítása után bezárul, ezért a játékidőt egy kis rejtett figyelő méri: a szervertől
+# (`jelenlet` függvény, a fiók tokenjével) kapott munkamenet-azonosítóval és kulccsal 2 percenként jelez,
+# amíg a játék fut, a végén pedig lezárja a munkamenetet. A figyelőben a nyilvános kulcson kívül csak ez a
+# kettő van (a fiók tokenje nem). Ha a szerver nem érhető el, a játék ettől még ugyanúgy elindul.
+#   Windows: rejtett PowerShell, a játék folyamatazonosítójával (pid).
+#   macOS: az „open” nem adja meg a játék pid-jét – a /bin/sh figyelő a futó program elérési útját keresi
+#   (ps); ha 90 mp-en belül nem látja, lezárja a munkamenetet.
+const JELENLET_BEAT := 120      # másodperc a jelzések között
+const JELENLET_PATH := "/functions/v1/jelenlet"
+
+# [sid, kulcs] – vagy üres tömb, ha nincs belépve / nem sikerült (5 mp-es korláttal)
+func _jelenlet_start(game_key: String) -> Array:
+	if not _acc_enabled() or not _acc_logged_in(): return []
+	# indításkor a belépés megújítása még futhat: rövid ideig megvárjuk a tokent
+	var var_ido := 0.0
+	while acc_token == "" and var_ido < 5.0:
+		await get_tree().create_timer(0.25).timeout
+		var_ido += 0.25
+	if acc_token == "": return []
+	acc_timeout = 5.0
+	var r := await _acc_call(HTTPClient.METHOD_POST, JELENLET_PATH,
+		{"action": "start", "game": game_key, "machine": OS.get_name()}, acc_token)
+	acc_timeout = 30.0
+	if int(r[0]) != 200 or not (r[1] is Dictionary): return []
+	var sid := int((r[1] as Dictionary).get("sid", 0))
+	var key := str((r[1] as Dictionary).get("key", ""))
+	if sid <= 0 or not RegEx.create_from_string("^[0-9a-f]{64}$").search(key): return []
+	return [sid, key]
+
+func _jelenlet_inditas(pid: int, mac_exe: String) -> void:
+	if not _is_mac() and pid <= 0: return
+	var s := await _jelenlet_start(str(game()["key"]))
+	if s.is_empty(): return
+	if _is_mac():
+		OS.create_process("/bin/sh", _jelenlet_sh_args(pid, mac_exe, int(s[0]), str(s[1])))
+	elif OS.get_name() == "Windows":
+		var encoded := Marshalls.raw_to_base64(_jelenlet_ps(pid, int(s[0]), str(s[1])).to_utf16_buffer())
+		OS.create_process("powershell.exe", ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden",
+			"-EncodedCommand", encoded], false)
+
+# Windows-figyelő: amíg a pid él, 2 percenként „beat”, utána „stop”. (A szerver új sid-et adhat alvás után.)
+func _jelenlet_ps(pid: int, sid: int, key: String) -> String:
+	return "\n".join([
+		"$ErrorActionPreference = 'SilentlyContinue'; $ProgressPreference = 'SilentlyContinue'",
+		"[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12",
+		"$u = '" + ACCOUNT_URL + JELENLET_PATH + "'; $h = @{ apikey = '" + ACCOUNT_ANON_KEY + "' }",
+		"$script:sid = " + str(sid) + "; $key = '" + key + "'",
+		"function Kuld($a) { try { $r = Invoke-RestMethod -Uri $u -Method Post -Headers $h -ContentType 'application/json' -TimeoutSec 20 "
+			+ "-Body ('{\"action\":\"' + $a + '\",\"sid\":' + $script:sid + ',\"key\":\"' + $key + '\"}'); "
+			+ "if ($r.sid) { $script:sid = [long]$r.sid } } catch {} }",
+		"$p = Get-Process -Id " + str(pid),
+		"if ($p) { while (-not $p.WaitForExit(" + str(JELENLET_BEAT * 1000) + ")) { Kuld 'beat' } }",
+		"Kuld 'stop'",
+	])
+
+# macOS-figyelő (/bin/sh -c <szkript> sh <mód> <cél> <program> <url> <kulcs> <sid> <munkamenet-kulcs>):
+#   mód "pid": a cél a játék pid-je; mód "app": a cél a .app mappa, a program a Contents/MacOS-beli fájl neve.
+# A teljes elérési út csak a szkripten belül áll össze (környezeti változóban adjuk az awk-nak), így a figyelő
+# a saját parancssorát nem találja meg a ps listájában.
+func _jelenlet_sh_args(pid: int, mac_exe: String, sid: int, key: String) -> PackedStringArray:
+	var sh := "\n".join([
+		"M=\"$1\"; A=\"$2\"; B=\"$3\"; U=\"$4\"; H=\"$5\"; S=\"$6\"; K=\"$7\"",
+		"fut() { if [ \"$M\" = pid ]; then kill -0 \"$A\" 2>/dev/null; else ps -axo command= | "
+			+ "P=\"$A/Contents/MacOS/$B\" awk 'index($0, ENVIRON[\"P\"]) == 1 { f = 1 } END { exit !f }'; fi; }",
+		"kuld() { R=$(curl -s -m 20 -X POST \"$U\" -H \"apikey: $H\" -H 'Content-Type: application/json' "
+			+ "-d \"{\\\"action\\\":\\\"$1\\\",\\\"sid\\\":$S,\\\"key\\\":\\\"$K\\\"}\"); "
+			+ "N=$(printf '%s' \"$R\" | sed -n 's/.*\"sid\":\\([0-9][0-9]*\\).*/\\1/p'); if [ -n \"$N\" ]; then S=\"$N\"; fi; }",
+		"i=0; while [ $i -lt 18 ] && ! fut; do sleep 5; i=$((i+1)); done",
+		"while fut; do n=0; while [ $n -lt " + str(int(JELENLET_BEAT / 5.0)) +" ] && fut; do sleep 5; n=$((n+1)); done; "
+			+ "if fut; then kuld beat; fi; done",
+		"kuld stop",
+	])
+	var mode := "pid" if pid > 0 else "app"
+	var app := mac_exe.get_base_dir().get_base_dir().get_base_dir()   # …/X.app/Contents/MacOS/bin → …/X.app
+	return PackedStringArray(["-c", sh, "sh", mode, str(pid) if pid > 0 else app, mac_exe.get_file(),
+		ACCOUNT_URL + JELENLET_PATH, ACCOUNT_ANON_KEY, str(sid), key])

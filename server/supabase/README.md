@@ -91,3 +91,24 @@ játék a `my_coins` nézetből olvassa); admin-napló → `admin_log`.
    Az `admin.html` nincs a menüben és a sitemapben, `noindex` – de a védelmet nem ez adja, hanem a szerver.
 
 Beállítás a függvényben: `SHOW_FULL_EMAIL` (alapból `false` → a listában csak `pa•••@gmail.com` látszik).
+
+## Játékidő és „most online” (launcher 45, `jelenlet` függvény)
+
+A launcher a játék indításakor munkamenetet nyit (`jelenlet` → `start`, a fiók tokenjével), majd bezárul;
+egy rejtett figyelő (Windows: PowerShell a játék folyamatazonosítójával, macOS: `/bin/sh` a `.app` futó
+programjának keresésével) 2 percenként jelez (`beat`), a játék kilépésekor lezárja (`stop`). Alvás /
+hibernálás (15 percnél nagyobb szünet) nem számít játékidőnek. Az admin felület ebből mutatja a
+fiókonkénti (és játékonkénti) játékidőt, és zöld pöttyel, ki játszik most (4 percen belüli jelzés).
+
+1. **Adatbázis:** SQL Editor → `schema_jelenlet.sql` tartalma → Run (a `jatek_munkamenet` tábla és az
+   `admin_jatekido` összesítő; csak a szerverfüggvények érik el).
+2. **Függvények** (a `server` mappából, mint fent):
+   ```powershell
+   npx --yes supabase@latest functions deploy jelenlet --project-ref gxvepswtairfqvosdcpb --use-api --no-verify-jwt
+   npx --yes supabase@latest functions deploy admin --project-ref gxvepswtairfqvosdcpb --use-api --no-verify-jwt
+   ```
+   Amíg a tábla nincs meg, a `jelenlet` 503-at ad (`nincs_tabla`) – a launcher ettől még elindítja a játékot,
+   az admin oldalon pedig „–” látszik.
+
+Korlát: csak a launcherből, belépve indított játék számít. macOS-en a figyelő a futó program elérési útját
+keresi (`ps`); ha nem találja 90 mp-en belül, a munkamenet lezárul (rövid, legfeljebb néhány perces idő).

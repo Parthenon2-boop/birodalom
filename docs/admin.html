@@ -82,6 +82,10 @@
 	.dlc-row:last-child { border-bottom: 0; }
 	.coin-form { display: grid; grid-template-columns: 140px 1fr auto; gap: 10px; align-items: end; }
 	@media (max-width: 600px) { .coin-form { grid-template-columns: 1fr; } }
+	.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; background: #6f675c; font-size: 0; }
+	.dot.on { background: #4cd964; box-shadow: 0 0 6px rgba(76,217,100,.8); }
+	.play-row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; border-bottom: 1px solid rgba(107,79,42,.4); }
+	.play-row:last-child { border-bottom: 0; }
 	[hidden] { display: none !important; }
 </style>
 </head>
@@ -115,6 +119,8 @@
 			<div class="box stat"><b id="stAccounts">–</b><span>regisztrált fiók</span></div>
 			<div class="box stat"><b id="stNamed">–</b><span>fióknévvel</span></div>
 			<div class="box stat"><b id="stFound">–</b><span>találat a keresésre</span></div>
+			<div class="box stat"><b id="stOnline">–</b><span><span class="dot on" aria-hidden="true"></span>most online</span></div>
+			<div class="box stat"><b id="stPlay">–</b><span>összes játékidő</span></div>
 		</div>
 		<div class="box">
 			<div class="tabs" role="tablist">
@@ -138,7 +144,7 @@
 				<p class="msg" id="accMsg" role="status"></p>
 				<div class="scroll">
 					<table>
-						<thead><tr><th>Fióknév</th><th>E-mail</th><th>Regisztrált</th><th>Utolsó belépés</th><th>Érme</th><th>Kiegészítők</th><th></th></tr></thead>
+						<thead><tr><th>Fióknév</th><th>E-mail</th><th>Regisztrált</th><th>Utolsó belépés</th><th>Játékidő</th><th>Érme</th><th>Kiegészítők</th><th></th></tr></thead>
 						<tbody id="accRows"></tbody>
 					</table>
 				</div>
@@ -177,6 +183,12 @@
 	<div class="dlg-body">
 		<p class="hint" id="dlgInfo"></p>
 		<p class="msg" id="dlgMsg" role="status"></p>
+
+		<div class="section">
+			<h2>Játékidő</h2>
+			<p class="hint" id="playInfo" style="margin-bottom:6px"></p>
+			<div id="playList"><span class="dim">Betöltés…</span></div>
+		</div>
 
 		<div class="section">
 			<h2>Kiegészítők</h2>
@@ -260,6 +272,38 @@
 		nyitott: svg('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>'),
 		kuka: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
 	};
+	// játékidő és jelenlét (a launcher `jelenlet` függvénye gyűjti; null = a tábla még nincs meg → „–”)
+	const GAME_NAMES = { birodalom: "Birodalom", heptarchia: "Heptarchia", kard_es_magia: "Kard és Mágia", antiquitas: "Antiquitas", saecula: "Saecula" };
+	const gameName = k => GAME_NAMES[k] || k;
+	const fmtPlay = s => {
+		if (s == null) return "–";
+		s = Number(s) || 0;
+		if (s < 3600) return Math.round(s / 60) + " perc";
+		return (s / 3600).toLocaleString("hu-HU", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " óra";
+	};
+	const dot = r => {
+		if (r.online == null) return "";
+		const t = r.online ? "Most játszik: " + gameName(r.online_game)
+			: (r.last_seen ? "Utoljára játszott: " + fmtDate(r.last_seen) : "Még nem játszott a launcherből");
+		return `<span class="dot${r.online ? " on" : ""}" title="${esc(t)}" role="img" aria-label="${esc(t)}">●</span>`;
+	};
+	// játékonkénti bontás (a cellák súgójához és a fiók ablakához)
+	const playParts = g => Object.entries(g || {}).sort((a, b) => b[1] - a[1]);
+	const playTitle = r => r.play_games == null ? "" : playParts(r.play_games).map(([k, s]) => gameName(k) + ": " + fmtPlay(s)).join("\n");
+	function renderPlay(r) {
+		if (r.online == null) {
+			$("playInfo").textContent = "";
+			$("playList").innerHTML = '<span class="dim">– (a játékidő-mérés még nincs beállítva a szerveren)</span>';
+			return;
+		}
+		$("playInfo").innerHTML = dot(r) + esc(r.online ? "Most játszik: " + gameName(r.online_game)
+			: (r.last_seen ? "Utoljára játszott: " + fmtDate(r.last_seen) : "Még nem játszott a launcherből."))
+			+ " · összesen: <b>" + esc(fmtPlay(r.play_seconds)) + "</b>";
+		const parts = playParts(r.play_games);
+		$("playList").innerHTML = parts.length
+			? parts.map(([k, s]) => `<div class="play-row"><span>${esc(gameName(k))}</span><span class="num">${esc(fmtPlay(s))}</span></div>`).join("")
+			: '<span class="dim">Nincs mért játékidő.</span>';
+	}
 	const errText = e => ERR[e && e.error] || ERR[e && e.message] || (e && (e.message || e.error)) || "Nem sikerült.";
 
 	// hívás az admin függvénynek a belépett fiók (friss) tokenjével
@@ -302,27 +346,59 @@
 			DLCS = me.dlcs || [];
 			myId = me.admin.id;
 			$("whoName").textContent = me.admin.name;
-			$("stAccounts").textContent = me.stats.accounts;
-			$("stNamed").textContent = me.stats.with_username;
+			showStats(me.stats);
 			$("loginView").hidden = true; $("dashView").hidden = false; $("who").hidden = false;
 			await loadAccounts();
+			startAutoRefresh();
 		} catch (err) {
 			gate(errText(err));
 		}
 	}
 
-	async function loadAccounts() {
+	function showStats(st) {
+		$("stAccounts").textContent = st.accounts;
+		$("stNamed").textContent = st.with_username;
+		$("stOnline").textContent = st.online_now == null ? "–" : st.online_now;
+		$("stPlay").textContent = fmtPlay(st.play_seconds);
+	}
+
+	// a fióklista (és a „most online” szám) percenként frissül, amíg a lap látszik, a Fiókok fül van elöl,
+	// és nincs nyitva ablak (hogy a kezelés közben ne ugráljon semmi)
+	let autoTimer = 0, autoBusy = false;
+	async function autoRefresh() {
+		if (autoBusy || document.hidden || $("dashView").hidden || $("pane-accounts").hidden || $("dlg").open || $("act").open) return;
+		autoBusy = true;
+		try {
+			const me = await call("me");
+			showStats(me.stats);
+			await loadAccounts(true);
+		} catch (err) { /* a hibát a következő kézi frissítés mutatja */ }
+		finally { autoBusy = false; }
+	}
+	function startAutoRefresh() {
+		if (autoTimer) return;
+		autoTimer = setInterval(autoRefresh, 60000);
+		// visszatérve a fülre azonnal frissít, ha közben lejárt egy kör
+		let hiddenAt = 0;
+		document.addEventListener("visibilitychange", () => {
+			if (document.hidden) hiddenAt = Date.now();
+			else if (hiddenAt && Date.now() - hiddenAt > 60000) autoRefresh();
+		});
+	}
+
+	async function loadAccounts(quiet) {
 		const m = $("accMsg");
-		say(m, "");
+		if (!quiet) say(m, "");
 		try {
 			const d = await call("accounts", { search: acc.q, page: acc.page });
 			acc.total = d.total; acc.size = d.page_size; acc.rows = d.rows;
 			$("stFound").textContent = d.total;
 			$("accRows").innerHTML = d.rows.length ? d.rows.map(r => `<tr>
-				<td>${r.username ? esc(r.username) : '<span class="dim">(nincs név)</span>'}${r.suspended ? ' <span class="tag warn">felfüggesztve</span>' : ""}</td>
+				<td>${dot(r)}${r.username ? esc(r.username) : '<span class="dim">(nincs név)</span>'}${r.suspended ? ' <span class="tag warn">felfüggesztve</span>' : ""}</td>
 				<td class="dim">${esc(r.email)}${r.confirmed ? "" : ' <span class="tag off" title="nincs megerősítve">nem megerősített</span>'}</td>
 				<td>${fmtDate(r.created_at)}</td>
 				<td>${fmtDate(r.last_sign_in_at)}</td>
+				<td class="num" title="${esc(playTitle(r))}">${fmtPlay(r.play_seconds)}</td>
 				<td class="num">${esc(r.coins)}</td>
 				<td>${(r.dlcs || []).map(k => `<span class="tag">${esc(dlcName(k))}</span>`).join("") || '<span class="dim">–</span>'}</td>
 				<td><div class="acts">
@@ -332,7 +408,7 @@
 						: `<button class="ico" type="button" data-act="felfuggeszt" data-id="${esc(r.id)}" title="Felfüggesztés" aria-label="Felfüggesztés">${IKON.zart}</button>`)
 						+ `<button class="ico del" type="button" data-act="torles" data-id="${esc(r.id)}" title="Törlés" aria-label="Törlés">${IKON.kuka}</button>`}
 				</div></td>
-			</tr>`).join("") : '<tr><td colspan="7" class="dim">Nincs találat.</td></tr>';
+			</tr>`).join("") : '<tr><td colspan="8" class="dim">Nincs találat.</td></tr>';
 			const pages = Math.max(1, Math.ceil(acc.total / acc.size));
 			$("accPage").textContent = `${acc.page + 1}. / ${pages} oldal`;
 			$("accPrev").disabled = acc.page <= 0;
@@ -473,6 +549,7 @@
 		$("histRows").innerHTML = '<tr><td colspan="3" class="dim">Betöltés…</td></tr>';
 		try {
 			const d = await call("user", { id: cur.id });
+			renderPlay(d);
 			const rows = [
 				...d.entitlements.map(e => ({ t: e.created_at, what: `<span class="tag${e.revoked ? " off" : ""}">${esc(dlcName(e.dlc_key))}</span>${e.revoked ? ' <span class="dim">visszavonva</span>' : ""}`, src: esc(e.source) })),
 				...d.coin_tx.map(c => ({ t: c.created_at, what: `${c.amount > 0 ? "+" : ""}${esc(c.amount)} érme`, src: esc(c.reason) + (c.item_key ? ` <span class="dim">(${esc(c.item_key)})</span>` : "") })),
@@ -487,6 +564,7 @@
 		cur = Object.assign({}, row);
 		say($("dlgMsg"), ""); $("dlcNote").value = ""; $("coinForm").reset();
 		renderUser();
+		renderPlay(row);   // a lista adataival azonnal, a részletes lekérés után frissül
 		dlg.showModal();
 		loadHistory();
 	}

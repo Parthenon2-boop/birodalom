@@ -3,9 +3,11 @@
 // A docs/admin.html (és a docs/fiok.html az Admin link miatt) hívja, a weboldal közös belépésével kapott
 // tokennel. Minden kérés POST, JSON-törzzsel: { "action": "…", … }
 //   whoami   {}                           – admin-e a fiók (200 = igen, 403 = nem)
-//   me       {}                           – ki vagyok, a kiegészítők listája, összesítők
-//   accounts { search?, page? }           – fióklista (50/oldal), keresés fióknévre / e-mailre
-//   user     { id }                       – egy fiók részletei: jogosultság-sorok, érmetörténet
+//   me       {}                           – ki vagyok, a kiegészítők listája, összesítők (fiókok, most online, összes játékidő)
+//   accounts { search?, page? }           – fióklista (50/oldal), keresés fióknévre / e-mailre; soronként
+//                                           online / online_game / last_seen / play_seconds / play_games
+//                                           (null, ha a schema_jelenlet.sql még nem futott le)
+//   user     { id }                       – egy fiók részletei: jogosultság-sorok, érmetörténet, játékidő játékonként
 //   dlc      { id, dlc, grant, note? }    – kiegészítő adása (grant=true) / visszavonása (false)
 //   coins    { id, amount, note }         – érme jóváírása (+) / levonása (−); indoklás kötelező
 //   suspend  { id, on, note }             – fiók felfüggesztése (on=true, indoklás kötelező) / feloldása
@@ -99,14 +101,52 @@ async function accountsPage(db: SupabaseClient, search: string, page: number) {
 	});
 	if (error) throw new Error(error.message);
 	const rows = (data ?? []) as Record<string, unknown>[];
-	const tiltva = await felfuggesztettek(db);
+	const [tiltva, ido] = await Promise.all([
+		felfuggesztettek(db),
+		jatekido(db, rows.map((r) => String(r.user_id))),
+	]);
 	return {
 		total: rows.length ? Number(rows[0].total) : 0,
 		rows: rows.map((r) => ({
 			id: r.user_id, username: r.username ?? null, email: maskEmail(String(r.email ?? "")),
 			created_at: r.created_at, last_sign_in_at: r.last_sign_in_at, confirmed: r.confirmed,
 			coins: r.coins, dlcs: r.dlcs ?? [], suspended: tiltva.has(String(r.user_id)),
+			...jatekidoMezok(ido, String(r.user_id)),
 		})),
+	};
+}
+
+// ── játékidő és jelenlét (schema_jelenlet.sql, a launcher `jelenlet` függvénye tölti) ──
+type Jatekido = { online: boolean; online_game: string | null; last_seen: string | null; seconds: number;
+	games: Record<string, number> };
+
+// fiókonként összesítve; null, ha a tábla még nincs meg (az admin oldal ilyenkor „–”-t mutat)
+async function jatekido(db: SupabaseClient, ids: string[] | null): Promise<Map<string, Jatekido> | null> {
+	if (ids && ids.length === 0) return new Map();
+	const { data, error } = await db.rpc("admin_jatekido", { p_users: ids });
+	if (error) {
+		console.warn("admin_jatekido:", error.message);
+		return null;
+	}
+	const out = new Map<string, Jatekido>();
+	for (const r of (data ?? []) as { user_id: string; game: string; seconds: number; last_seen: string; online: boolean }[]) {
+		const j = out.get(r.user_id) ?? { online: false, online_game: null, last_seen: null, seconds: 0, games: {} };
+		const s = Number(r.seconds) || 0;
+		j.seconds += s;
+		j.games[r.game] = (j.games[r.game] ?? 0) + s;
+		if (!j.last_seen || String(r.last_seen) > j.last_seen) j.last_seen = String(r.last_seen);
+		if (r.online) { j.online = true; j.online_game = r.game; }
+		out.set(r.user_id, j);
+	}
+	return out;
+}
+
+function jatekidoMezok(ido: Map<string, Jatekido> | null, id: string) {
+	if (!ido) return { online: null, online_game: null, last_seen: null, play_seconds: null, play_games: null };
+	const j = ido.get(id);
+	return {
+		online: j?.online ?? false, online_game: j?.online_game ?? null, last_seen: j?.last_seen ?? null,
+		play_seconds: j?.seconds ?? 0, play_games: j?.games ?? {},
 	};
 }
 
@@ -153,9 +193,18 @@ async function handle(db: SupabaseClient, admin: Admin, action: string, body: Bo
 			// a fiók oldal ezzel kérdezi meg, mutassa-e az „Admin” linket (nem adminnak 403 jön)
 			return [{ admin: true, name: admin.name }, 200];
 		case "me": {
-			const all = await accountsPage(db, "", 0);
-			const { count: named } = await db.from("profiles").select("user_id", { count: "exact", head: true });
-			return [{ admin, dlcs: DLCS, stats: { accounts: all.total, with_username: named ?? 0 } }, 200];
+			const [all, { count: named }, ido] = await Promise.all([
+				accountsPage(db, "", 0),
+				db.from("profiles").select("user_id", { count: "exact", head: true }),
+				jatekido(db, null),
+			]);
+			let online: number | null = null, playSeconds: number | null = null;
+			if (ido) {
+				online = 0; playSeconds = 0;
+				for (const j of ido.values()) { if (j.online) online++; playSeconds += j.seconds; }
+			}
+			return [{ admin, dlcs: DLCS, stats: { accounts: all.total, with_username: named ?? 0,
+				online_now: online, play_seconds: playSeconds } }, 200];
 		}
 		case "accounts": {
 			const search = String(body.search ?? "").trim().slice(0, 100);
@@ -176,11 +225,12 @@ async function handle(db: SupabaseClient, admin: Admin, action: string, body: Bo
 					: Promise.resolve({ data: [] }),
 			]).then(([a, b]) => [...((a.data ?? []) as unknown as Record<string, string>[]), ...((b.data ?? []) as unknown as Record<string, string>[])]
 				.sort((x, y) => String(y.created_at).localeCompare(String(x.created_at))));
-			const [ent, tx] = await Promise.all([
+			const [ent, tx, ido] = await Promise.all([
 				q("entitlements", "dlc_key, source, revoked, created_at"),
 				q("coin_tx", "amount, reason, item_key, created_at"),
+				jatekido(db, [id]),
 			]);
-			return [{ entitlements: ent, coin_tx: tx, suspended: felfuggesztve(u.user) }, 200];
+			return [{ entitlements: ent, coin_tx: tx, suspended: felfuggesztve(u.user), ...jatekidoMezok(ido, id) }, 200];
 		}
 		case "dlc": {
 			const id = String(body.id ?? "");

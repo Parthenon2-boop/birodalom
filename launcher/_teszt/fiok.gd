@@ -261,6 +261,7 @@ func _run() -> void:
 		["/rest/v1/entitlements", 200, [{"dlc_key": "vikingek"}]],
 		["dlc-access", 200, {"token": jog, "owned": ["vikingek"], "latest": {"vikingek": "vikingek-v9"}}],
 		["dlc-access", 403, {"error": "not_owned"}],        # a letöltés linkjét már nem adja
+		["jatek-access", 200, {"games": {}}],               # nem admin: nincs titkos játék (launcher 44)
 	]
 	_kitolt("Probaelek", "", "jelszo123")
 	L._acc_kuld()
@@ -385,5 +386,59 @@ func _run() -> void:
 	t0 = Time.get_ticks_msec()
 	r = await V._acc_call(HTTPClient.METHOD_POST, "/functions/v1/login-nev", {"nev": "nincs", "password": "nincs"})
 	_ell(int(r[0]) == 0, "elérhetetlen szerver: hibaként tér vissza (%d ms)" % (Time.get_ticks_msec() - t0))
+
+	_fej("14. Játékidő-mérés: munkamenet indítása és a figyelő szkriptje")
+	L.valaszok = []
+	L.hivasok.clear()
+	L.acc_token = ""
+	L.cfg.set_value("account", "refresh_token", "")
+	var js: Array = await L._jelenlet_start("birodalom")
+	_ell(js.is_empty() and L.hivott("jelenlet") == 0, "belépés nélkül nem nyit munkamenetet, kérés sincs")
+	L.acc_token = "AT-proba"
+	var kulcs := "ab".repeat(32)
+	L.valaszok = [["/functions/v1/jelenlet", 200, {"sid": 42, "key": kulcs}]]
+	js = await L._jelenlet_start("heptarchia")
+	var jb: Dictionary = L.hivasok[-1]["body"] if not L.hivasok.is_empty() else {}
+	_ell(js == [42, kulcs], "belépve: sid + kulcs jön vissza (%s)" % str(js))
+	_ell(str(jb.get("action")) == "start" and str(jb.get("game")) == "heptarchia" and str(L.hivasok[-1]["token"]) == "AT-proba",
+		"a start kérés a játék kulcsával és a fiók tokenjével megy")
+	_ell(is_equal_approx(L.acc_timeout, 30.0), "utána a szokásos 30 mp-es időkorlát áll vissza")
+	L.valaszok = [["/functions/v1/jelenlet", 503, {"error": "nincs_tabla"}]]
+	js = await L._jelenlet_start("birodalom")
+	_ell(js.is_empty(), "ha a szerveren még nincs tábla (503), csendben kimarad")
+	L.valaszok = [["/functions/v1/jelenlet", 200, {"sid": 7, "key": "rossz"}]]
+	js = await L._jelenlet_start("birodalom")
+	_ell(js.is_empty(), "hibás kulcsot nem fogad el")
+	var ps: String = L._jelenlet_ps(1234, 42, kulcs)
+	_ell(ps.contains("Get-Process -Id 1234") and ps.contains("$script:sid = 42") and ps.contains(kulcs)
+		and ps.contains("WaitForExit(120000)") and ps.contains("Kuld 'stop'") and ps.contains("Tls12"),
+		"a PowerShell-figyelő: pid, sid, kulcs, 2 perces jelzés, stop, TLS 1.2")
+	_ell(not ps.contains("AT-proba") and not ps.contains("RT-"), "a figyelőben nincs fióktoken")
+	var sa: PackedStringArray = L._jelenlet_sh_args(-1, "/Apps/Heptarchia.app/Contents/MacOS/Heptarchia", 42, kulcs)
+	_ell(sa[0] == "-c" and sa[3] == "app" and sa[4] == "/Apps/Heptarchia.app" and sa[5] == "Heptarchia" and sa[8] == "42" and sa[9] == kulcs,
+		"a macOS-figyelő argumentumai (app mód): %s" % str(Array(sa).slice(3)))
+	_ell(not sa[1].contains("/Apps/Heptarchia.app/Contents/MacOS/Heptarchia"), "a teljes út nincs a szkript parancssorában")
+
+	L.cfg.set_value("account", "refresh_token", "RT-proba")
+	var szerver2 := TCPServer.new()
+	var port2 := 0
+	for p in range(47910, 48000):
+		if szerver2.listen(p, "127.0.0.1") == OK:
+			port2 = p
+			break
+	V.proxy_host = "127.0.0.1"
+	V.proxy_port = port2
+	V.acc_token = "AT-proba"
+	V.cfg.set_value("account", "refresh_token", "RT-proba")
+	t0 = Time.get_ticks_msec()
+	js = await V._jelenlet_start("birodalom")
+	mp = (Time.get_ticks_msec() - t0) / 1000.0
+	_ell(js.is_empty() and mp >= 4.0 and mp <= 9.0, "válasz nélküli szervernél 5 mp után feladja (%.1f mp), a játék indulhat" % mp)
+	_ell(is_equal_approx(V.acc_timeout, 30.0), "és a 30 mp-es korlát visszaáll")
+	szerver2.stop()
+	V.acc_token = ""
+	V.cfg.set_value("account", "refresh_token", "")
 	V.queue_free()
+	L.acc_token = ""
+	L.cfg.set_value("account", "refresh_token", "")
 	_vege()
