@@ -39,6 +39,8 @@ jobs:
           valtozott=0
           for f in launcher/assets/covers/*.jpg; do
             nev="$(basename "$f")"
+            # a titkos (csak admin) játékok borítója nem kerülhet a nyilvános weboldalra
+            case "$nev" in antiquitas.jpg|saecula.jpg) continue ;; esac
             cel="docs/kepek/borito_${nev}"
             if ! cmp -s "$f" "$cel"; then
               cp "$f" "$cel"
