@@ -58,7 +58,6 @@ const GAMES := [
 		"dir": "KardEsMagia",
 		"marker": "kard_es_magia_launcher.marker",
 		"home": false,
-		"cover_has_title": true,            # a borítóképen már rajta a cím
 	},
 	# ── Fejlesztés alatt álló, TITKOS játékok ──
 	# Csak admin fióknak látszanak: a listát és a letöltési linket a jatek-access szerverfüggvény adja
@@ -162,7 +161,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 47
+const LAUNCHER_BUILD := 48
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
