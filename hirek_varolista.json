@@ -1,1 +1,12 @@
-[]
+[{
+    "cim":  "Heptarchia 1.76 – saját ikon",
+    "cimke":  "Heptarchia",
+    "szoveg":  "A Heptarchia saját ikont kapott: egy kelta fonatdíszes aranykorona vörös alapon. Ez látszik a tálcán, az ablak sarkában és a játék fájlján is, a korábbi általános ikon helyett. A ParthLauncher is saját ikont kapott, egy arany Parthenont. Ha a tálcára rögzített parancsikon még a régi képet mutatja, vedd le és rögzítsd újra.",
+    "cim_en":  "Heptarchia 1.76 – its own icon",
+    "szoveg_en":  "Heptarchia now has its own icon: a golden crown with Celtic knotwork on a red field. It appears on the taskbar, in the window corner and on the game file, replacing the old generic icon. The ParthLauncher also has its own icon, a golden Parthenon. If a pinned taskbar shortcut still shows the old picture, unpin it and pin it again.",
+    "cim_de":  "Heptarchia 1.76 – ein eigenes Symbol",
+    "szoveg_de":  "Heptarchia hat jetzt ein eigenes Symbol: eine goldene Krone mit keltischem Flechtwerk auf rotem Grund. Es erscheint in der Taskleiste, in der Fensterecke und an der Spieldatei und ersetzt das alte allgemeine Symbol. Auch der ParthLauncher hat ein eigenes Symbol bekommen, einen goldenen Parthenon. Zeigt eine angeheftete Verknüpfung noch das alte Bild, löse sie und hefte sie erneut an.",
+    "cimke_en":  "Heptarchia",
+    "cimke_de":  "Heptarchia",
+    "datum":  "2026-09-29"
+}]
