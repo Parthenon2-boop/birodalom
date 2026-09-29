@@ -245,6 +245,7 @@ func _ready() -> void:
 	if BUILD_STATS.get(tipus, {}).get("drop", false):
 		add_to_group("dropoff")
 	sprite.visible = false
+	_load_art()
 	queue_redraw()
 
 func _base_hp() -> float:
@@ -264,12 +265,13 @@ func _process(delta: float) -> void:
 	# Hálózati játszmában a csatlakozó nem termel, nem képez és nem épít:
 	# mindezt a házigazda számolja, ide csak a kész állapot érkezik.
 	if GameState.net_client:
-		if tipus in CHIMNEY and prog >= 1.0 and Settings.lively():
+		if (tipus in CHIMNEY or _smoke_node != null) and prog >= 1.0 and Settings.lively():
 			_smoke_t += delta
 			_smoke_redraw += delta
 			if _smoke_redraw >= 0.16:
 				_smoke_redraw = 0.0
-				queue_redraw()
+				if _smoke_node != null: _smoke_node.queue_redraw()
+				else: queue_redraw()
 		return
 	if not GameState.on or GameState.over: return
 	if prog < 1.0:
@@ -288,7 +290,7 @@ func _process(delta: float) -> void:
 	_tick_tower(delta)
 	_tick_heal(delta)
 	# A kéményfüst mozgásához ritka újrarajzolás elég.
-	if tipus in CHIMNEY and Settings.lively():
+	if (tipus in CHIMNEY or _smoke_node != null) and Settings.lively():
 		_smoke_t += delta
 		_smoke_redraw += delta
 		if _smoke_redraw >= 0.16:
@@ -640,9 +642,204 @@ func _wall_rect() -> Rect2:
 	return Rect2(-_size.x * 0.5, _size.y * 0.5 - wh, _size.x, wh)
 
 func _sprite_rect() -> Rect2:
+	if not _art.is_empty(): return _art_rect("kesz")
 	return _roof_rect().merge(_wall_rect())
 
+# --- A BLENDERBEN RENDERELT KÉP ---
+#
+# Típusonként és korszakonként három kép (assets/art3d/buildings, a
+# tools/blender/render_epulet.py készíti): kész, építkezés (állvány) és
+# romos. Mindegyikhez maszk: R = csapatszín, G = kiemelőszín, B = a nemzet
+# tetőszíne (Style.ARCH) — ettől lesz a magyar falu vörös, a német szürke
+# palás, a kalózoké barna tetős. A vetett árnyék és az állvány a képen van;
+# élőben csak a kéményfüst, a tűz és a főváros lobogója mozog.
+const ART_MAPPA := "res://assets/art3d/buildings/"
+static var _art_man: Dictionary = {}
+static var _art_anyag: Dictionary = {}
+var _art: Dictionary = {}          # "kesz"/"epit"/"rom" -> {tex, mask, ox, oy, w, h}
+var _art_info: Dictionary = {}     # a manifest bejegyzése (fust, zaszlo, s)
+var _art_state: String = ""
+var _art_s: float = 2.0
+
+static func art_manifest() -> Dictionary:
+	if _art_man.is_empty():
+		var f := FileAccess.open(ART_MAPPA + "manifest.json", FileAccess.READ)
+		if f != null:
+			var d: Variant = JSON.parse_string(f.get_as_text())
+			if d is Dictionary: _art_man = d
+	return _art_man
+
+static func art_key(t: String, a: int) -> String:
+	var man := art_manifest()
+	var aa := clampi(a, 0, 3)
+	for d in [0, -1, 1, -2, 2, -3, 3]:
+		var k := "%s_%d" % [t, aa + d]
+		if aa + d >= 0 and aa + d <= 3 and man.has(k): return k
+	return ""
+
+# Közös anyag: kép + színek szerint (az azonos gazda azonos házai egy
+# rajzhívásba kerülhetnek).
+static func art_material(mask: Texture2D, csapat: Color, kiemelo: Color, teto: Color) -> ShaderMaterial:
+	var k := "%d|%s|%s|%s" % [mask.get_instance_id() if mask != null else 0, csapat.to_html(false),
+		kiemelo.to_html(false), teto.to_html(false)]
+	if _art_anyag.has(k): return _art_anyag[k]
+	var mat := ShaderMaterial.new()
+	mat.shader = UnitSprite.shader()
+	mat.set_shader_parameter("maszk", mask)
+	mat.set_shader_parameter("csapat", csapat)
+	mat.set_shader_parameter("kiemelo", kiemelo)
+	mat.set_shader_parameter("teto", teto)
+	_art_anyag[k] = mat
+	return mat
+
+func _load_art() -> void:
+	_art.clear()
+	_art_state = ""
+	var key := art_key(tipus, age)
+	if key == "": return
+	_art_info = art_manifest()[key]
+	_art_s = float(_art_info.get("s", 2.0))
+	for v in ["kesz", "epit", "rom"]:
+		var suf: String = "" if v == "kesz" else "_" + v
+		var p := ART_MAPPA + key + suf + ".png"
+		var e: Dictionary = _art_e(v)
+		if not ResourceLoader.exists(p) or e.is_empty(): continue
+		var mp := ART_MAPPA + key + suf + "_m.png"
+		_art[v] = {"tex": load(p), "mask": load(mp) if ResourceLoader.exists(mp) else null,
+			"ox": float(e["ox"]), "oy": float(e["oy"]), "w": float(e["w"]), "h": float(e["h"])}
+	if not _art.has("kesz"):
+		_art.clear()
+		return
+	sprite.centered = false
+	sprite.region_enabled = false
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	sprite.show_behind_parent = true
+	sprite.scale = Vector2(1.0 / _art_s, 1.0 / _art_s)
+	sprite.visible = true
+	_update_art()
+	if not _art_e("kesz").get("fust", []).is_empty() or tipus == "hq":
+		_ensure_smoke()
+
+# A manifestben a kész kép "kesz", a másik kettő "_epit" / "_rom" néven áll.
+func _art_e(v: String) -> Dictionary:
+	return _art_info.get(v, _art_info.get("_" + v, {}))
+
+func _art_variant() -> String:
+	if prog < 1.0 and _art.has("epit"): return "epit"
+	if hp < max_hp * 0.5 and _art.has("rom"): return "rom"
+	return "kesz"
+
+func _update_art() -> void:
+	var v := _art_variant()
+	if v == _art_state: return
+	_art_state = v
+	var e: Dictionary = _art[v]
+	sprite.texture = e["tex"]
+	sprite.offset = -Vector2(float(e["ox"]), float(e["oy"]))
+	sprite.material = art_material(e["mask"], team_color, team_accent,
+		Style.arch_color(_nemzet, "roof"))
+
+# A kép téglalapja az épület helyi terében.
+func _art_rect(v: String) -> Rect2:
+	var e: Dictionary = _art.get(v, _art.get("kesz", {}))
+	if e.is_empty(): return Rect2()
+	return Rect2(-float(e["ox"]) / _art_s, -float(e["oy"]) / _art_s, float(e["w"]) / _art_s,
+		float(e["h"]) / _art_s)
+
+# Képpont a képen -> helyi koordináta.
+func _art_pont(p: Array, v: String = "kesz") -> Vector2:
+	var e: Dictionary = _art_e(v)
+	return Vector2((float(p[0]) - float(e.get("ox", 0.0))) / _art_s,
+		(float(p[1]) - float(e.get("oy", 0.0))) / _art_s)
+
+func has_art() -> bool:
+	return not _art.is_empty()
+
+func _draw_art() -> void:
+	_update_art()
+	var foot := Rect2(-_size * 0.5, _size)
+	var box := _art_rect(_art_state)
+	if _selected:
+		draw_rect(foot.grow(1.5), Color(0, 0, 0, 0.45), false, 3.0)
+		draw_rect(foot, team_accent, false, 2.0)
+	if owner_id == GameState.en_id:
+		_draw_rally(_selected)
+	var frac := clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
+	var bar_w := _size.x
+	var bar_top := box.position.y - 6.0
+	if prog < 1.0:
+		_draw_bar(bar_w, bar_top, prog, Color("d8b34a"))
+	elif frac < 1.0:
+		var c := Color("6fae52")
+		if frac < 0.55: c = Color("c98b3a")
+		if frac < 0.28: c = Color("c04a3a")
+		_draw_bar(bar_w, bar_top, frac, c)
+	elif not train_queue.is_empty():
+		var left := prod_tmr.time_left
+		var total := maxf(prod_tmr.wait_time, 0.001)
+		_draw_bar(bar_w, bar_top, 1.0 - left / total, Color("6f8fae"))
+
+# Élő réteg a képen: kéményfüst (sérülten sűrű, fekete), tűz a romos
+# házon, a főváros lobogója. Ezt a füst-csomópont rajzolja (6 Hz).
+func _draw_art_live() -> void:
+	if prog < 1.0: return
+	var t := _smoke_t
+	var frac := clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
+	var pontok: Array = _art_e(_art_state).get("fust", [])
+	if Settings.lively():
+		for i in range(pontok.size()):
+			var o := _art_pont(pontok[i], _art_state)
+			var korom := 0.86 if age < 2 else 0.62
+			if frac < 0.5: korom = 0.3
+			for k in range(3):
+				var u := fmod(t * 0.35 + float(k) / 3.0 + float(i) * 0.21, 1.0)
+				var p := o + Vector2(u * 5.0 + sin(u * 6.0 + float(i)) * 1.5, -2.0 - u * 26.0)
+				_smoke_node.draw_circle(p, 2.0 + u * 5.0,
+					Color(korom, korom, korom * 1.02, (1.0 - u) * 0.32))
+	if frac < 0.34:
+		var r := _art_rect(_art_state)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = nid * 131 + 7
+		for i in range(3):
+			var c := Vector2(rng.randf_range(r.position.x + r.size.x * 0.25, r.end.x - r.size.x * 0.25),
+				rng.randf_range(r.position.y + r.size.y * 0.35, r.end.y - r.size.y * 0.3))
+			var f := 0.5 + sin(t * 9.0 + float(i) * 2.1) * 0.5
+			_smoke_node.draw_circle(c + Vector2(0, -3), 3.0 + f * 2.5, Color(0.93, 0.55, 0.18, 0.55 + f * 0.3))
+			_smoke_node.draw_circle(c + Vector2(0, -5), 1.6 + f * 1.4, Color(1.0, 0.86, 0.45, 0.7))
+			for k in range(3):
+				var u := fmod(t * 0.3 + float(k) / 3.0 + float(i) * 0.3, 1.0)
+				_smoke_node.draw_circle(c + Vector2(u * 6.0, -8.0 - u * 30.0), 3.0 + u * 7.0,
+					Color(0.18, 0.17, 0.16, (1.0 - u) * 0.4))
+	var zp: Variant = _art_info.get("kesz", {}).get("zaszlo", null)
+	if tipus == "hq" and zp is Array and _flag_tex != null:
+		_draw_waving_flag(_art_pont(zp), t)
+
+# Lobogó a rúdon: keskeny csíkokból, két eltérő ütemű hullám összegéből; a
+# rúdnál nyugodt, a végén erős.
+func _draw_waving_flag(at: Vector2, t: float) -> void:
+	var iw := float(_flag_tex.get_width())
+	var ih := float(_flag_tex.get_height())
+	var w := 15.0
+	var h := w * ih / maxf(iw, 1.0)
+	var n := 12
+	var sw := w / float(n)
+	var sh := iw / float(n)
+	var amp := h * 0.26
+	var fazis := t * 4.0 + float(nid % 7)
+	for i in range(n):
+		var u := float(i) / float(n - 1)
+		var wv := (sin(fazis + u * 3.6) * 0.62 + sin(fazis * 1.43 + u * 6.1) * 0.38) * 0.72
+		var off := wv * amp * u * u * (1.6 - u * 0.6)
+		_smoke_node.draw_texture_rect_region(_flag_tex, Rect2(at.x + float(i) * sw, at.y + off,
+			sw + 0.6, h), Rect2(float(i) * sh, 0.0, sh, ih))
+		if wv < -0.12:
+			_smoke_node.draw_rect(Rect2(at.x + float(i) * sw, at.y + off, sw + 0.6, h),
+				Color(0, 0, 0, 0.15), true)
+
 func _draw() -> void:
+	if not _art.is_empty():
+		_draw_art()
+		return
 	var foot := Rect2(-_size * 0.5, _size)
 	var box := _sprite_rect()
 	# Vetett árnyék + letaposott föld a ház körül. A fény bal felülről jön
@@ -801,7 +998,7 @@ func _draw_house(foot: Rect2, reveal: float) -> void:
 var _smoke_node: Node2D = null
 
 func _ensure_smoke() -> void:
-	if _smoke_node != null or not (tipus in CHIMNEY): return
+	if _smoke_node != null or not (tipus in CHIMNEY or not _art.is_empty()): return
 	_smoke_node = Node2D.new()
 	_smoke_node.z_index = 1
 	_smoke_node.draw.connect(_draw_smoke)
@@ -818,6 +1015,9 @@ func _ensure_smoke() -> void:
 var _on_screen: bool = true
 
 func _draw_smoke() -> void:
+	if not _art.is_empty():
+		_draw_art_live()
+		return
 	if prog < 1.0 or not Settings.lively(): return
 	var r := _chimney_rect()
 	var cx := r.get_center().x

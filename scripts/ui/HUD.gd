@@ -262,88 +262,50 @@ func _style_top_bar() -> void:
 		box.add_child(sep)
 		box.move_child(sep, group.get_index())
 
-# Kis épületrajz az építési gombokra. Nem külön rajz: a BuildArt ugyanazt
-# a sziluettet, palettát és tust teszi le, mint a pályán — csak textúra
-# nélkül, mert 26 képponton úgyis eltűnne.
+# Kis épületrajz az építési gombokra: UGYANAZ a Blenderben renderelt kép,
+# ami a pályán áll (Building.art_*), a játékos színeivel és tetőszínével.
+# Ha a képe hiányozna, a régi BuildArt-rajz marad.
 class BldIcon extends Control:
 	var tipus: String = "house"
 	var age: int = 0
+	var _tex: Texture2D = null
+	var _rect: Rect2 = Rect2()
+
+	func _ready() -> void:
+		var key := Building.art_key(tipus, age)
+		if key == "": return
+		var p := Building.ART_MAPPA + key + ".png"
+		if not ResourceLoader.exists(p): return
+		_tex = load(p)
+		var mp := Building.ART_MAPPA + key + "_m.png"
+		if ResourceLoader.exists(mp):
+			material = Building.art_material(load(mp), Style.side_color(GameState.en_id),
+				Style.side_accent(GameState.en_id), Style.arch_color(GameState.nation, "roof"))
 
 	func _draw() -> void:
-		BuildArt.ikon(self, tipus, age, Rect2(Vector2.ZERO, size))
+		if _tex == null:
+			BuildArt.ikon(self, tipus, age, Rect2(Vector2.ZERO, size))
+			return
+		var ts := Vector2(_tex.get_width(), _tex.get_height())
+		var k := minf(size.x / ts.x, size.y / ts.y)
+		var s := ts * k
+		draw_texture_rect(_tex, Rect2((size - s) * 0.5, s), false)
 
 # --- KIS EGYSÉGRAJZ A KÉPZÉSI GOMBOKRA ---
 #
-# Az építőgombon régóta ott a ház rajza, a képzési gombon viszont nem volt
-# semmi. Új grafikát nem találunk ki: ugyanarról a lapról vágunk ki egy
-# szemből álló kockát, amiről a pályán az UnitSprite dolgozik. Így a gombon
-# pontosan az az alak áll, amit kiképzel — és mivel a lap korszakonként más,
-# a korszakváltás a gombokon is meglátszik.
-#
-# A lapkiosztást (melyik szerep melyik rajzról jön) nem másoljuk le: magát
-# az UnitSprite táblázatait olvassuk, hogy a kettő ne csúszhasson szét.
+# Ugyanarról a Blenderben renderelt lapról, amiről a pályán az UnitSprite
+# dolgozik: a délnek néző pihenő kocka, a játékos színeivel.
 const EgysegLap := preload("res://scripts/units/UnitSprite.gd")
 
-# Egy kocka mérete a lapokon, és a "szemből" néző irány a sorrendekben.
-const KOCKA    := 64.0
-const IRANY_DEL := 1      # 0=Kelet, 1=Dél, 2=Nyugat, 3=Észak
-
-# A már kivágott ikonokat eltesszük: a képzési panel minden kijelöléskor
-# újraépül, fölösleges újra és újra AtlasTexture-t gyártani.
 static var _egyseg_ikonok: Dictionary = {}
 
 # A szerephez tartozó kis kép, vagy null, ha nincs hozzá lap.
 static func egyseg_ikon(role: String, age: int) -> Texture2D:
 	var kulcs := "%s/%d" % [role, age]
 	if _egyseg_ikonok.has(kulcs): return _egyseg_ikonok[kulcs]
-	var tex := _egyseg_ikon_keszit(role, age)
+	var tex: Texture2D = EgysegLap.ikon(role, age)
 	_egyseg_ikonok[kulcs] = tex
 	return tex
-
-static func _egyseg_ikon_keszit(role: String, age: int) -> Texture2D:
-	# A hajó és a repülő EGYETLEN oldalnézeti kép, nincs kockákra osztva:
-	# az egészet használjuk. (A 20. századi acélhajót a pályán rajzoljuk,
-	# de a gombon a vitorlás képe is elmondja, miféle hajó lesz belőle.)
-	if role in EgysegLap.NAVAL_ROLES:
-		return _lap("res://assets/sprites/ship/%s.png" % role)
-	if role in EgysegLap.AIR_ROLES:
-		return _lap("res://assets/sprites/air/%s.png" % role)
-	if role == "cav":
-		var lo := _lap("res://assets/sprites/horse.png")
-		if lo == null: return null
-		# A ló lapján oldalnézet van: a 3. sor 1. kockája az álló ló.
-		return _kivag(lo, Rect2(KOCKA, 3.0 * KOCKA + 8.0, KOCKA, 38.0))
-	# Gyalogos: a korszak lapja. 0 = LPC vitézek, 1-2 = napóleoni
-	# vonalgyalogság, 3 = világháborús katona — ugyanaz a rend, mint az
-	# UnitSprite.setup()-ban.
-	var kulcs := ""
-	var ut := ""
-	var sor := 0
-	if age >= 3:
-		kulcs = "ww2"
-		ut = "res://assets/sprites/ww2/ally.png"
-		sor = int(EgysegLap.ROWS_WW2[IRANY_DEL])
-	elif age >= 1:
-		var lap: String = str(EgysegLap.NAP_FOR.get(role, "melee"))
-		kulcs = "napoleon/" + lap
-		ut = "res://assets/sprites/napoleon/%s.png" % lap
-		sor = int(EgysegLap.ROWS_LPC[IRANY_DEL])
-	if ut == "" or not ResourceLoader.exists(ut):
-		var lap2: String = str(EgysegLap.LPC_FOR.get(role, "melee"))
-		kulcs = "lpc/" + lap2
-		ut = "res://assets/sprites/lpc/%s.png" % lap2
-		sor = int(EgysegLap.ROWS_LPC[IRANY_DEL])
-	var t := _lap(ut)
-	if t == null: return null
-	# Az alak nem tölti ki a 64x64-es kockát: az UnitSprite méréseiből
-	# tudjuk, milyen magas és hol van a talpa. Szorosan köré vágunk, hogy
-	# a 26 képpontos ikonon ne csak egy pontnyi emberke látszódjon.
-	var m: Array = EgysegLap.SHEET_METRICS.get(kulcs, [46.0, 61.0])
-	var magas: float = float(m[0])
-	var talp: float = float(m[1])
-	return _kivag(t, Rect2(0.5 * (KOCKA - magas),
-		float(sor) * KOCKA + talp - magas, magas, magas))
-
 static func _lap(ut: String) -> Texture2D:
 	if not ResourceLoader.exists(ut): return null
 	return load(ut) as Texture2D
@@ -369,6 +331,10 @@ func _egyseg_ikon_gombra(btn: Button, role: String, age: int) -> void:
 	kep.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	kep.custom_minimum_size = IKON_MERET
 	kep.texture = tex
+	var lapkulcs: String = EgysegLap.sheet_key(role, age)
+	if lapkulcs != "":
+		kep.material = EgysegLap.anyag(lapkulcs, Style.side_color(GameState.en_id),
+			Style.side_accent(GameState.en_id))
 	kep.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(kep)
 	kep.position = IKON_HELY
