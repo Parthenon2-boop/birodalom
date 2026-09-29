@@ -1,12 +1,15 @@
-// Egy játék saját hírei a játékoldalakon (heptarchia.html, birodalom.html, kard-es-magia.html).
+// Egy játék saját hírei a játékoldalakon (heptarchia.html, birodalom.html, kard-es-magia.html, antiquitas.html,
+// saecula.html).
 // Forrás: hirek.json (ugyanaz, amit a főoldal #hirek része mutat).
-// Használat: jatekHirek(dobozElem, "heptarchia" | "birodalom" | "kard", "hu" | "en" | "de")
+// Használat: jatekHirek(dobozElem, "heptarchia" | "birodalom" | "kard" | "antiquitas" | "saecula", "hu" | "en" | "de")
 // Nyelvváltáskor elég újra meghívni: a hirek.json csak egyszer töltődik le.
 (() => {
 	const JATEKOK = {
 		heptarchia: /heptarchia|vikingek kora|viking age|zeitalter der wikinger|varégok útja|varangian road|warägerweg/i,
 		birodalom: /birodalom/i,
 		kard: /kard\s+és\s+mágia|sword\s+and\s+(sorcery|magic)|schwert\s+und\s+magie/i,
+		antiquitas: /antiquitas/i,
+		saecula: /saecula/i,
 	};
 	const SZOVEG = {
 		hu: { none: "Ehhez a játékhoz még nincs friss hír.", all: "Minden hír a főoldalon →", err: "A híreket most nem sikerült betölteni.", tag: "Hír" },
