@@ -161,7 +161,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 48
+const LAUNCHER_BUILD := 49
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -573,6 +573,17 @@ func _scan_for_godot(dir_path: String, depth: int) -> String:
 
 const SIDEBAR_W := 236.0
 const COVER_DIR := "res://assets/covers/"
+# A festett borítók (960×720) fókuszpontja: a széles keretbe vágáskor és a lista kis négyzetes képén a kép ezen
+# arányos pontja körül marad meg a lényeg (0 = bal / felső széle, 1 = jobb / alsó széle). Középről vágva a
+# Heptarchia borítóján a király feje lelógott a keret tetejéről – ezért a vágás ott a kép tetejéhez igazodik.
+const COVER_FOCUS := {
+	"birodalom": Vector2(0.5, 0.35),
+	"heptarchia": Vector2(0.1, 0.12),
+	"kard_es_magia": Vector2(0.2, 0.4),
+	"antiquitas": Vector2(0.15, 0.42),
+	"saecula": Vector2(0.5, 0.4),
+}
+var cover_focus := Vector2(0.5, 0.5)
 var cover: Control
 var cover_tex: Texture2D
 var cover_caption: Control
@@ -787,21 +798,23 @@ func _thumb(key: String) -> Texture2D:
 	if img == null: return null
 	if img.is_compressed(): img.decompress()
 	var side := mini(img.get_width(), img.get_height())
-	img = img.get_region(Rect2i((img.get_width() - side) / 2, (img.get_height() - side) / 2, side, side))
+	var f: Vector2 = COVER_FOCUS.get(key, Vector2(0.5, 0.5))
+	img = img.get_region(Rect2i(roundi((img.get_width() - side) * f.x), roundi((img.get_height() - side) * f.y), side, side))
 	img.resize(42, 42, Image.INTERPOLATE_LANCZOS)
 	var t := ImageTexture.create_from_image(img)
 	_thumbs[key] = t
 	return t
 
-# A borító: a kép kitölti a keretet (középről vágva), az alja elsötétül, hogy a felirat olvasható legyen
+# A borító: a kép kitölti a keretet (a játék fókuszpontja körül vágva, lásd COVER_FOCUS), az alja elsötétül,
+# hogy a felirat olvasható legyen
 func _draw_cover(cv: Control) -> void:
 	var r := Rect2(Vector2.ZERO, cv.size)
 	cv.draw_rect(r, Color(0.05, 0.04, 0.03))
 	if cover_tex != null:
 		var ts := cover_tex.get_size()
 		var k := maxf(r.size.x / ts.x, r.size.y / ts.y)
-		var src_size := r.size / k
-		var src := Rect2((ts - src_size) * 0.5, src_size)
+		var src_size := (r.size / k).min(ts)
+		var src := Rect2((ts - src_size) * cover_focus, src_size)
 		cv.draw_texture_rect_region(cover_tex, r, src)
 	if cover_caption != null and cover_caption.visible:
 		var top := r.size.y * 0.45
@@ -815,6 +828,7 @@ func _refresh_cover() -> void:
 	if cover == null or not is_instance_valid(cover): return
 	var g := game()
 	cover_tex = _cover_of(str(g["key"]))
+	cover_focus = COVER_FOCUS.get(str(g["key"]), Vector2(0.5, 0.5))
 	cover_title.text = str(g["name"])
 	cover_sub.text = str(g["sub"])
 	cover_caption.visible = not bool(g.get("cover_has_title", false))
