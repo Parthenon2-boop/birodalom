@@ -1,1 +1,12 @@
-[]
+[{
+    "cim":  "Heptarchia 1.77 – rendezettebb tartománypanel, egységes gombok",
+    "cimke":  "Heptarchia",
+    "szoveg":  "A tartomány panelje már nem lóg le akkor sem, ha sok épület és csapat közül választhatsz: a gombok saját görgethető területen vannak, a Sereg indítása és a Támadás pedig mindig látszik. Az egységek felsorolása csak a tételek között törik, és az elégedetlenség sora is szépen tördelődik. Az Eredmények gomb ugyanolyan méretű és stílusú lett, mint a Menü. A ParthLauncher visszakapta a régi, P betűs ikonját, és a borítóképek jobban vannak kivágva: a Heptarchia királyának feje már nem lóg ki a képből.",
+    "cim_en":  "Heptarchia 1.77 – tidier province panel, matching buttons",
+    "szoveg_en":  "The province panel no longer overflows when you have many buildings and units to choose from: the buttons now scroll in their own area, and Raise army and Attack always stay visible. The unit list only breaks between entries, and the unrest line wraps neatly. The Scores button now matches the Menu button in size and style. The ParthLauncher has its old P icon back, and the cover pictures are cropped better – the Heptarchia king\u0027s head is no longer cut off.",
+    "cim_de":  "Heptarchia 1.77 – aufgeräumtes Provinzfenster, einheitliche Knöpfe",
+    "szoveg_de":  "Das Provinzfenster läuft nicht mehr über, auch wenn viele Gebäude und Einheiten zur Wahl stehen: Die Knöpfe scrollen jetzt in einem eigenen Bereich, und Heer aufstellen sowie Angreifen bleiben immer sichtbar. Die Einheitenliste bricht nur noch zwischen den Einträgen um, und die Unruhe-Zeile wird sauber umbrochen. Der Ergebnisse-Knopf passt jetzt in Größe und Stil zum Menü-Knopf. Der ParthLauncher hat sein altes P-Symbol zurück, und die Titelbilder sind besser zugeschnitten – der Kopf des Heptarchia-Königs wird nicht mehr abgeschnitten.",
+    "cimke_en":  "Heptarchia",
+    "cimke_de":  "Heptarchia",
+    "datum":  "2026-10-03"
+}]
