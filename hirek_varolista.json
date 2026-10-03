@@ -22,5 +22,17 @@
         "cimke_en":  "Heptarchia",
         "cimke_de":  "Heptarchia",
         "datum":  "2026-10-03"
+    },
+    {
+        "cim":  "Heptarchia 1.81 – átjárható tornyok, rövid csatasúgó",
+        "cimke":  "Heptarchia",
+        "szoveg":  "Ostromnál a védők most már a fal tetején maradva, ajtón át átmennek a tornyokon – nem kell lemászniuk és újra fel. A tornyok magasabbak lettek, a burh és a viking tábor tornyán faajtó, a római kőfalén boltíves kapu van. A csata súgója a szövegfal helyett egy rövid, kétsoros tipp lett, ami magától eltűnik; a részletes leírás az F1 vagy a ? gombbal nyílik meg, csukható részekkel. Fontos: a többjátékos csatához mindkét játékosnak frissítenie kell.",
+        "cim_en":  "Heptarchia 1.81 – walk-through towers, short battle help",
+        "szoveg_en":  "In sieges, defenders now walk through the wall towers along the wall top, through doors – no more climbing down and up again. Towers are taller, with wooden doors on burh and Viking-camp towers and stone arches on Roman walls. The battle help wall of text is now a short two-line tip that fades by itself; the detailed help opens with F1 or ?, with collapsible sections. Note: both players must update for multiplayer battles.",
+        "cim_de":  "Heptarchia 1.81 – begehbare Türme, kurze Schlachthilfe",
+        "szoveg_de":  "Bei Belagerungen gehen die Verteidiger jetzt auf dem Wehrgang durch Türen durch die Mauertürme – kein Hinab- und Hinaufsteigen mehr. Die Türme sind höher, mit Holztüren an Burh- und Wikingerlager-Türmen und Steinbögen an römischen Mauern. Statt einer Textwand zeigt die Schlachthilfe jetzt einen kurzen, zweizeiligen Tipp, der von selbst verschwindet; die ausführliche Hilfe öffnet sich mit F1 oder ?, mit einklappbaren Abschnitten. Wichtig: Für Mehrspielerschlachten müssen beide Spieler aktualisieren.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-10-03"
     }
 ]
