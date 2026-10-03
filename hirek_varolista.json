@@ -58,5 +58,17 @@
         "cimke_en":  "Birodalom",
         "cimke_de":  "Birodalom",
         "datum":  "2026-10-03"
+    },
+    {
+        "cim":  "Heptarchia 1.83 – gyorsabb idő, nagyobb tét",
+        "cimke":  "Heptarchia",
+        "szoveg":  "Egy kör mostantól egy év (új játéknál akár kettő), így 790-től 1066-ig 276 kör a játék. A bevett városról te döntesz: kifosztod (sok ezüst, de sokáig forrong), megtorlást rendelsz el (alig marad lakos, de nem mernek lázadni), vagy megszállod – az ablak megmutatja a pontos számokat. Új a raktár és a kincstár (nincs több végtelen készlet), a csapatok feloszlatása éhínségkor egy gombbal, a közös flotta (bárhonnan bárhová hajózhatsz, ahová víz vezet), és erősebbek a gépi ellenfelek: Normál, Erős (×3, alapértelmezett) vagy Brutális (×5). A régi mentések betölthetők. Fontos: a többjátékos módhoz mindkét játékosnak frissítenie kell.",
+        "cim_en":  "Heptarchia 1.83 – faster time, higher stakes",
+        "szoveg_en":  "One turn is now one year (or two, for a new game), so 790 to 1066 takes 276 turns. You decide the fate of every captured town: sack it (lots of silver, long unrest), order reprisals (few people left, but they won\u0027t dare to rise) or occupy it – the dialog shows the exact numbers. Also new: storage and treasury limits (no more endless stockpiles), one-click disbanding when your army starves, a common fleet (sail from anywhere to anywhere water leads) and tougher AI rulers – Normal, Strong (×3, default) or Brutal (×5). Old saves still load. Note: both players must update for multiplayer.",
+        "cim_de":  "Heptarchia 1.83 – schnellere Zeit, höherer Einsatz",
+        "szoveg_de":  "Eine Runde ist jetzt ein Jahr (bei neuem Spiel auch zwei), 790 bis 1066 dauert also 276 Runden. Über jede eroberte Stadt entscheidest du: Plünderung (viel Silber, lange Unruhe), Strafgericht (kaum Einwohner bleiben, aber niemand wagt den Aufstand) oder Besetzung – das Fenster zeigt die genauen Zahlen. Neu sind außerdem Lager- und Schatzkammergrenzen (keine endlosen Vorräte mehr), das Auflösen von Truppen per Klick bei Hungersnot, eine gemeinsame Flotte (von überall dorthin segeln, wohin Wasser führt) und stärkere KI-Herrscher – Normal, Stark (×3, Standard) oder Brutal (×5). Alte Spielstände lassen sich laden. Wichtig: Für den Mehrspielermodus müssen beide Spieler aktualisieren.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-10-03"
     }
 ]
