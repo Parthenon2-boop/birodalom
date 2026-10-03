@@ -46,5 +46,17 @@
         "cimke_en":  "Heptarchia",
         "cimke_de":  "Heptarchia",
         "datum":  "2026-10-03"
+    },
+    {
+        "cim":  "Birodalom – új, Blenderben modellezett grafika",
+        "cimke":  "Birodalom",
+        "szoveg":  "A Birodalom új grafikát kapott! A katonák és a munkások Blenderben modellezett figurák lettek: 8 irányban mozognak, járás-, harc- és halálanimációval, mind a négy korszakban. Mind a 15 épület új képet kapott: építkezés közben állvánnyal, súlyos sérülésnél romosan, a nemzet tetőszínével, füstölgő kéményekkel, a főépületen lobogó zászlóval. Az elesettek egy ideig a csatatéren maradnak. A hajók és a repülők egyelőre a régi rajzzal jelennek meg, az ő új grafikájuk később jön.",
+        "cim_en":  "Birodalom – new Blender-modelled graphics",
+        "szoveg_en":  "Birodalom has new graphics! Soldiers and workers are now Blender-modelled figures moving in 8 directions with walk, attack and death animations across all four eras. All 15 buildings are redrawn: scaffolding while under construction, ruins when badly damaged, nation-coloured roofs, smoking chimneys and a waving flag on the headquarters. Fallen soldiers now remain on the battlefield for a while. Ships and aircraft still use the previous art for now; their new graphics will follow later.",
+        "cim_de":  "Birodalom – neue, in Blender modellierte Grafik",
+        "szoveg_de":  "Birodalom hat eine neue Grafik! Soldaten und Arbeiter sind jetzt in Blender modellierte Figuren, die sich in 8 Richtungen bewegen, mit Lauf-, Angriffs- und Todesanimation in allen vier Epochen. Alle 15 Gebäude sind neu gestaltet: mit Baugerüst im Bau, als Ruine bei schweren Schäden, mit Dachfarbe der Nation, rauchenden Schornsteinen und wehender Flagge am Hauptgebäude. Gefallene bleiben eine Weile auf dem Schlachtfeld liegen. Schiffe und Flugzeuge nutzen vorerst noch die bisherige Grafik; ihre neue Grafik folgt später.",
+        "cimke_en":  "Birodalom",
+        "cimke_de":  "Birodalom",
+        "datum":  "2026-10-03"
     }
 ]
