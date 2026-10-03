@@ -1,12 +1,26 @@
-[{
-    "cim":  "Heptarchia 1.77 – rendezettebb tartománypanel, egységes gombok",
-    "cimke":  "Heptarchia",
-    "szoveg":  "A tartomány panelje már nem lóg le akkor sem, ha sok épület és csapat közül választhatsz: a gombok saját görgethető területen vannak, a Sereg indítása és a Támadás pedig mindig látszik. Az egységek felsorolása csak a tételek között törik, és az elégedetlenség sora is szépen tördelődik. Az Eredmények gomb ugyanolyan méretű és stílusú lett, mint a Menü. A ParthLauncher visszakapta a régi, P betűs ikonját, és a borítóképek jobban vannak kivágva: a Heptarchia királyának feje már nem lóg ki a képből.",
-    "cim_en":  "Heptarchia 1.77 – tidier province panel, matching buttons",
-    "szoveg_en":  "The province panel no longer overflows when you have many buildings and units to choose from: the buttons now scroll in their own area, and Raise army and Attack always stay visible. The unit list only breaks between entries, and the unrest line wraps neatly. The Scores button now matches the Menu button in size and style. The ParthLauncher has its old P icon back, and the cover pictures are cropped better – the Heptarchia king\u0027s head is no longer cut off.",
-    "cim_de":  "Heptarchia 1.77 – aufgeräumtes Provinzfenster, einheitliche Knöpfe",
-    "szoveg_de":  "Das Provinzfenster läuft nicht mehr über, auch wenn viele Gebäude und Einheiten zur Wahl stehen: Die Knöpfe scrollen jetzt in einem eigenen Bereich, und Heer aufstellen sowie Angreifen bleiben immer sichtbar. Die Einheitenliste bricht nur noch zwischen den Einträgen um, und die Unruhe-Zeile wird sauber umbrochen. Der Ergebnisse-Knopf passt jetzt in Größe und Stil zum Menü-Knopf. Der ParthLauncher hat sein altes P-Symbol zurück, und die Titelbilder sind besser zugeschnitten – der Kopf des Heptarchia-Königs wird nicht mehr abgeschnitten.",
-    "cimke_en":  "Heptarchia",
-    "cimke_de":  "Heptarchia",
-    "datum":  "2026-10-03"
-}]
+[
+    {
+        "cim":  "Heptarchia 1.77 – rendezettebb tartománypanel, egységes gombok",
+        "cimke":  "Heptarchia",
+        "szoveg":  "A tartomány panelje már nem lóg le akkor sem, ha sok épület és csapat közül választhatsz: a gombok saját görgethető területen vannak, a Sereg indítása és a Támadás pedig mindig látszik. Az egységek felsorolása csak a tételek között törik, és az elégedetlenség sora is szépen tördelődik. Az Eredmények gomb ugyanolyan méretű és stílusú lett, mint a Menü. A ParthLauncher visszakapta a régi, P betűs ikonját, és a borítóképek jobban vannak kivágva: a Heptarchia királyának feje már nem lóg ki a képből.",
+        "cim_en":  "Heptarchia 1.77 – tidier province panel, matching buttons",
+        "szoveg_en":  "The province panel no longer overflows when you have many buildings and units to choose from: the buttons now scroll in their own area, and Raise army and Attack always stay visible. The unit list only breaks between entries, and the unrest line wraps neatly. The Scores button now matches the Menu button in size and style. The ParthLauncher has its old P icon back, and the cover pictures are cropped better – the Heptarchia king\u0027s head is no longer cut off.",
+        "cim_de":  "Heptarchia 1.77 – aufgeräumtes Provinzfenster, einheitliche Knöpfe",
+        "szoveg_de":  "Das Provinzfenster läuft nicht mehr über, auch wenn viele Gebäude und Einheiten zur Wahl stehen: Die Knöpfe scrollen jetzt in einem eigenen Bereich, und Heer aufstellen sowie Angreifen bleiben immer sichtbar. Die Einheitenliste bricht nur noch zwischen den Einträgen um, und die Unruhe-Zeile wird sauber umbrochen. Der Ergebnisse-Knopf passt jetzt in Größe und Stil zum Menü-Knopf. Der ParthLauncher hat sein altes P-Symbol zurück, und die Titelbilder sind besser zugeschnitten – der Kopf des Heptarchia-Königs wird nicht mehr abgeschnitten.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-10-03"
+    },
+    {
+        "cim":  "Heptarchia 1.80 – vezesd magad a csatát!",
+        "cimke":  "Heptarchia",
+        "szoveg":  "Megérkezett a játszható csata! Rohamnál, védekezésnél, portyázók ellen és rajtaütésnél a „Csata vezetése” gombbal Total War-szerű, 2,5D csatatéren magad irányítod a sereget. Korhű csapatok harcolnak: fyrd, thegnek, dán bárdos huscarlok, vikingek és berzerkerek, walesi és gael könnyűgyalogság, normann lovagok, íjászok és számszeríjasok. Minden nép a maga módján: pajzsfal, disznófej-ék, berserkergang, normann lovagroham és színlelt menekülés, erdei rajtaütés. Ostromnál a burh földsánca és palánkja, a római városok kőfala, a viking tábor vagy a normann motte áll a csatatéren – faltörő kossal, létrákkal, a védők a falon. A térképen többkörös ostrom: körülzárás, kiéheztetés, ostromgépek építése, megadásra szólítás, kitörés és felmentő sereg. Többjátékosban a barátaiddal egyszerre, élőben vezetitek a csapatokat. A csata indulásakor betöltőkép jelzi, amíg minden elkészül.",
+        "cim_en":  "Heptarchia 1.80 – lead your battles yourself!",
+        "szoveg_en":  "Playable battles are here! For assaults, defence, raids and ambushes, the “Lead the battle” button takes you to a Total War-style 2.5D battlefield where you command your army yourself. Period troops fight: fyrd, thegns, axe-wielding housecarls, Vikings and berserkers, Welsh and Gaelic skirmishers, Norman knights, archers and crossbowmen. Each people fights its own way: shield wall, the svinfylking wedge, berserkergang, the Norman knightly charge and feigned retreat, ambushes from the woods. In sieges the burh\u0027s earth rampart and palisade, Roman town walls, Viking camps or Norman mottes stand on the battlefield – with battering rams, ladders and defenders on the walls. On the campaign map sieges last several turns: blockade, starvation, building siege engines, demanding surrender, sallies and relief armies. In multiplayer you and your friends command your troops live, at the same time. A loading screen covers the battlefield while it is being prepared.",
+        "cim_de":  "Heptarchia 1.80 – führe deine Schlachten selbst!",
+        "szoveg_de":  "Spielbare Schlachten sind da! Bei Angriff, Verteidigung, Raubzügen und Hinterhalten führt dich der Knopf „Schlacht führen“ auf ein 2,5D-Schlachtfeld im Stil von Total War, auf dem du dein Heer selbst befehligst. Zeitgemäße Truppen kämpfen: Fyrd, Thegns, Huscarls mit der dänischen Axt, Wikinger und Berserker, walisische und gälische Plänkler, normannische Ritter, Bogen- und Armbrustschützen. Jedes Volk kämpft auf seine Art: Schildwall, Svinfylking-Keil, Berserkergang, der normannische Ritteransturm und die vorgetäuschte Flucht, Hinterhalte aus dem Wald. Bei Belagerungen stehen der Erdwall der Burh mit Palisade, römische Stadtmauern, Wikingerlager oder normannische Motten auf dem Schlachtfeld – mit Rammbock, Leitern und Verteidigern auf der Mauer. Auf der Karte dauern Belagerungen mehrere Runden: Einschließung, Aushungern, Bau von Belagerungsmaschinen, Aufforderung zur Kapitulation, Ausfälle und Entsatzheere. Im Mehrspieler führt ihr eure Truppen gemeinsam und gleichzeitig. Ein Ladebildschirm deckt das Schlachtfeld ab, bis alles bereit ist.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-10-03"
+    }
+]
