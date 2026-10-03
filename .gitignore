@@ -19,3 +19,6 @@ docs/kepek/*.import
 
 # a Supabase parancssoros eszköz ideiglenes fájljai
 server/supabase/.temp/
+
+# Python (tools/blender)
+__pycache__/

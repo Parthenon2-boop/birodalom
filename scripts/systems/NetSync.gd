@@ -163,7 +163,11 @@ func _apply_builds(b: PackedFloat32Array) -> void:
 				Building.TIPUS_ORDER.size() - 1)]
 			n = main.spawn_building(tipus, owner, pos, prog >= 1.0)
 			n.nid = nid
-			n.age = age
+			# A korszak a házigazdáé: ha a csatlakozónál más volt, a kép is
+			# a házigazda szerinti korszaké legyen.
+			if int(n.age) != age:
+				n.age = age
+				n.refresh_art()
 			_builds[nid] = n
 		n.net_apply(hp, prog)
 		i += B_STRIDE

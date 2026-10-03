@@ -18,7 +18,9 @@ extends SceneTree
 # Kilépési kód: 0 = rendben, 1 = hiba.
 
 const NYELVEK := ["hu", "en", "de"]
-const KIHAGY := ["res://scripts/dev/", "res://launcher/", "res://.godot/"]
+# A build/ a helyi kiadási mappa (benne a launcher letöltött játékai is):
+# nem a Birodalom forrása, a kiadásba sem kerül.
+const KIHAGY := ["res://scripts/dev/", "res://launcher/", "res://.godot/", "res://build/"]
 
 var _hibak: Array[String] = []
 var _hasznalt_db: int = 0

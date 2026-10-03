@@ -372,7 +372,9 @@ func _ready() -> void:
 func _draw() -> void:
 	var s := radius / 9.2
 	var cy := 3.4 * s
-	if not naval:
+	if air:
+		# A szárazföldi egységek és a hajók renderelt képén az árnyék már
+		# rajta van; a repülőgépét (a magasban) mi vetjük a földre.
 		# KONTAKTÁRNYÉK a figura alatt, a NAP ÁLLÁSA szerint dőlve: reggel
 		# hosszan nyugatra, délben rövid, este keletre (index.html 16/D).
 		var nap := _nap_arnyek()
@@ -486,8 +488,10 @@ func _draw_heal_fx() -> void:
 func _head_y() -> float:
 	# A gép a talajárnyéka FÖLÖTT repül, ezért az életsávja is följebb kell
 	# hogy kerüljön — különben a szárnyára esne.
-	if air: return -(AIR_HEIGHT + 46.0)
-	return -maxf(46.0, radius * 2.4)
+	var fh := 20.0
+	if sprite != null and sprite.has_method("figure_height"): fh = sprite.figure_height()
+	if air: return -(AIR_HEIGHT + fh * 0.6 + 6.0)
+	return -maxf(fh + 4.0, radius * 1.4)
 
 func _draw_hp_bar() -> void:
 	if hp >= max_hp: return
@@ -1369,6 +1373,9 @@ func take_damage(amount: float, tamado: Node = null) -> void:
 		if fo2 != null and fo2.scars != null and is_instance_valid(fo2.scars):
 			fo2.scars.add_scar(global_position,
 				"fegyver" if randf() < 0.55 else "eges")
+			# Az elesett egység teste egy ideig ott marad (a lap halálkockái).
+			Holttest.letesz(fo2.scars.get_parent(), sprite, global_position, naval,
+				AIR_HEIGHT if air else 0.0)
 		# A kalózvilágban a zsákmány hírnevet hoz: a hajó többet ér.
 		if GameState.hostile(GameState.en_id, owner_id):
 			GameState.kills += 1
