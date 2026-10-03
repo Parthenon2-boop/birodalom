@@ -34,5 +34,17 @@
         "cimke_en":  "Heptarchia",
         "cimke_de":  "Heptarchia",
         "datum":  "2026-10-03"
+    },
+    {
+        "cim":  "Heptarchia 1.82 – több hadjárat, saját mentéssel",
+        "cimke":  "Heptarchia",
+        "szoveg":  "Minden hadjáratnak saját mentése lett: egy új játék már nem írja felül a régit. A Betöltés lista minden mentett hadjáratot mutat – néppel, uralkodóval, évvel, körrel, játékidővel –, és itt át is nevezheted vagy törölheted őket. A „Mentés újként…” a menüben külön ágat ment ugyanabból a hadjáratból, a Folytatás gomb a legutóbbit tölti be. A kör elején automatikus mentés készül, biztonsági másolattal. A korábbi mentésed „Korábbi hadjárat” néven magától átkerül.",
+        "cim_en":  "Heptarchia 1.82 – several campaigns, each with its own save",
+        "szoveg_en":  "Every campaign now has its own save: starting a new game no longer overwrites the old one. The Load list shows all saved campaigns – with nation, ruler, year, turn and play time – and lets you rename or delete them. “Save as new…” in the menu saves a separate branch of the same campaign, and the Continue button loads the latest one. An autosave with a backup is made at the start of each turn. Your existing save is moved over automatically as “Earlier campaign”.",
+        "cim_de":  "Heptarchia 1.82 – mehrere Feldzüge mit eigenem Spielstand",
+        "szoveg_de":  "Jeder Feldzug hat jetzt seinen eigenen Spielstand: Ein neues Spiel überschreibt den alten nicht mehr. Die Laden-Liste zeigt alle gespeicherten Feldzüge – mit Volk, Herrscher, Jahr, Runde und Spielzeit – und du kannst sie umbenennen oder löschen. „Als neu speichern…“ im Menü speichert einen eigenen Zweig desselben Feldzugs, und der Fortsetzen-Knopf lädt den neuesten. Zu Beginn jeder Runde wird automatisch mit Sicherungskopie gespeichert. Dein bisheriger Spielstand wird automatisch als „Früherer Feldzug“ übernommen.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-10-03"
     }
 ]
