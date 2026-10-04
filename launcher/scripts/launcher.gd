@@ -161,7 +161,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 49
+const LAUNCHER_BUILD := 50
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -2983,6 +2983,7 @@ func _on_downloaded(result: int, code: int, _h: PackedStringArray, _b: PackedByt
 		installed_version = str(remote["version"])
 		installed_mode = str(remote["mode"])
 		_fix_mac_permissions()
+		_asztali_parancsikon()
 		_save_cfg()
 		_status("Kész: a %s változat telepítve. Indíthatod a játékot!" % installed_version, S.GREEN)
 		_progress(100, "kész")
@@ -3039,6 +3040,31 @@ func _install(zip_path: String) -> String:
 	if m: m.store_string("ParthLauncher – ezt a mappát az indító kezeli.\n")
 	DirAccess.remove_absolute(zip_path)
 	return ""
+
+# Windows: az első telepítéskor parancsikon kerül az asztalra a játék .exe-jére (a játék saját ikonjával),
+# így a launcher nélkül is indítható. Csak egyszer hozzuk létre: ha a játékos törli, frissítéskor nem tesszük
+# vissza. Az asztal helyét a Windows adja meg (OneDrive-os asztalnál is jó); a nevet és az utakat kódolva adjuk
+# át (UTF-16LE, base64), így az ékezetek és az idézőjelek nem sérülnek.
+func _asztali_parancsikon() -> void:
+	if OS.get_name() != "Windows" or installed_mode == "source": return
+	var g := game()
+	var kulcs := "parancsikon_" + str(g["key"])
+	if bool(cfg.get_value("state", kulcs, false)): return
+	var exe := _game_exe()
+	if exe == "": return
+	var mappa := exe.get_base_dir().replace("/", "\\")
+	exe = exe.replace("/", "\\")
+	var nev := str(g.get("label", str(g["name"]).capitalize()))
+	var q := func(s: String) -> String: return "'" + s.replace("'", "''") + "'"
+	var ps: String = "$l = Join-Path ([Environment]::GetFolderPath('Desktop')) " + q.call(nev + ".lnk") + "; " \
+		+ "$s = (New-Object -ComObject WScript.Shell).CreateShortcut($l); " \
+		+ "$s.TargetPath = " + q.call(exe) + "; " \
+		+ "$s.WorkingDirectory = " + q.call(mappa) + "; " \
+		+ "$s.IconLocation = " + q.call(exe + ",0") + "; " \
+		+ "$s.Description = " + q.call(nev) + "; $s.Save()"
+	var encoded := Marshalls.raw_to_base64(ps.to_utf16_buffer())
+	OS.create_process("powershell.exe", ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-EncodedCommand", encoded], false)
+	cfg.set_value("state", kulcs, true)
 
 # Egy zip kibontása a megadott mappába ("" = rendben)
 func _extract_zip(zip_path: String, dest: String) -> String:
