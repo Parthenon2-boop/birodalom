@@ -112,3 +112,33 @@ fiókonkénti (és játékonkénti) játékidőt, és zöld pöttyel, ki játszi
 
 Korlát: csak a launcherből, belépve indított játék számít. macOS-en a figyelő a futó program elérési útját
 keresi (`ps`); ha nem találja 90 mp-en belül, a munkamenet lezárul (rövid, legfeljebb néhány perces idő).
+
+## Heptarchia a böngészőben (`heptarchia-web` függvény, privát `heptarchia-web` tároló)
+
+A böngészős Heptarchiát csak bejelentkezett (regisztrált) fiók játszhatja. A honlapon (`docs/jatek/heptarchia/`)
+csak a betöltő van (`index.html`, a Godot-motor `index.js` / `index.wasm`-ja); maga a játék (`index.pck`) a PRIVÁT
+`heptarchia-web` tárolóban. Belépés után az oldal a `heptarchia-web` függvénytől kér linket: a függvény ellenőrzi a
+tokent, a felfüggesztést, az oldalt (Origin: csak `https://parthenon2-boop.github.io` és fejlesztéshez
+`http://localhost:*`), a korlátot (fiókonként óránként 30 link), naplóz (`heptarchia_web_log`), és 5 percig érvényes,
+aláírt letöltési linket ad. A csomagot a heptarchia tároló CI-je (`.github/workflows/web.yml`) tölti fel minden
+`v*` címkénél, egy csak feltöltésre jó kulccsal. A többjátékos szobák jelzőcsatornái (Realtime, `hep-<kód>`) privátak:
+csak bejelentkezett fiók léphet be.
+
+### Telepítés (egyszer)
+
+1. **Adatbázis:** SQL Editor → `schema_heptarchia_web.sql` tartalma → Run (a tároló, a napló, a Realtime-szabályok).
+2. **Realtime:** Project Settings → Realtime (vagy Realtime → Settings) → **Allow public access: KI** (csak privát csatorna).
+3. **Titok** (Edge Functions → Secrets): `HEP_WEB_FELTOLTO_KULCS` = egy hosszú, véletlen szöveg, pl. PowerShellben:
+   `-join ((48..57)+(65..90)+(97..122) | Get-Random -Count 48 | % {[char]$_})`
+4. **Függvény** (a `server` mappából, mint fent):
+   ```powershell
+   npx --yes supabase@latest functions deploy heptarchia-web --project-ref gxvepswtairfqvosdcpb --use-api --no-verify-jwt
+   ```
+   A `--no-verify-jwt` szándékos: a függvény maga ellenőrzi a tokent (a böngésző CORS-előkérése token nélkül jön).
+5. **GitHub:** a `Parthenon2-boop/heptarchia` tároló → Settings → Secrets and variables → Actions → New repository
+   secret: `HEP_WEB_FELTOLTO_KULCS` = ugyanaz, mint a 3. pontban.
+6. **Első csomag:** heptarchia tároló → Actions → „Heptarchia böngészős változat” → Run workflow (vagy a következő
+   `v*` címke). Ellenőrzés: Storage → `heptarchia-web` → `aktualis.json` és `<verzió>/index.pck`.
+
+Korlátok (ingyenes csomag): egy fájl legfeljebb 50 MB (a csomag most ~40 MB); a Storage-forgalom havi 5 GB – a
+böngésző verziónként egyszer tölti le a csomagot (gyorsítótár), utána nem; sok új játékos esetén ez elfogyhat.
