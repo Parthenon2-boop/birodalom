@@ -161,7 +161,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 50
+const LAUNCHER_BUILD := 51
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -286,6 +286,7 @@ func _ready() -> void:
 	game_idx = clampi(int(cfg.get_value("state", "game", 0)), 0, GAMES.size() - 1)
 	# titkos játékkal nem indulunk: az csak akkor jelenik meg, ha a szerver admin fióknak ismeri el
 	if bool(GAMES[game_idx].get("titkos", false)): game_idx = 0
+	_parancsikonok_a_telepitettekhez()
 	_load_game(game_idx)
 	_apply_skin()                 # a kiválasztott játék stílusa + felület
 	http = HTTPRequest.new()
@@ -3065,6 +3066,21 @@ func _asztali_parancsikon() -> void:
 	var encoded := Marshalls.raw_to_base64(ps.to_utf16_buffer())
 	OS.create_process("powershell.exe", ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-EncodedCommand", encoded], false)
 	cfg.set_value("state", kulcs, true)
+
+# Induláskor a már korábban telepített játékok is megkapják (egyszer) az asztali parancsikont –
+# különben csak a következő játékfrissítéskor kerülne ki.
+func _parancsikonok_a_telepitettekhez() -> void:
+	if OS.get_name() != "Windows" or OS.has_feature("editor"): return
+	var eredeti := game_idx
+	var volt := false
+	for i in range(GAMES.size()):
+		if bool(cfg.get_value("state", "parancsikon_" + str(GAMES[i]["key"]), false)): continue
+		_load_game(i)
+		if installed_version != "" and _game_installed():
+			_asztali_parancsikon()
+			volt = true
+	_load_game(eredeti)
+	if volt: cfg.save(CFG_PATH)
 
 # Egy zip kibontása a megadott mappába ("" = rendben)
 func _extract_zip(zip_path: String, dest: String) -> String:
