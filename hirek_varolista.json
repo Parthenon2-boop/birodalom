@@ -22,5 +22,17 @@
         "cimke_en":  "Heptarchia",
         "cimke_de":  "Heptarchia",
         "datum":  "2026-10-04"
+    },
+    {
+        "cim":  "Heptarchia 1.86 – kisebb letöltés, javítások",
+        "cimke":  "Heptarchia",
+        "szoveg":  "Feleakkora lett a letöltés: az uralkodóportrék kisebb, de ugyanolyan szép képformátumba kerültek. Javítva: a többjátékos váróterem az 1.83–1.84-ben nem nyílt meg – ez az 1.85-ben már rendben volt, és most minden változatban az. A többjátékos módhoz mindkét játékosnak frissítenie kell.",
+        "cim_en":  "Heptarchia 1.86 – smaller download, fixes",
+        "szoveg_en":  "The download is now half the size: ruler portraits use a smaller image format with no visible loss. Fixed: the multiplayer lobby did not open in 1.83–1.84 – this was already fixed in 1.85 and is now fixed everywhere. Both players must update for multiplayer.",
+        "cim_de":  "Heptarchia 1.86 – kleinerer Download, Korrekturen",
+        "szoveg_de":  "Der Download ist jetzt nur noch halb so groß: Die Herrscherporträts nutzen ein kleineres Bildformat ohne sichtbaren Verlust. Behoben: Die Mehrspieler-Lobby öffnete sich in 1.83–1.84 nicht – das war in 1.85 bereits behoben und ist es jetzt überall. Für den Mehrspielermodus müssen beide Spieler aktualisieren.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-10-04"
     }
 ]
