@@ -2,20 +2,42 @@
 <html lang="hu">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#120c07">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Heptarchia</title>
 <meta name="description" content="Heptarchia – angolszász nagystratégiai játék a böngészőben / Anglo-Saxon grand strategy in your browser">
 <link rel="icon" href="index.icon.png">
 <style>
 /* HEPTARCHIA – a böngészős változat oldala: belépés, töltőképernyő, hibaüzenet, a vászon */
 html, body, #canvas { margin: 0; padding: 0; border: 0; }
-body { color: #e8d9b8; background: #120c07; overflow: hidden; touch-action: none;
-	font-family: Georgia, 'Times New Roman', serif; }
-#canvas { display: block; position: absolute; inset: 0; width: 100vw; height: 100vh; }
+/* telefonon a lap ne görögjön, ne húzódjon (lehúzásra frissítés), ne nagyítson; a játék a teljes ablakban */
+html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
+body { color: #e8d9b8; background: #120c07; touch-action: none; -webkit-text-size-adjust: 100%;
+	-webkit-tap-highlight-color: transparent; font-family: Georgia, 'Times New Roman', serif; }
+#canvas { display: block; position: absolute; inset: 0; width: 100vw; height: 100vh; height: 100dvh;
+	touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 #canvas:focus { outline: none; }
+/* a töltő / belépő lap görgethető (alacsony, fekvő telefonon nem fér ki), a dupla koppintás nem nagyít */
 #tolto { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
-	justify-content: center; gap: 16px; padding: 16px; box-sizing: border-box; text-align: center; overflow-y: auto;
-	background: radial-gradient(ellipse at center, #2a1a0d 0%, #120c07 70%); z-index: 2; touch-action: auto; }
+	justify-content: flex-start; gap: 16px; padding: 16px; box-sizing: border-box; text-align: center; overflow-y: auto;
+	-webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+	background: radial-gradient(ellipse at center, #2a1a0d 0%, #120c07 70%); z-index: 2; touch-action: pan-y; }
+/* (középre, de ha nem fér ki, felülről görgethető: a két üres elem osztja el a maradék helyet) */
+#tolto::before, #tolto::after { content: ''; flex: 1 0 0; margin: -8px 0; }
+/* álló telefonon: „fordítsd el” (a játék fekvő képre készült, ugyanúgy, mint gépen) */
+#fordit { display: none; position: fixed; inset: 0; z-index: 5; flex-direction: column; align-items: center;
+	justify-content: center; gap: 18px; padding: 24px; box-sizing: border-box; text-align: center;
+	background: radial-gradient(ellipse at center, #2a1a0d 0%, #120c07 75%); touch-action: none; }
+#fordit svg { width: 96px; height: 96px; animation: fordul 2.4s ease-in-out infinite; }
+@keyframes fordul { 0%, 25% { transform: rotate(0deg); } 55%, 100% { transform: rotate(-90deg); } }
+#fordit .cim { font-size: 22px; color: #d6ad5c; }
+#fordit .szoveg { font-size: 15px; color: #c9b48a; line-height: 1.45; max-width: 340px; }
+#fordit button { padding: 12px 22px; font: 600 17px Georgia, serif; color: #1d1510; border: 0; border-radius: 4px;
+	background: linear-gradient(#f0cf85, #d9a441); }
+@media (orientation: portrait) { body.jatekban.erinto #fordit { display: flex; } }
 #tolto h1 { margin: 0; font-size: clamp(34px, 7vw, 64px); letter-spacing: 0.12em; color: #d6ad5c;
 	font-weight: normal; text-shadow: 0 2px 8px #000; }
 #tolto .alcim { margin: 0; font-size: clamp(14px, 2.4vw, 19px); color: #b89b6a; font-style: italic; }
@@ -42,6 +64,16 @@ body { color: #e8d9b8; background: #120c07; overflow: hidden; touch-action: none
 #belepes .linkek { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; font-size: 14px; }
 #belepes a { color: #f0cf85; }
 #belepes .uzenet { min-height: 1.2em; margin-top: 10px; font-size: 14px; color: #f08a74; }
+#tolto { scrollbar-color: #6b4f2a transparent; scrollbar-width: thin; }
+/* alacsony (fekvő telefonos) képernyőn tömörebben */
+@media (max-height: 520px) {
+	#tolto { gap: 10px; padding: 10px 16px; }
+	#tolto h1 { font-size: 30px; }
+	#tolto .alcim { font-size: 14px; }
+	#belepes { padding: 12px 16px; }
+	#belepes p { font-size: 14px; margin-bottom: 8px; }
+	#belepes label { margin-bottom: 6px; }
+}
 </style>
 <link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
 <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
@@ -66,6 +98,14 @@ body { color: #e8d9b8; background: #120c07; overflow: hidden; touch-action: none
 	<div id="felirat"></div>
 	<div id="megjegyzes"></div>
 	<div id="hiba"></div>
+</div>
+
+<div id="fordit">
+	<svg viewBox="0 0 96 96" aria-hidden="true"><rect x="30" y="10" width="36" height="76" rx="6" fill="none"
+		stroke="#d6ad5c" stroke-width="4"/><circle cx="48" cy="77" r="3" fill="#d6ad5c"/></svg>
+	<div class="cim" id="f_cim"></div>
+	<div class="szoveg" id="f_szoveg"></div>
+	<button type="button" id="f_gomb"></button>
 </div>
 
 <script>
@@ -103,6 +143,73 @@ body { color: #e8d9b8; background: #120c07; overflow: hidden; touch-action: none
 	});
 }());
 
+// ── Telefon, táblagép ────────────────────────────────────────────────────────
+// ERINTO: van érintőképernyő – a játék (scripts/erintes.gd) ebből tudja, hogy az érintést maga fordítsa
+// egéreseményekre (koppintás, hosszú nyomás, csippentés). DURVA: az elsődleges mutató az ujj (telefon,
+// táblagép) – ott teljes képernyő, fekvő kép, és a képpontsűrűség legfeljebb 2 (a 3×-os telefonkijelzőn a
+// játék így harmadannyi képpontot rajzol, alig láthatóan életlenebbül). ?erinto=1: fejlesztői próba gépen.
+const ERINTO = (function () {
+	let e = false;
+	try { e = ('ontouchstart' in window) || navigator.maxTouchPoints > 0; } catch (err) { e = false; }
+	return e || /[?&]erinto=1/.test(location.search);
+}());
+const DURVA = (function () {
+	try { return matchMedia('(pointer: coarse)').matches || /[?&]erinto=1/.test(location.search); } catch (e) { return false; }
+}());
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+window.hepErinto = ERINTO;
+if (ERINTO) document.body.classList.add('erinto');
+if (DURVA && (window.devicePixelRatio || 1) > 2) {
+	try { Object.defineProperty(window, 'devicePixelRatio', { get: function () { return 2; }, configurable: true }); } catch (e) {}
+}
+// iOS Safari: a két ujjas csippentés ne a lapot nagyítsa (a játékban az a nagyítás)
+document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+document.addEventListener('dblclick', function (e) { if (e.target && e.target.id === 'canvas') e.preventDefault(); });
+
+// A hang feloldása: a telefonos böngésző (főleg iOS) csak a játékos érintése után engedi megszólalni a hangot.
+// A játék hangkörnyezetét (AudioContext) megjegyezzük, és minden érintéskor / gombnyomáskor folytatjuk, ha áll.
+(function () {
+	const AC = window.AudioContext || window.webkitAudioContext;
+	if (!AC) return;
+	const lista = [];
+	class HangKornyezet extends AC {
+		constructor(...a) { super(...a); lista.push(this); }
+	}
+	window.AudioContext = HangKornyezet;
+	if (window.webkitAudioContext) window.webkitAudioContext = HangKornyezet;
+	function felold() {
+		for (const c of lista) {
+			if (c.state !== 'running' && c.state !== 'closed') c.resume().catch(function () {});
+		}
+	}
+	['touchend', 'pointerup', 'mousedown', 'keydown'].forEach(function (e) {
+		addEventListener(e, felold, { capture: true, passive: true });
+	});
+}());
+
+// Teljes képernyő és fekvő kép (Androidon a fekvő zár csak teljes képernyőn megy; iPhone-on egyik sincs –
+// ott a Főképernyőhöz adás ad teljes képernyőt)
+function teljes_kepernyo() {
+	const el = document.documentElement;
+	const ker = el.requestFullscreen || el.webkitRequestFullscreen;
+	let p = null;
+	if (ker && !document.fullscreenElement && !document.webkitFullscreenElement) {
+		try { p = ker.call(el, { navigationUI: 'hide' }); } catch (e) { p = null; }
+	}
+	Promise.resolve(p).then(function () {
+		if (screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape');
+	}).catch(function () { /* nem engedte: marad a „fordítsd el” jelzés */ });
+}
+const VAN_TELJES = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+// a játék indulása után az első érintés kéri (a böngésző csak a játékos mozdulatára engedi)
+if (DURVA) {
+	addEventListener('touchend', function elso() {
+		if (!document.body.classList.contains('jatekban')) return;
+		removeEventListener('touchend', elso, true);
+		teljes_kepernyo();
+	}, true);
+}
+
 // ── Szövegek a böngésző (vagy a honlapon választott) nyelvén ─────────────────
 const NYELV = (function () {
 	let n = '';
@@ -123,7 +230,10 @@ const SZOVEG = {
 		'e.rate': 'Túl sok kérés rövid időn belül. Várj egy percet, és próbáld újra.',
 		'm.relogin': 'A belépésed lejárt. Töltsd újra az oldalt, és lépj be újra.', 'm.site': 'A játék csak a hivatalos oldalon érhető el.',
 		'm.nopck': 'A játék csomagja most nem érhető el. Próbáld újra később.',
-		'e.net': 'Nem sikerült elérni a szervert. Van internet?', 'e.other': 'Nem sikerült. Próbáld újra később.' },
+		'e.net': 'Nem sikerült elérni a szervert. Van internet?', 'e.other': 'Nem sikerült. Próbáld újra később.',
+		'f.cim': 'Fordítsd el a telefont', 'f.szoveg': 'A Heptarchia fekvő képernyőre készült – telefonon is ugyanúgy néz ki, mint gépen.',
+		'f.ios': 'Teljes képernyőhöz: Megosztás → Főképernyőhöz adás, és onnan indítsd a játékot.', 'f.gomb': 'Teljes képernyő',
+		webgl: 'A játékhoz WebGL 2 kell, de ez a böngésző vagy eszköz nem támogatja (vagy ki van kapcsolva). Próbáld friss Chrome-mal, Firefoxszal vagy Safarival, illetve kapcsold be a hardveres gyorsítást.' },
 	en: { alcim: 'Anglo-Saxon Kingdoms – 790', tolt: 'Loading…', indul: 'Starting the game…', ellenoriz: 'Checking your account…',
 		megj: 'The first load is about 50 MB; after that it starts faster from the browser cache. Your saves stay in this browser.',
 		hiany: 'Your browser is missing some features the game needs:\n', hiba: 'An error occurred while loading:\n',
@@ -136,7 +246,10 @@ const SZOVEG = {
 		'e.rate': 'Too many requests in a short time. Wait a minute and try again.',
 		'm.relogin': 'Your sign-in has expired. Reload the page and sign in again.', 'm.site': 'The game is only available on the official site.',
 		'm.nopck': 'The game package is not available right now. Please try again later.',
-		'e.net': 'Could not reach the server. Are you online?', 'e.other': 'It did not work. Please try again later.' },
+		'e.net': 'Could not reach the server. Are you online?', 'e.other': 'It did not work. Please try again later.',
+		'f.cim': 'Turn your phone sideways', 'f.szoveg': 'Heptarchia is made for a landscape screen – on a phone it looks just like on a computer.',
+		'f.ios': 'For full screen: Share → Add to Home Screen, then start the game from there.', 'f.gomb': 'Full screen',
+		webgl: 'The game needs WebGL 2, but this browser or device does not support it (or it is turned off). Try an up-to-date Chrome, Firefox or Safari, or turn on hardware acceleration.' },
 	de: { alcim: 'Angelsächsische Königreiche – 790', tolt: 'Wird geladen…', indul: 'Das Spiel startet…', ellenoriz: 'Konto wird geprüft…',
 		megj: 'Der erste Ladevorgang umfasst etwa 50 MB; danach startet es schneller aus dem Browser-Cache. Spielstände bleiben in diesem Browser.',
 		hiany: 'Deinem Browser fehlen einige Funktionen, die das Spiel benötigt:\n', hiba: 'Beim Laden ist ein Fehler aufgetreten:\n',
@@ -149,12 +262,22 @@ const SZOVEG = {
 		'e.rate': 'Zu viele Anfragen in kurzer Zeit. Warte eine Minute und versuche es erneut.',
 		'm.relogin': 'Deine Anmeldung ist abgelaufen. Lade die Seite neu und melde dich erneut an.', 'm.site': 'Das Spiel ist nur auf der offiziellen Seite verfügbar.',
 		'm.nopck': 'Das Spielpaket ist gerade nicht verfügbar. Bitte versuche es später erneut.',
-		'e.net': 'Der Server ist nicht erreichbar. Bist du online?', 'e.other': 'Es hat nicht geklappt. Bitte versuche es später erneut.' },
+		'e.net': 'Der Server ist nicht erreichbar. Bist du online?', 'e.other': 'Es hat nicht geklappt. Bitte versuche es später erneut.',
+		'f.cim': 'Dreh dein Handy quer', 'f.szoveg': 'Heptarchia ist für das Querformat gemacht – auf dem Handy sieht es genauso aus wie am Computer.',
+		'f.ios': 'Für Vollbild: Teilen → Zum Home-Bildschirm, dann das Spiel von dort starten.', 'f.gomb': 'Vollbild',
+		webgl: 'Das Spiel benötigt WebGL 2, aber dieser Browser oder dieses Gerät unterstützt es nicht (oder es ist ausgeschaltet). Versuche ein aktuelles Chrome, Firefox oder Safari, oder schalte die Hardwarebeschleunigung ein.' },
 }[NYELV];
 document.documentElement.lang = NYELV;
 const $ = (id) => document.getElementById(id);
 $('alcim').textContent = SZOVEG.alcim;
 $('felirat').textContent = SZOVEG.ellenoriz;
+// a „fordítsd el” jelzés (álló telefonon, játék közben); iPhone-on nincs teljes képernyő gomb, csak a tipp
+$('f_cim').textContent = SZOVEG['f.cim'];
+$('f_szoveg').textContent = SZOVEG['f.szoveg'] + (IOS && !VAN_TELJES ? '\n' + SZOVEG['f.ios'] : '');
+$('f_szoveg').style.whiteSpace = 'pre-line';
+$('f_gomb').textContent = SZOVEG['f.gomb'];
+if (!VAN_TELJES) $('f_gomb').style.display = 'none';
+$('f_gomb').addEventListener('click', teljes_kepernyo);
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="index.js"></script>
@@ -177,7 +300,7 @@ const AKTIV = 'parth_utolso_aktiv';
 // a játék (web_fiok.gd) ebből olvassa a belépést
 window.hepFiok = { token: '', nev: '', teszt: false, kilep: function () {} };
 
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":40347872,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":40360604,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
@@ -200,7 +323,9 @@ const engine = new Engine(GODOT_CONFIG);
 
 	const hianyzik = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
 	if (hianyzik.length !== 0) {
-		hibat_mutat(SZOVEG.hiany, hianyzik.join('\n'));
+		// a WebGL 2 hiánya érthetően (régi telefonon, kikapcsolt hardveres gyorsításnál ez a gyakori)
+		if (hianyzik.some(function (h) { return /webgl/i.test(h); })) hibat_mutat('', SZOVEG.webgl);
+		else hibat_mutat(SZOVEG.hiany, hianyzik.join('\n'));
 		return;
 	}
 
@@ -240,11 +365,17 @@ const engine = new Engine(GODOT_CONFIG);
 				await engine.init(GODOT_CONFIG.executable);
 				await engine.preloadFile(pck, 'heptarchia.pck');
 				await engine.start({ args: ['--main-pack', 'heptarchia.pck'] });
-				tolto.remove();
+				jatek_indult();
 			} catch (e) { hibat_mutat(SZOVEG.hiba, e); }
 			return;
 		}
-		engine.startGame(beall).then(function () { tolto.remove(); }, function (err) { hibat_mutat(SZOVEG.hiba, err); });
+		engine.startGame(beall).then(jatek_indult, function (err) { hibat_mutat(SZOVEG.hiba, err); });
+	}
+
+	// a játék fut: a töltőlap eltűnik; telefonon innentől kell fekvő kép (lásd #fordit)
+	function jatek_indult() {
+		tolto.remove();
+		document.body.classList.add('jatekban');
 	}
 
 	// a szerverfüggvény hibakódjai -> a szövegek kulcsai
@@ -347,7 +478,8 @@ const engine = new Engine(GODOT_CONFIG);
 		$('b_elf').href = FIOK_OLDAL + '?lang=' + NYELV + '#elfelejtett';
 		$('b_uzenet').textContent = uzenet || '';
 		urlap.style.display = 'block';
-		urlap.nev.focus();
+		// (telefonon nem: a billentyűzet magától felugrana, és eltakarná az űrlapot)
+		if (!DURVA) urlap.nev.focus();
 	}
 
 	// a munkamenet ellenőrzése a SZERVERREL (a helyben tárolt token lejárt / visszavont is lehet)
