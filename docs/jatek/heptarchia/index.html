@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+<title>Heptarchia</title>
+<meta name="description" content="Heptarchia – angolszász nagystratégiai játék a böngészőben / Anglo-Saxon grand strategy in your browser">
+<link rel="icon" href="index.icon.png">
+<style>
+/* HEPTARCHIA – a böngészős változat oldala: belépés, töltőképernyő, hibaüzenet, a vászon */
+html, body, #canvas { margin: 0; padding: 0; border: 0; }
+body { color: #e8d9b8; background: #120c07; overflow: hidden; touch-action: none;
+	font-family: Georgia, 'Times New Roman', serif; }
+#canvas { display: block; position: absolute; inset: 0; width: 100vw; height: 100vh; }
+#canvas:focus { outline: none; }
+#tolto { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+	justify-content: center; gap: 16px; padding: 16px; box-sizing: border-box; text-align: center; overflow-y: auto;
+	background: radial-gradient(ellipse at center, #2a1a0d 0%, #120c07 70%); z-index: 2; touch-action: auto; }
+#tolto h1 { margin: 0; font-size: clamp(34px, 7vw, 64px); letter-spacing: 0.12em; color: #d6ad5c;
+	font-weight: normal; text-shadow: 0 2px 8px #000; }
+#tolto .alcim { margin: 0; font-size: clamp(14px, 2.4vw, 19px); color: #b89b6a; font-style: italic; }
+#csik { width: min(460px, 86vw); height: 14px; border: 1px solid #8a6630; border-radius: 3px;
+	background: #1d130a; overflow: hidden; }
+#csik > div { height: 100%; width: 0%; background: linear-gradient(#e3bd6b, #a87b2f); transition: width 0.2s; }
+#csik.vegtelen > div { width: 30%; animation: jar 1.3s ease-in-out infinite alternate; }
+@keyframes jar { from { margin-left: 0%; } to { margin-left: 70%; } }
+#felirat { font-size: 15px; color: #c9b48a; min-height: 1.3em; }
+#megjegyzes { font-size: 13px; color: #8f7b58; max-width: 520px; line-height: 1.45; }
+#hiba { display: none; max-width: 560px; background: #4a2420; border: 1px solid #9b4b3a; border-radius: 6px;
+	padding: 14px 16px; color: #f0dcd0; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.4; white-space: pre-line; }
+/* belépés */
+#belepes { display: none; width: min(380px, 100%); background: #2f2219; border: 1px solid #6b4f2a; border-radius: 8px;
+	padding: 18px 20px; box-sizing: border-box; text-align: left; }
+#belepes p { margin: 0 0 12px; font-size: 15px; line-height: 1.45; color: #d8c7a3; }
+#belepes label { display: block; margin: 0 0 10px; font-size: 14px; color: #c9b48a; }
+#belepes input { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; padding: 9px 10px; font-size: 16px;
+	background: #1d1510; color: #f1e4c6; border: 1px solid #6b4f2a; border-radius: 4px; }
+#belepes input:focus { outline: 2px solid #d9a441; outline-offset: 0; }
+#belepes button { width: 100%; margin-top: 4px; padding: 10px; font: 600 17px Georgia, serif; color: #1d1510;
+	background: linear-gradient(#f0cf85, #d9a441); border: 0; border-radius: 4px; cursor: pointer; }
+#belepes button:disabled { opacity: 0.6; cursor: default; }
+#belepes .linkek { display: flex; justify-content: space-between; gap: 10px; margin-top: 12px; font-size: 14px; }
+#belepes a { color: #f0cf85; }
+#belepes .uzenet { min-height: 1.2em; margin-top: 10px; font-size: 14px; color: #f08a74; }
+</style>
+<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+
+</head>
+<body>
+<canvas id="canvas">A böngésződ nem támogatja a canvas elemet. / Your browser does not support the canvas element.</canvas>
+<noscript>A játékhoz JavaScript kell. / JavaScript is required.</noscript>
+
+<div id="tolto">
+	<h1>HEPTARCHIA</h1>
+	<p class="alcim" id="alcim"></p>
+	<form id="belepes" novalidate>
+		<p id="b_szoveg"></p>
+		<label><span id="b_nev"></span><input type="text" name="nev" autocomplete="username" required></label>
+		<label><span id="b_jelszo"></span><input type="password" name="pw" autocomplete="current-password" required></label>
+		<button type="submit" id="b_gomb"></button>
+		<div class="linkek"><a id="b_reg" href="#"></a><a id="b_elf" href="#"></a></div>
+		<div class="uzenet" id="b_uzenet"></div>
+	</form>
+	<div id="csik" class="vegtelen"><div></div></div>
+	<div id="felirat"></div>
+	<div id="megjegyzes"></div>
+	<div id="hiba"></div>
+</div>
+
+<script>
+// ── A háttérbe került lap is fusson tovább ───────────────────────────────────
+// A böngésző a rejtett lapon nem hívja a requestAnimationFrame-et, így a játék (és a többjátékos gazdagép
+// is) megállna, amíg a játékos másik lapon van. Rejtett lapon egy Web Worker ütemez (másodpercenként ~20
+// képkocka); a Worker üzeneteit a böngésző nem fojtja vissza úgy, mint a sima időzítőket.
+(function () {
+	const eredeti = window.requestAnimationFrame.bind(window);
+	let varo = [];
+	let worker = null;
+	function lefuttat() {
+		const most = performance.now();
+		const lista = varo;
+		varo = [];
+		for (const cb of lista) cb(most);
+	}
+	function inditWorker() {
+		if (worker) return;
+		try {
+			const kod = 'setInterval(function(){postMessage(0)},50);';
+			worker = new Worker(URL.createObjectURL(new Blob([kod], { type: 'text/javascript' })));
+			worker.onmessage = function () { if (document.hidden && varo.length) lefuttat(); };
+		} catch (e) { worker = null; }
+	}
+	window.requestAnimationFrame = function (cb) {
+		varo.push(cb);
+		if (document.hidden) inditWorker();
+		else eredeti(lefuttat);
+		return 0;
+	};
+	document.addEventListener('visibilitychange', function () {
+		if (document.hidden) inditWorker();
+		else if (varo.length) eredeti(lefuttat);
+	});
+}());
+
+// ── Szövegek a böngésző (vagy a honlapon választott) nyelvén ─────────────────
+const NYELV = (function () {
+	let n = '';
+	try { n = localStorage.getItem('parth_lang') || ''; } catch (e) { n = ''; }
+	if (!n) n = (navigator.language || 'en').slice(0, 2).toLowerCase();
+	return ['hu', 'en', 'de'].indexOf(n) >= 0 ? n : 'en';
+}());
+const SZOVEG = {
+	hu: { alcim: 'Angolszász királyságok – 790', tolt: 'Betöltés…', indul: 'Indul a játék…', ellenoriz: 'A fiók ellenőrzése…',
+		megj: 'Az első betöltés kb. 50 MB; utána a böngésző gyorsítótárából gyorsabban indul. A mentések ebben a böngészőben maradnak.',
+		hiany: 'A böngésződből hiányzik néhány funkció, ami a játékhoz kell:\n', hiba: 'Hiba történt a betöltés közben:\n',
+		belep: 'A böngészős Heptarchiát regisztrált játékosok játszhatják. Lépj be a fiókoddal – ugyanazzal, mint a ParthLauncherben és a honlapon.',
+		nev: 'Fióknév vagy e-mail-cím', jelszo: 'Jelszó', gomb: 'Belépés', reg: 'Regisztráció (ingyenes)', elf: 'Elfelejtett jelszó',
+		'm.login': 'Add meg a fióknevedet (vagy e-mail-címedet) és a jelszavadat.', 'm.badlogin': 'Hibás fióknév / e-mail-cím vagy jelszó.',
+		'm.unconfirmed': 'Ez a fiók még nincs megerősítve. Előbb kattints a megerősítő levélben lévő gombra.',
+		'm.banned': 'Ezt a fiókot felfüggesztettük. Ha szerinted tévedés, írj nekünk a Támogatás oldalon.',
+		'm.usenamefail': 'A fióknévvel most nem sikerült belépni. Próbáld az e-mail-címeddel.',
+		'e.rate': 'Túl sok kérés rövid időn belül. Várj egy percet, és próbáld újra.',
+		'm.relogin': 'A belépésed lejárt. Töltsd újra az oldalt, és lépj be újra.', 'm.site': 'A játék csak a hivatalos oldalon érhető el.',
+		'm.nopck': 'A játék csomagja most nem érhető el. Próbáld újra később.',
+		'e.net': 'Nem sikerült elérni a szervert. Van internet?', 'e.other': 'Nem sikerült. Próbáld újra később.' },
+	en: { alcim: 'Anglo-Saxon Kingdoms – 790', tolt: 'Loading…', indul: 'Starting the game…', ellenoriz: 'Checking your account…',
+		megj: 'The first load is about 50 MB; after that it starts faster from the browser cache. Your saves stay in this browser.',
+		hiany: 'Your browser is missing some features the game needs:\n', hiba: 'An error occurred while loading:\n',
+		belep: 'Heptarchia in the browser is for registered players. Sign in with your account – the same as in the ParthLauncher and on the website.',
+		nev: 'Account name or e-mail address', jelszo: 'Password', gomb: 'Sign in', reg: 'Sign up (free)', elf: 'Forgot password',
+		'm.login': 'Enter your account name (or e-mail address) and password.', 'm.badlogin': 'Wrong account name / e-mail address or password.',
+		'm.unconfirmed': 'This account is not confirmed yet. Click the button in the confirmation e-mail first.',
+		'm.banned': 'This account has been suspended. If you think this is a mistake, write to us via Support.',
+		'm.usenamefail': 'Signing in with the account name did not work just now. Try your e-mail address instead.',
+		'e.rate': 'Too many requests in a short time. Wait a minute and try again.',
+		'm.relogin': 'Your sign-in has expired. Reload the page and sign in again.', 'm.site': 'The game is only available on the official site.',
+		'm.nopck': 'The game package is not available right now. Please try again later.',
+		'e.net': 'Could not reach the server. Are you online?', 'e.other': 'It did not work. Please try again later.' },
+	de: { alcim: 'Angelsächsische Königreiche – 790', tolt: 'Wird geladen…', indul: 'Das Spiel startet…', ellenoriz: 'Konto wird geprüft…',
+		megj: 'Der erste Ladevorgang umfasst etwa 50 MB; danach startet es schneller aus dem Browser-Cache. Spielstände bleiben in diesem Browser.',
+		hiany: 'Deinem Browser fehlen einige Funktionen, die das Spiel benötigt:\n', hiba: 'Beim Laden ist ein Fehler aufgetreten:\n',
+		belep: 'Heptarchia im Browser ist für registrierte Spieler. Melde dich mit deinem Konto an – demselben wie im ParthLauncher und auf der Website.',
+		nev: 'Kontoname oder E-Mail-Adresse', jelszo: 'Passwort', gomb: 'Anmelden', reg: 'Registrieren (kostenlos)', elf: 'Passwort vergessen',
+		'm.login': 'Gib deinen Kontonamen (oder deine E-Mail-Adresse) und dein Passwort ein.', 'm.badlogin': 'Falscher Kontoname / falsche E-Mail-Adresse oder falsches Passwort.',
+		'm.unconfirmed': 'Dieses Konto ist noch nicht bestätigt. Klicke zuerst auf die Schaltfläche in der Bestätigungsmail.',
+		'm.banned': 'Dieses Konto wurde gesperrt. Wenn du das für einen Irrtum hältst, schreib uns über den Support.',
+		'm.usenamefail': 'Die Anmeldung mit dem Kontonamen hat gerade nicht geklappt. Versuche es mit deiner E-Mail-Adresse.',
+		'e.rate': 'Zu viele Anfragen in kurzer Zeit. Warte eine Minute und versuche es erneut.',
+		'm.relogin': 'Deine Anmeldung ist abgelaufen. Lade die Seite neu und melde dich erneut an.', 'm.site': 'Das Spiel ist nur auf der offiziellen Seite verfügbar.',
+		'm.nopck': 'Das Spielpaket ist gerade nicht verfügbar. Bitte versuche es später erneut.',
+		'e.net': 'Der Server ist nicht erreichbar. Bist du online?', 'e.other': 'Es hat nicht geklappt. Bitte versuche es später erneut.' },
+}[NYELV];
+document.documentElement.lang = NYELV;
+const $ = (id) => document.getElementById(id);
+$('alcim').textContent = SZOVEG.alcim;
+$('felirat').textContent = SZOVEG.ellenoriz;
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="index.js"></script>
+<script>
+// ── Fiók: csak bejelentkezett (regisztrált) játékos indíthatja a játékot ──────
+// Ugyanaz a fiókrendszer, mint a honlapon (fiok.html) és a ParthLauncherben (Supabase); a munkamenetet a
+// supabase-js a localStorage-ban tartja, így aki a honlapon már belépett, itt is be van lépve (ugyanaz az
+// oldal: parthenon2-boop.github.io). A játék fájljai (wasm, pck) csak érvényes belépés UTÁN töltődnek le.
+const SUPA_URL = 'https://gxvepswtairfqvosdcpb.supabase.co';
+// nyilvános (anon) kulcs – a böngészőbe szánták, a jogosultságokat a szerver szabályai védik
+const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd4dmVwc3d0YWlyZnF2b3NkY3BiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4MzQyMzYsImV4cCI6MjEwNTQxMDIzNn0.9A86POfj49aRynE3rerz4nMbfds7xny6GLuRePpgSSI';
+// a honlap fiókoldala (regisztráció, elfelejtett jelszó): a játék a honlap jatek/heptarchia/ mappájában van
+const FIOK_OLDAL = '../../fiok.html';
+// Védett játékcsomag: a .pck-t csak a bejelentkezett fiók kapja meg a „heptarchia-web” szerverfüggvénytől, néhány
+// percig érvényes linkkel (lásd a honlap server/supabase/README.md-jét). (A helyi próbában – ?teszt=1 – a mellette lévő index.pck.)
+const VEDETT_PCK = true;
+const MUNKAMENET = 'sb-gxvepswtairfqvosdcpb-auth-token';
+const AKTIV = 'parth_utolso_aktiv';
+
+// a játék (web_fiok.gd) ebből olvassa a belépést
+window.hepFiok = { token: '', nev: '', teszt: false, kilep: function () {} };
+
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":40347872,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const tolto = $('tolto');
+	const csik = $('csik');
+	const toltes = csik.firstElementChild;
+	const felirat = $('felirat');
+	const urlap = $('belepes');
+	let elindult = false;
+
+	function hibat_mutat(elotag, err) {
+		console.error(err);
+		const szoveg = err instanceof Error ? err.message : (typeof err === 'string' ? err : 'Unknown error');
+		$('hiba').textContent = elotag + szoveg;
+		$('hiba').style.display = 'block';
+		csik.style.display = 'none';
+		felirat.style.display = 'none';
+	}
+
+	const hianyzik = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
+	if (hianyzik.length !== 0) {
+		hibat_mutat(SZOVEG.hiany, hianyzik.join('\n'));
+		return;
+	}
+
+	// ── a játék indítása (csak belépve) ──
+	async function indit() {
+		if (elindult) return;
+		elindult = true;
+		urlap.style.display = 'none';
+		csik.style.display = '';
+		felirat.style.display = '';
+		felirat.textContent = SZOVEG.tolt;
+		$('megjegyzes').textContent = SZOVEG.megj;
+		const beall = {
+			'onProgress': function (most, osszes) {
+				if (most > 0 && osszes > 0) {
+					csik.classList.remove('vegtelen');
+					toltes.style.width = Math.min(100, (most / osszes) * 100).toFixed(1) + '%';
+					felirat.textContent = SZOVEG.tolt + ' ' + Math.round(most / 1048576) + ' / ' + Math.round(osszes / 1048576) + ' MB';
+					if (most >= osszes) felirat.textContent = SZOVEG.indul;
+				} else {
+					csik.classList.add('vegtelen');
+				}
+			},
+		};
+		if (VEDETT_PCK && !window.hepFiok.teszt) {
+			// A játékcsomag (.pck) NINCS a nyilvános oldalon: a heptarchia-web szerverfüggvény ellenőrzi a belépést
+			// (és az oldalt), és csak akkor ad egy néhány percig érvényes linket a privát tárolóhoz. A letöltött csomag
+			// verziónként egyszer kerül a böngésző gyorsítótárába; a játék helyben „heptarchia.pck”-ként látja.
+			try {
+				const r = await fetch(SUPA_URL + '/functions/v1/heptarchia-web', { method: 'POST',
+					headers: { 'Content-Type': 'application/json', apikey: SUPA_ANON, Authorization: 'Bearer ' + window.hepFiok.token },
+					body: '{}' });
+				const d = await r.json().catch(() => ({}));
+				if (!r.ok || !d.url || !d.ver) throw new Error(SZOVEG[HIBA_KULCS[d.error]] || d.error || ('HTTP ' + r.status));
+				const pck = await pck_betolt(d.url, String(d.ver), Number(d.size || 0), beall.onProgress);
+				engine.config.update(beall);
+				await engine.init(GODOT_CONFIG.executable);
+				await engine.preloadFile(pck, 'heptarchia.pck');
+				await engine.start({ args: ['--main-pack', 'heptarchia.pck'] });
+				tolto.remove();
+			} catch (e) { hibat_mutat(SZOVEG.hiba, e); }
+			return;
+		}
+		engine.startGame(beall).then(function () { tolto.remove(); }, function (err) { hibat_mutat(SZOVEG.hiba, err); });
+	}
+
+	// a szerverfüggvény hibakódjai -> a szövegek kulcsai
+	const HIBA_KULCS = { not_logged_in: 'm.relogin', felfuggesztve: 'm.banned', rossz_oldal: 'm.site', tul_sok: 'e.rate', nincs_csomag: 'm.nopck' };
+
+	// A csomag a gyorsítótárból (ha ez a verzió már megvan), különben letöltés a kapott linkről, haladásjelzéssel
+	async function pck_betolt(url, ver, meret, haladas) {
+		const KULCS = 'https://heptarchia.pck/' + encodeURIComponent(ver);
+		let tar = null;
+		try { tar = await caches.open('heptarchia-pck'); } catch (e) { tar = null; }
+		if (tar) {
+			const megvan = await tar.match(KULCS);
+			if (megvan) return await megvan.arrayBuffer();
+		}
+		const r = await fetch(url);
+		if (!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+		const osszes = Number(r.headers.get('Content-Length')) || meret;
+		const olvaso = r.body.getReader();
+		const reszek = [];
+		let most = 0;
+		for (;;) {
+			const { done, value } = await olvaso.read();
+			if (done) break;
+			reszek.push(value);
+			most += value.length;
+			haladas(most, osszes);
+		}
+		const buf = new Uint8Array(most);
+		let hol = 0;
+		for (const r2 of reszek) { buf.set(r2, hol); hol += r2.length; }
+		if (tar) {
+			try {
+				// a régebbi verziók törlése, az új eltétele
+				for (const k of await tar.keys()) await tar.delete(k);
+				await tar.put(KULCS, new Response(buf, { headers: { 'Content-Type': 'application/octet-stream' } }));
+			} catch (e) { /* tele a tárhely: legközelebb újra letölti */ }
+		}
+		return buf.buffer;
+	}
+
+	// ── fejlesztői próba: csak a saját gépen (localhost), ?teszt=1 – a kiadott játék ezt figyelmen kívül hagyja ──
+	const q = new URLSearchParams(location.search);
+	if (q.get('teszt') === '1' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+		window.hepFiok.teszt = true;
+		window.hepFiok.nev = (q.get('nev') || 'Teszt').slice(0, 20);
+		indit();
+		return;
+	}
+
+	// csak a hivatalos oldalon (és fejlesztéskor a saját gépen) – a játék és a szerverfüggvény is ellenőrzi
+	const ENGEDETT_OLDALAK = ['https://parthenon2-boop.github.io'];
+	const helyi = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+	if (ENGEDETT_OLDALAK.indexOf(location.origin) < 0 && !helyi) { hibat_mutat('', SZOVEG['m.site']); return; }
+
+	if (!window.supabase) { hibat_mutat(SZOVEG.hiba, SZOVEG['e.net']); return; }
+	const sb = window.supabase.createClient(SUPA_URL, SUPA_ANON,
+		{ auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } });
+
+	async function fiok_nev(user) {
+		let nev = (user.user_metadata && user.user_metadata.username) || '';
+		try {
+			const { data } = await sb.from('profiles').select('username').eq('user_id', user.id).maybeSingle();
+			if (data && data.username) nev = data.username;
+		} catch (e) { /* marad a regisztrációkori név */ }
+		return String(nev).slice(0, 20);
+	}
+
+	window.hepFiok.kilep = async function () {
+		try { await sb.auth.signOut(); } catch (e) { /* a helyi munkamenet így is törlődik */ }
+		try { localStorage.removeItem(MUNKAMENET); } catch (e) {}
+		location.reload();
+	};
+
+	// a megújult token a játékhoz is eljut (a játék 2 mp-enként nézi); kijelentkezéskor üres
+	sb.auth.onAuthStateChange(function (ev, session) {
+		window.hepFiok.token = session ? session.access_token : '';
+	});
+
+	// a honlap tétlenségi kiléptetése (kileptetes.js) a játékot is tevékenységnek számolja
+	let jelzett = 0;
+	['pointerdown', 'keydown', 'wheel'].forEach(function (e) {
+		addEventListener(e, function () {
+			const t = Date.now();
+			if (t - jelzett < 15000 || !window.hepFiok.token) return;
+			jelzett = t;
+			try { localStorage.setItem(AKTIV, String(t)); } catch (err) {}
+		}, { passive: true, capture: true });
+	});
+
+	function urlap_mutat(uzenet) {
+		csik.style.display = 'none';
+		felirat.style.display = 'none';
+		$('b_szoveg').textContent = SZOVEG.belep;
+		$('b_nev').textContent = SZOVEG.nev;
+		$('b_jelszo').textContent = SZOVEG.jelszo;
+		$('b_gomb').textContent = SZOVEG.gomb;
+		$('b_reg').textContent = SZOVEG.reg;
+		$('b_reg').href = FIOK_OLDAL + '?lang=' + NYELV + '#regisztracio';
+		$('b_elf').textContent = SZOVEG.elf;
+		$('b_elf').href = FIOK_OLDAL + '?lang=' + NYELV + '#elfelejtett';
+		$('b_uzenet').textContent = uzenet || '';
+		urlap.style.display = 'block';
+		urlap.nev.focus();
+	}
+
+	// a munkamenet ellenőrzése a SZERVERREL (a helyben tárolt token lejárt / visszavont is lehet)
+	async function ellenoriz() {
+		const { data: s } = await sb.auth.getSession();
+		if (!s || !s.session) return urlap_mutat('');
+		const { data, error } = await sb.auth.getUser();
+		if (error || !data || !data.user) {
+			const m = String(error && error.message || '').toLowerCase();
+			if (m.includes('fetch') || m.includes('network')) return urlap_mutat(SZOVEG['e.net']);
+			return urlap_mutat('');
+		}
+		const { data: s2 } = await sb.auth.getSession();
+		window.hepFiok.token = s2 && s2.session ? s2.session.access_token : s.session.access_token;
+		window.hepFiok.nev = await fiok_nev(data.user);
+		try { localStorage.setItem(AKTIV, String(Date.now())); } catch (e) {}
+		indit();
+	}
+
+	// ── belépés: fióknévvel a login-nev szerverfüggvényen át, e-mail-címmel közvetlenül (mint a fiok.html) ──
+	urlap.onsubmit = async function (e) {
+		e.preventDefault();
+		const nev = urlap.nev.value.trim(), pw = urlap.pw.value;
+		const mond = (k) => { $('b_uzenet').textContent = SZOVEG[k] || k; };
+		if (!nev || !pw) return mond('m.login');
+		$('b_gomb').disabled = true;
+		try {
+			if (nev.includes('@')) {
+				const { error } = await sb.auth.signInWithPassword({ email: nev, password: pw });
+				if (error) {
+					const m = String(error.message).toLowerCase();
+					if (m.includes('confirm')) return mond('m.unconfirmed');
+					if (m.includes('banned')) return mond('m.banned');
+					if (m.includes('invalid')) return mond('m.badlogin');
+					if (m.includes('rate')) return mond('e.rate');
+					if (m.includes('fetch') || m.includes('network')) return mond('e.net');
+					return mond('e.other');
+				}
+			} else {
+				let r, d;
+				try {
+					r = await fetch(SUPA_URL + '/functions/v1/login-nev', { method: 'POST',
+						headers: { 'Content-Type': 'application/json', apikey: SUPA_ANON, Authorization: 'Bearer ' + SUPA_ANON },
+						body: JSON.stringify({ nev: nev, password: pw }) });
+					d = await r.json().catch(() => ({}));
+				} catch (err) { return mond('m.usenamefail'); }
+				if (!r.ok || !d.access_token) {
+					if (d.error === 'nincs_megerositve') return mond('m.unconfirmed');
+					if (d.error === 'felfuggesztve') return mond('m.banned');
+					if (d.error === 'rossz_belepes') return mond('m.badlogin');
+					return mond('m.usenamefail');
+				}
+				const { error } = await sb.auth.setSession({ access_token: d.access_token, refresh_token: d.refresh_token });
+				if (error) return mond('e.other');
+			}
+			urlap.pw.value = '';
+			$('b_uzenet').textContent = '';
+			urlap.style.display = 'none';
+			felirat.style.display = '';
+			felirat.textContent = SZOVEG.ellenoriz;
+			await ellenoriz();
+		} finally {
+			$('b_gomb').disabled = false;
+		}
+	};
+
+	ellenoriz().catch(function () { urlap_mutat(SZOVEG['e.net']); });
+}());
+</script>
+</body>
+</html>
+
