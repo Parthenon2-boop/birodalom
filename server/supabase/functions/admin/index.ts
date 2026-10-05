@@ -320,6 +320,29 @@ async function handle(db: SupabaseClient, admin: Admin, action: string, body: Bo
 			}));
 			return [{ games: out }, 200];
 		}
+		case "online": {
+			// a böngészős Heptarchia online (többjátékos) játékára meghívott fióknevek (schema_heptarchia_online.sql)
+			const { data, error } = await db.from("heptarchia_online_engedely")
+				.select("username, megjegyzes, created_at").order("username");
+			if (error) return [{ error: "db_error", message: error.message }, 500];
+			// van-e ilyen nevű fiók (a lista kisbetűs, NFC-alakú nevei a profilok nevéhez mérve)
+			const { data: prof } = await db.from("profiles").select("username").limit(10000);
+			const nevek = new Set(((prof ?? []) as { username: string }[]).map((p) => String(p.username).normalize("NFC").toLowerCase()));
+			return [{ rows: ((data ?? []) as { username: string }[]).map((r) => ({ ...r, van_fiok: nevek.has(r.username) })) }, 200];
+		}
+		case "online_set": {
+			// { username, add: true = meghív, false = elvesz, note }
+			const username = String(body.username ?? "").trim().slice(0, 40);
+			if (!username || typeof body.add !== "boolean") return [{ error: "bad_request" }, 400];
+			const { data, error } = await db.rpc("admin_heptarchia_online", {
+				p_admin: admin.id, p_admin_name: admin.name, p_username: username, p_add: body.add,
+				p_note: String(body.note ?? "").slice(0, 300),
+			});
+			if (error) return [{ error: "db_error", message: error.message }, 500];
+			const row = Array.isArray(data) ? data[0] : data;
+			if (!row?.ok) return [{ error: row?.hiba || "hiba" }, 400];
+			return [{ ok: true, changed: row.valtozott, info: row.hiba }, 200];
+		}
 		case "log": {
 			const page = Math.max(0, Math.floor(Number(body.page ?? 0)) || 0);
 			const { data, error, count } = await db.from("admin_log")

@@ -127,6 +127,24 @@
 				<button type="button" role="tab" data-tab="accounts" aria-selected="true">Fiókok</button>
 				<button type="button" role="tab" data-tab="log" aria-selected="false">Napló</button>
 				<button type="button" role="tab" data-tab="dev" aria-selected="false">Fejlesztés alatt</button>
+				<button type="button" role="tab" data-tab="online" aria-selected="false">Online játék</button>
+			</div>
+
+			<div class="pane" id="pane-online" hidden>
+				<p class="hint" style="margin-bottom:12px">A böngészős Heptarchia online (többjátékos) játéka csak ezeknek a fiókneveknek érhető el – a szerver is ellenőrzi. Mindenki más egyjátékosban játszhat. (A kis- és nagybetű, valamint az ékezet kódolása nem számít.)</p>
+				<form class="bar" id="onlineForm" style="padding:0">
+					<input type="text" name="nev" placeholder="Fióknév…" maxlength="40" autocomplete="off">
+					<input type="text" name="note" placeholder="Megjegyzés (nem kötelező)" maxlength="300" autocomplete="off">
+					<button class="main" type="submit">Meghívás</button>
+					<button class="ghost" type="button" id="onlineReload">Frissítés</button>
+				</form>
+				<p class="msg" id="onlineMsg" role="status"></p>
+				<div class="scroll">
+					<table>
+						<thead><tr><th>Fióknév</th><th>Megjegyzés</th><th>Meghívva</th><th></th></tr></thead>
+						<tbody id="onlineRows"></tbody>
+					</table>
+				</div>
 			</div>
 
 			<div class="pane" id="pane-dev" hidden>
@@ -251,6 +269,8 @@
 
 	const ERR = {
 		nincs_jog: "Ennek a fióknak nincs admin joga.",
+		rossz_nev: "Érvénytelen fióknév.",
+		unknown_action: "Ehhez az admin szerverfüggvény újabb változata kell (supabase functions deploy admin).",
 		not_logged_in: "Nem vagy belépve (vagy lejárt a munkamenet). Lépj be a fiók oldalon.",
 		keves_erme: "Ennyit nem lehet levonni: az egyenleg 0 alá menne.",
 		kell_indoklas: "Írj indoklást (legalább 3 karakter).",
@@ -468,9 +488,50 @@
 		$("pane-accounts").hidden = b.dataset.tab !== "accounts";
 		$("pane-log").hidden = b.dataset.tab !== "log";
 		$("pane-dev").hidden = b.dataset.tab !== "dev";
+		$("pane-online").hidden = b.dataset.tab !== "online";
 		if (b.dataset.tab === "log") loadLog();
 		if (b.dataset.tab === "dev") loadDev();
+		if (b.dataset.tab === "online") loadOnline();
 	});
+
+	// ── online játék (böngészős Heptarchia): a meghívott fióknevek ──
+	let onlineRows = [];
+	async function loadOnline() {
+		say($("onlineMsg"), "");
+		try {
+			const d = await call("online");
+			onlineRows = d.rows || [];
+			$("onlineRows").innerHTML = onlineRows.length ? onlineRows.map((r, i) => `<tr>
+				<td>${esc(r.username)}${r.van_fiok ? "" : ' <span class="tag off" title="Nincs ilyen nevű fiók (még)">nincs ilyen fiók</span>'}</td>
+				<td class="dim">${esc(r.megjegyzes || "")}</td>
+				<td>${fmtDate(r.created_at)}</td>
+				<td><div class="acts"><button class="ico del" type="button" data-online="${i}" title="Elvétel" aria-label="Elvétel">${IKON.kuka}</button></div></td>
+			</tr>`).join("") : '<tr><td colspan="4" class="dim">Senki sincs meghívva – az online játék most senkinek sem érhető el.</td></tr>';
+		} catch (err) { say($("onlineMsg"), errText(err)); }
+	}
+	$("onlineReload").onclick = () => loadOnline();
+	$("onlineForm").onsubmit = async e => {
+		e.preventDefault();
+		const f = e.target, nev = f.nev.value.trim();
+		if (!nev) return;
+		try {
+			const d = await call("online_set", { username: nev, add: true, note: f.note.value.trim() });
+			f.reset();
+			await loadOnline();
+			say($("onlineMsg"), d.changed ? "Meghívva: " + nev : "Már a listán van.", true);
+		} catch (err) { say($("onlineMsg"), errText(err)); }
+	};
+	$("onlineRows").onclick = async e => {
+		const b = e.target.closest("button[data-online]");
+		if (!b) return;
+		const r = onlineRows[Number(b.dataset.online)];
+		if (!r || !confirm("Elveszed az online játékot tőle: " + r.username + "?")) return;
+		try {
+			await call("online_set", { username: r.username, add: false });
+			await loadOnline();
+			say($("onlineMsg"), "Elvéve: " + r.username, true);
+		} catch (err) { say($("onlineMsg"), errText(err)); }
+	};
 
 	// ── fejlesztés alatt álló (titkos) játékok ──
 	async function loadDev() {
@@ -490,7 +551,8 @@
 
 	// ── napló ──
 	const ACTION = { dlc_ad: "kiegészítő adása", dlc_elvesz: "kiegészítő visszavonása", erme: "érme",
-		felfuggeszt: "felfüggesztés", felold: "aktiválás", torles: "fiók törlése" };
+		felfuggeszt: "felfüggesztés", felold: "aktiválás", torles: "fiók törlése",
+		online_ad: "online játék: meghívás", online_elvesz: "online játék: elvétel" };
 	function logDetails(r) {
 		const d = r.details || {};
 		const parts = [];

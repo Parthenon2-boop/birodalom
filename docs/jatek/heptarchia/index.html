@@ -13,8 +13,11 @@
 <style>
 /* HEPTARCHIA – a böngészős változat oldala: belépés, töltőképernyő, hibaüzenet, a vászon */
 html, body, #canvas { margin: 0; padding: 0; border: 0; }
-/* telefonon a lap ne görögjön, ne húzódjon (lehúzásra frissítés), ne nagyítson; a játék a teljes ablakban */
-html, body { position: fixed; inset: 0; width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
+/* telefonon a lap ne görögjön, ne húzódjon (lehúzásra frissítés), ne nagyítson; a játék a teljes ablakban.
+   SZÁNDÉKOSAN nincs position: fixed: az iPhone Safari (iOS 26) a billentyűzet bezárása és a címsor mozgása után
+   a fix elemeket 10–24 képponttal eltolva rajzolja ki, a koppintást viszont a helyükön méri – így a koppintás
+   a játékban mellément. A lap így sem görög: nincs mit görgetni, és a vásznon touch-action: none. */
+html, body { width: 100%; height: 100%; overflow: hidden; overscroll-behavior: none; }
 body { color: #e8d9b8; background: #120c07; touch-action: none; -webkit-text-size-adjust: 100%;
 	-webkit-tap-highlight-color: transparent; font-family: Georgia, 'Times New Roman', serif; }
 #canvas { display: block; position: absolute; inset: 0; width: 100vw; height: 100vh; height: 100dvh;
@@ -28,7 +31,7 @@ body { color: #e8d9b8; background: #120c07; touch-action: none; -webkit-text-siz
 /* (középre, de ha nem fér ki, felülről görgethető: a két üres elem osztja el a maradék helyet) */
 #tolto::before, #tolto::after { content: ''; flex: 1 0 0; margin: -8px 0; }
 /* álló telefonon: „fordítsd el” (a játék fekvő képre készült, ugyanúgy, mint gépen) */
-#fordit { display: none; position: fixed; inset: 0; z-index: 5; flex-direction: column; align-items: center;
+#fordit { display: none; position: absolute; inset: 0; z-index: 5; flex-direction: column; align-items: center;
 	justify-content: center; gap: 18px; padding: 24px; box-sizing: border-box; text-align: center;
 	background: radial-gradient(ellipse at center, #2a1a0d 0%, #120c07 75%); touch-action: none; }
 #fordit svg { width: 96px; height: 96px; animation: fordul 2.4s ease-in-out infinite; }
@@ -148,6 +151,8 @@ body { color: #e8d9b8; background: #120c07; touch-action: none; -webkit-text-siz
 // egéreseményekre (koppintás, hosszú nyomás, csippentés). DURVA: az elsődleges mutató az ujj (telefon,
 // táblagép) – ott teljes képernyő, fekvő kép, és a képpontsűrűség legfeljebb 2 (a 3×-os telefonkijelzőn a
 // játék így harmadannyi képpontot rajzol, alig láthatóan életlenebbül). ?erinto=1: fejlesztői próba gépen.
+// (A koppintás helyét ez nem rontja el: a Godot a vászon képpontszámának és CSS-méretének arányával számol, nem a
+// képpontsűrűséggel – a vászon mérete és az érintés helye mindig ugyanabból a sűrűségből jön.)
 const ERINTO = (function () {
 	let e = false;
 	try { e = ('ontouchstart' in window) || navigator.maxTouchPoints > 0; } catch (err) { e = false; }
@@ -165,6 +170,84 @@ if (DURVA && (window.devicePixelRatio || 1) > 2) {
 // iOS Safari: a két ujjas csippentés ne a lapot nagyítsa (a játékban az a nagyítás)
 document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
 document.addEventListener('dblclick', function (e) { if (e.target && e.target.id === 'canvas') e.preventDefault(); });
+
+// ── A koppintás pontosan ott, ahol az ujj (főleg iPhone / iPad) ──────────────
+// A Godot az érintés helyét a vászon helyéhez méri (getBoundingClientRect). Ez csak akkor egyezik azzal, amit a
+// játékos lát, ha a lap nincs elgörgetve, nincs felnagyítva, és a vásznat nem tolta el a böngésző. iPhone-on a
+// belépéskori billentyűzet (és a játékbeli szövegmezőké) elgörgetheti / felnagyíthatja a lapot, és bezárás után
+// ott is hagyhatja – ilyenkor a lapot visszatesszük a helyére (gépelés közben nem: akkor a mező kell, hogy látsszon).
+function gepel() {
+	const a = document.activeElement;
+	return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
+}
+function lap_helyre() {
+	if (gepel()) return;
+	const vv = window.visualViewport;
+	// (iPhone-on a billentyűzet bezárása után a látható nézet úgy is elcsúszva maradhat, hogy a lap görgetése 0)
+	if (window.scrollX || window.scrollY || (vv && (Math.abs(vv.offsetLeft) > 0.5 || Math.abs(vv.offsetTop) > 0.5))) window.scrollTo(0, 0);
+	const se = document.scrollingElement;
+	if (se && (se.scrollTop || se.scrollLeft)) { se.scrollTop = 0; se.scrollLeft = 0; }
+	if (document.body && (document.body.scrollTop || document.body.scrollLeft)) { document.body.scrollTop = 0; document.body.scrollLeft = 0; }
+	// felnagyított lap (iOS-en a user-scalable=no sem tiltja teljesen): a nézet beállításának újraírása visszaállítja
+	if (vv && Math.abs(vv.scale - 1) > 0.01) {
+		const m = document.querySelector('meta[name=viewport]');
+		if (m) {
+			const c = m.getAttribute('content');
+			m.setAttribute('content', c + ', minimum-scale=1.0');
+			setTimeout(function () { m.setAttribute('content', c); }, 50);
+		}
+	}
+}
+let helyre_idozito = 0;
+function lap_helyre_kesobb() {
+	clearTimeout(helyre_idozito);
+	helyre_idozito = setTimeout(lap_helyre, 60);
+}
+['scroll', 'resize', 'orientationchange', 'focusout', 'pageshow'].forEach(function (e) { addEventListener(e, lap_helyre_kesobb, { passive: true }); });
+if (window.visualViewport) {
+	visualViewport.addEventListener('resize', lap_helyre_kesobb, { passive: true });
+	visualViewport.addEventListener('scroll', lap_helyre_kesobb, { passive: true });
+}
+
+// Egy érintést pontosan EGY úton kap meg a játék: a Godot érintéseseményként (ebből csinál egéreseményt a játék
+// scripts/erintes.gd-je). Ha a böngésző az érintés után még utánzott egéreseményt is küld a vászonra (mousedown,
+// mouseup, click – iOS-en és Androidon is előfordul), azt a játék nem kapja meg, különben kétszer sülne el.
+let utolso_erintes = -1e9;
+['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(function (e) {
+	addEventListener(e, function () { utolso_erintes = performance.now(); }, { capture: true, passive: true });
+});
+['mousedown', 'mouseup', 'mousemove', 'click', 'dblclick'].forEach(function (e) {
+	addEventListener(e, function (ev) {
+		if (!ERINTO || !ev.target || ev.target.id !== 'canvas') return;
+		const utanzott = performance.now() - utolso_erintes < 800 ||
+			(ev.sourceCapabilities && ev.sourceCapabilities.firesTouchEvents);
+		if (!utanzott) return;
+		ev.stopImmediatePropagation();
+		if (ev.cancelable) ev.preventDefault();
+	}, true);
+});
+// ?jel=1: a játék minden koppintás helyén egy kis jelet rajzol (iPhone-on így látszik, hová ér a koppintás)
+window.hepErintoJel = /[?&]jel=1/.test(location.search);
+// (ugyanekkor a bal felső sarokban a lap mért adatai is látszanak – egy képernyőképből kiderül, mi csúszott el)
+if (window.hepErintoJel) {
+	const adat = document.createElement('div');
+	adat.style.cssText = 'position:absolute;left:4px;top:4px;z-index:9;padding:2px 5px;font:10px/1.3 monospace;color:#fff;' +
+		'background:rgba(0,0,0,0.6);pointer-events:none;white-space:pre';
+	document.body.appendChild(adat);
+	const kerek = function (n) { return Math.round(n * 10) / 10; };
+	const kiir = function (ev) {
+		const c = document.getElementById('canvas'), r = c.getBoundingClientRect(), vv = window.visualViewport;
+		const t = ev && ev.changedTouches && ev.changedTouches[0];
+		adat.textContent = 'ablak ' + innerWidth + 'x' + innerHeight + '  kepernyo ' + screen.width + 'x' + screen.height +
+			'  dpr ' + window.devicePixelRatio + '\nvaszon ' + c.width + 'x' + c.height + '  hely ' +
+			[r.left, r.top, r.width, r.height].map(kerek).join(',') + '\ngorgetes ' + kerek(scrollX) + ',' + kerek(scrollY) +
+			(vv ? '  nezet ' + [vv.offsetLeft, vv.offsetTop, vv.width, vv.height, vv.scale].map(kerek).join(',') : '') +
+			(t ? '\nujj ' + kerek(t.clientX) + ',' + kerek(t.clientY) + '  lap ' + kerek(t.pageX) + ',' + kerek(t.pageY) +
+				'  kepernyo ' + kerek(t.screenX) + ',' + kerek(t.screenY) : '');
+	};
+	['touchstart', 'resize', 'orientationchange'].forEach(function (e) { addEventListener(e, kiir, { capture: true, passive: true }); });
+	setTimeout(kiir, 0);
+}
 
 // A hang feloldása: a telefonos böngésző (főleg iOS) csak a játékos érintése után engedi megszólalni a hangot.
 // A játék hangkörnyezetét (AudioContext) megjegyezzük, és minden érintéskor / gombnyomáskor folytatjuk, ha áll.
@@ -374,8 +457,10 @@ const engine = new Engine(GODOT_CONFIG);
 
 	// a játék fut: a töltőlap eltűnik; telefonon innentől kell fekvő kép (lásd #fordit)
 	function jatek_indult() {
+		if (document.activeElement && document.activeElement !== $('canvas') && document.activeElement.blur) document.activeElement.blur();
 		tolto.remove();
 		document.body.classList.add('jatekban');
+		lap_helyre();
 	}
 
 	// a szerverfüggvény hibakódjai -> a szövegek kulcsai
@@ -536,6 +621,9 @@ const engine = new Engine(GODOT_CONFIG);
 				if (error) return mond('e.other');
 			}
 			urlap.pw.value = '';
+			// a billentyűzet bezárul (iPhone-on különben elgörgetve / eltolva hagyhatja a lapot)
+			if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+			lap_helyre_kesobb();
 			$('b_uzenet').textContent = '';
 			urlap.style.display = 'none';
 			felirat.style.display = '';
@@ -551,4 +639,3 @@ const engine = new Engine(GODOT_CONFIG);
 </script>
 </body>
 </html>
-

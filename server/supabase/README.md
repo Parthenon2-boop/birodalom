@@ -142,3 +142,17 @@ csak bejelentkezett fiók léphet be.
 
 Korlátok (ingyenes csomag): egy fájl legfeljebb 50 MB (a csomag most ~40 MB); a Storage-forgalom havi 5 GB – a
 böngésző verziónként egyszer tölti le a csomagot (gyorsítótár), utána nem; sok új játékos esetén ez elfogyhat.
+
+### Online játék csak meghívottaknak (`schema_heptarchia_online.sql`, Heptarchia 1.86.4-től)
+
+A böngészős Heptarchia többjátékos szobáiba csak a `heptarchia_online_engedely` listán lévő fióknevek léphetnek
+be (kisbetűsen, Unicode NFC-alakban tárolva: a kis-nagybetű és az ékezet kódolása nem számít). A védelem a
+szerveren van: a `hep-%` Realtime-csatornák szabályai a `heptarchia_online_engedelyes()` függvénnyel ellenőrzik a
+belépett fiókot. A játék ugyanezt a függvényt kérdezi (`/rest/v1/rpc/heptarchia_online_engedelyes`), és aki nincs a
+listán, annak a Többjátékos gombja le van tiltva (magyarázattal); az egyjátékos mód mindenkinek megmarad.
+Az asztali (letölthető) változat helyi hálózati játékát (ENet, fiók nélkül) ez nem érinti.
+
+1. **Adatbázis:** SQL Editor → `schema_heptarchia_online.sql` tartalma → Run (a `schema_heptarchia_web.sql` után;
+   annak a két szobaszabályát cseréli le). Az első három meghívott: `tojasosnokedli`, `OlivérVető`, `parthenon2`.
+2. **Admin felület** (nem kötelező): `npx --yes supabase@latest functions deploy admin --project-ref gxvepswtairfqvosdcpb --use-api --no-verify-jwt`
+   – utána az `admin.html` „Online játék” fülén lehet meghívni / elvenni (naplózva). Enélkül SQL-ből (lásd a fájl elejét).
