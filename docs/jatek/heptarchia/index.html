@@ -146,6 +146,59 @@ body { color: #e8d9b8; background: #120c07; touch-action: none; -webkit-text-siz
 	});
 }());
 
+// ── Többjátékos: a pillanatnyi hálózati akadás ne bontsa a játékot ───────────
+// A böngésző a WebRTC-kapcsolatot már néhány másodpercnyi csend után „disconnected” állapotba teszi (wifi-
+// váltás, mobilnet, a közvetítő akadása) – ez átmeneti, a kapcsolat többnyire magától visszaáll. A Godot
+// viszont ezt végleges szakadásnak veszi, és azonnal kidobja a játékost (élő csatában a gép veszi át az
+// oldalát, a vendégnél „A gazdagép kilépett”). Ezért a játék felé az átmeneti állapot „connected” marad;
+// a valódi szakadást („failed”, „closed”, a bezárt adatcsatorna) ugyanúgy megkapja. Ha AKADAS_MAX_MP alatt
+// sem áll helyre, a szakadás átmegy (az asztali változat ENet-kapcsolata ugyanennyit vár – Net.ENET_TIMEOUT).
+// A valódi állapotváltások a konzolra kerülnek ([hep-rtc]), hibakereséshez.
+(function () {
+	const RTC = window.RTCPeerConnection;
+	if (!RTC) return;
+	const AKADAS_MAX_MP = 45;
+	const lejart = new WeakSet();
+	const idozito = new WeakMap();
+	const valodi = {};
+	for (const nev of ['connectionState', 'iceConnectionState']) {
+		const d = Object.getOwnPropertyDescriptor(RTC.prototype, nev);
+		if (!d || !d.get || !d.configurable) continue;
+		valodi[nev] = d.get;
+		Object.defineProperty(RTC.prototype, nev, {
+			configurable: true, enumerable: d.enumerable,
+			get: function () {
+				const s = d.get.call(this);
+				return s === 'disconnected' && !lejart.has(this) ? 'connected' : s;
+			},
+		});
+	}
+	function figyel(pc, nev, esemeny) {
+		if (!valodi[nev]) return;
+		pc.addEventListener(esemeny, function () {
+			const s = valodi[nev].call(pc);
+			console.warn('[hep-rtc] ' + nev + ': ' + s);
+			clearTimeout(idozito.get(pc));
+			if (s !== 'disconnected') { lejart.delete(pc); return; }
+			idozito.set(pc, setTimeout(function () {
+				if (valodi[nev].call(pc) !== 'disconnected') return;
+				// nem állt helyre: a játék most kapja meg a szakadást
+				lejart.add(pc);
+				pc.dispatchEvent(new Event(esemeny));
+			}, AKADAS_MAX_MP * 1000));
+		});
+	}
+	window.RTCPeerConnection = function (beallitas) {
+		const pc = new RTC(beallitas);
+		// (a Godot a connectionState-et figyeli, ahol van; különben az iceConnectionState-et)
+		if (valodi.connectionState) figyel(pc, 'connectionState', 'connectionstatechange');
+		else figyel(pc, 'iceConnectionState', 'iceconnectionstatechange');
+		return pc;
+	};
+	window.RTCPeerConnection.prototype = RTC.prototype;
+}());
+
+
 // ── Telefon, táblagép ────────────────────────────────────────────────────────
 // ERINTO: van érintőképernyő – a játék (scripts/erintes.gd) ebből tudja, hogy az érintést maga fordítsa
 // egéreseményekre (koppintás, hosszú nyomás, csippentés). DURVA: az elsődleges mutató az ujj (telefon,
