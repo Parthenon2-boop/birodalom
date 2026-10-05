@@ -156,3 +156,16 @@ Az asztali (letölthető) változat helyi hálózati játékát (ENet, fiók né
    annak a két szobaszabályát cseréli le). Az első három meghívott: `tojasosnokedli`, `OlivérVető`, `parthenon2`.
 2. **Admin felület** (nem kötelező): `npx --yes supabase@latest functions deploy admin --project-ref gxvepswtairfqvosdcpb --use-api --no-verify-jwt`
    – utána az `admin.html` „Online játék” fülén lehet meghívni / elvenni (naplózva). Enélkül SQL-ből (lásd a fájl elejét).
+
+### Közvetítő (TURN) szerver a többjátékos szobákhoz (`heptarchia-turn`, Heptarchia 1.86.6-tól)
+
+A böngészős többjátékos mód WebRTC: a gépek közvetlenül kapcsolódnak. Mobilnet és iskolai / céges hálózat között
+ez nem jön létre („A szoba megvan, de a közvetlen kapcsolat nem jött létre”) – ilyenkor a forgalom egy közvetítőn
+megy át (Cloudflare Realtime TURN, havi 1000 GB-ig ingyenes). A játék a szobanyitáskor / csatlakozáskor a
+`heptarchia-turn` függvénytől kér rövid életű belépőt (csak bejelentkezett, meghívott fiók kap); ha a függvény
+vagy a titkok hiányoznak, a játék közvetítő nélkül próbálkozik (mint eddig).
+
+1. **Cloudflare:** dash.cloudflare.com (ingyenes fiók) → Realtime → TURN Server → Create. Két érték kell:
+   „Turn Token ID” és „API Token”.
+2. **Titkok:** Supabase → Edge Functions → Secrets: `CF_TURN_KEY_ID` (a Turn Token ID) és `CF_TURN_API_TOKEN`.
+3. **Függvény:** `npx --yes supabase@latest functions deploy heptarchia-turn --project-ref gxvepswtairfqvosdcpb --use-api --no-verify-jwt`
