@@ -14,6 +14,27 @@ extends Node
 const SAVE_PATH := "user://save.json"
 const VERSION := "1.1"
 
+## Felhő-mentés: a mentés a fiókhoz kötve (scripts/globals/felho_mentes.gd). A ParthLauncherből,
+## belépve indított játékban a mentés másik gépen is megvan; fiók nélkül (vagy fej nélküli
+## futásban: önteszt) kimarad, a helyi mentés ugyanúgy működik.
+const FelhoModul := preload("res://scripts/globals/felho_mentes.gd")
+var felho: Node = null
+var _felho_utoljara := 0
+
+func _ready() -> void:
+	if DisplayServer.get_name() != "headless":
+		felho = FelhoModul.new()
+		felho.name = "FelhoMentes"
+		add_child(felho)
+		_felho_utoljara = Time.get_ticks_msec()
+		felho.indit("birodalom", "user://", ["json"], [], [SAVE_PATH.get_file()])
+
+## Amikor a játék ablaka újra előtérbe kerül (legfeljebb percenként): hátha másik gépen mentettek
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_IN and felho != null and Time.get_ticks_msec() - _felho_utoljara > 60000:
+		_felho_utoljara = Time.get_ticks_msec()
+		felho.szinkron()
+
 func save_game() -> void:
 	var data := {
 		"version": VERSION,
@@ -41,6 +62,7 @@ func save_game() -> void:
 	if f:
 		f.store_string(JSON.stringify(data, "\t"))
 		f.close()
+		if felho != null: felho.feltolt(SAVE_PATH.get_file())
 
 func load_game() -> bool:
 	if not FileAccess.file_exists(SAVE_PATH): return false
@@ -108,3 +130,4 @@ func has_save() -> bool:
 
 func delete_save() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+	if felho != null: felho.torol(SAVE_PATH.get_file())

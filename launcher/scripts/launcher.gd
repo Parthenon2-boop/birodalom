@@ -161,7 +161,7 @@ const ACC_LICENSE := "account"  # a fiókból jövő jogosultság jele a ParthLa
 # Az indító saját változata. Ha a „home” tárolóban lévő launcher/VERSION.txt ennél
 # nagyobb, az indító letölti és kicseréli önmagát, majd újraindul.
 # Ha az indítón változtatsz: növeld itt is és a launcher/VERSION.txt fájlban is!
-const LAUNCHER_BUILD := 51
+const LAUNCHER_BUILD := 52
 const VERSION_FILE := "launcher/VERSION.txt"
 
 const CFG_PATH := "user://ParthLauncher.cfg"
@@ -1565,9 +1565,12 @@ func _acc_store_user(user: Dictionary) -> void:
 	cfg.set_value("account", "fioknev", str(meta.get("username", "")))
 	cfg.save(CFG_PATH)
 
-# A fiókot átadjuk azoknak a játékoknak, amelyeknek szükségük van rá (Kard és Mágia: bolt, érmék).
+# A fiókot átadjuk a játékoknak: a Kard és Mágia boltjához és érméihez, és MINDEN játék
+# felhő-mentéséhez (scripts/felho_mentes.gd: a mentések a fiókhoz kötve, nem a géphez).
 # A játék adatmappájába írunk egy kis fájlt; kijelentkezéskor töröljük.
-const SESSION_GAMES := {"kard_es_magia": "Kard és Mágia"}
+# Kulcs: a játék azonosítója (GAMES); érték: a játék adatmappájának neve (a project.godot config/name-je).
+const SESSION_GAMES := {"kard_es_magia": "Kard és Mágia", "heptarchia": "Heptarchia", "birodalom": "Birodalom",
+	"antiquitas": "Antiquitas", "saecula": "Saecula"}
 
 func _game_session_path(user_dir: String) -> String:
 	return OS.get_user_data_dir().get_base_dir().path_join(user_dir).path_join("fiok.json")
@@ -1622,14 +1625,18 @@ func _acc_try_refresh(token: String) -> Array:
 		{"refresh_token": token})
 
 # A játéknak átadott fájlban lehet frissebb kulcs (a játék is megújíthatta)
+# (több játék is megújíthatta: a LEGUTÓBB mentett fájl kulcsa az érvényes)
 func _game_session_refresh_token() -> String:
+	var legjobb := ""
+	var mikor := -1.0
 	for key in SESSION_GAMES:
 		var p := _game_session_path(str(SESSION_GAMES[key]))
 		if not FileAccess.file_exists(p): continue
 		var d: Variant = JSON.parse_string(FileAccess.get_file_as_string(p))
-		if d is Dictionary and str(d.get("refresh_token", "")) != "":
-			return str(d["refresh_token"])
-	return ""
+		if d is Dictionary and str(d.get("refresh_token", "")) != "" and float(d.get("mentve", 0)) > mikor:
+			mikor = float(d.get("mentve", 0))
+			legjobb = str(d["refresh_token"])
+	return legjobb
 
 # A fiók kiegészítői: ezek „megvásároltak” lesznek (a ParthLauncher.cfg-ben ACC_LICENSE jellel)
 func _acc_sync() -> void:

@@ -169,3 +169,24 @@ vagy a titkok hiányoznak, a játék közvetítő nélkül próbálkozik (mint e
    „Turn Token ID” és „API Token”.
 2. **Titkok:** Supabase → Edge Functions → Secrets: `CF_TURN_KEY_ID` (a Turn Token ID) és `CF_TURN_API_TOKEN`.
 3. **Függvény:** `npx --yes supabase@latest functions deploy heptarchia-turn --project-ref gxvepswtairfqvosdcpb --use-api --no-verify-jwt`
+
+## Felhő-mentés: a mentések a fiókhoz kötve (`schema_felho_mentes.sql`, launcher: SESSION_GAMES)
+
+Minden játék (Kard és Mágia, Heptarchia, Birodalom, Antiquitas, Saecula) a saját mentésmappáját tükrözi a
+`felho_mentes` táblába: egy sor = egy mentésfájl (gzip + base64), fiókonként és játékonként legfeljebb 80 élő
+mentés és 60 MB. Szerverfüggvény nem kell: a játék a fiók tokenjével közvetlenül a REST-felületet hívja, a
+sorokat az RLS védi (mindenki csak a sajátját látja és írja). A törlés „sírkő” (`torolt = true`), hogy a többi
+gépen is eltűnjön a mentés.
+
+A kliens mind az öt játékban ugyanaz a fájl: `scripts/felho_mentes.gd` (a Birodalomban `scripts/globals/`).
+A fiókot a launcher adja át: a játék adatmappájába írt `fiok.json` (a `launcher.gd` `SESSION_GAMES` táblája —
+mostantól minden játéknak ír). Launcher nélkül, belépés nélkül vagy hálózat nélkül a mentés helyben ugyanúgy
+működik, és a következő belépett indításkor feltöltődik.
+
+### Telepítés (egyszer)
+
+1. **Adatbázis:** SQL Editor → New query → `schema_felho_mentes.sql` tartalma → Run.
+2. **Kiadás:** új launcher-kiadás (a `SESSION_GAMES` miatt) és új kiadás minden játékból.
+
+Ellenőrzés belépve: `select jatek, nev, meret, torolt, frissitve from public.felho_mentes order by frissitve desc;`
+Régi sírkövek takarítása: `delete from public.felho_mentes where torolt and frissitve < now() - interval '30 days';`
