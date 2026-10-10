@@ -68,6 +68,10 @@ const BETU_NAGY  := 17   # a képernyő közepén megjelenő rövid üzenet
 # Az építő- és a képzési gomb ugyanaz a fajta gomb, ezért ugyanakkora is:
 # egy sor szöveg, előtte egy kis rajz. Az ikon a gomb bal szélén ül.
 const GOMB_MERET := Vector2(158, 32)
+# Az építőmenü fölött és alatt foglalt magasság (felső sáv, a doboz kerete, kistérkép): ennyi NEM jut a gomboknak.
+const EPITO_FOGLALT := 240.0
+# Egy gombsor valódi magassága a menüben (a téma kerete és a sorköz miatt jóval több a GOMB_MERET-nél).
+const EPITO_SOR := 51.0
 const IKON_HELY  := Vector2(5, 3)
 const IKON_MERET := Vector2(26, 26)
 
@@ -529,6 +533,7 @@ func _build_build_panel() -> void:
 		c.queue_free()
 	var main := get_tree().get_first_node_in_group("main")
 	var age := GameState.get_age()
+	var gombok: Array[Button] = []
 	for entry in BUILDABLE:
 		var t: String = entry
 		var st: Dictionary = Building.BUILD_STATS.get(t, {})
@@ -558,7 +563,22 @@ func _build_build_panel() -> void:
 		ico.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		btn.add_child(ico)
 		_ikon_hely_gombra(btn)
-		build_panel.add_child(btn)
+		gombok.append(btn)
+	# Ha a lista egy oszlopban nem férne el a felső sáv és a kistérkép között (a modern korban és a
+	# kalózvilágban sok az épület), két oszlopba törjük — különben felül kilógna a képernyőről.
+	var hely := get_viewport_rect().size.y - EPITO_FOGLALT
+	var sor_m := EPITO_SOR
+	if gombok.size() * sor_m <= hely:
+		for g in gombok:
+			build_panel.add_child(g)
+	else:
+		for i in range(0, gombok.size(), 2):
+			var sor := HBoxContainer.new()
+			sor.add_theme_constant_override("separation", build_panel.get_theme_constant("separation"))
+			sor.add_child(gombok[i])
+			if i + 1 < gombok.size():
+				sor.add_child(gombok[i + 1])
+			build_panel.add_child(sor)
 
 # Az építőmenü a keretével (BuildBox) együtt jelenik meg és tűnik el —
 # különben üres panel maradna a képernyőn.
