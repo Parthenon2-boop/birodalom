@@ -95,7 +95,8 @@ func _broadcast() -> void:
 	# autoload küldi — lásd az ottani magyarázatot a csomópont-útvonalról.
 	for peer in Net.players.keys():
 		if int(peer) == Net.my_id: continue
-		Net.rpc_id(int(peer), "_cli_snapshot", u, b, sides, GameState.t,
+		# (A Net dönti el, egyben megy-e vagy darabokban — lásd send_snapshot.)
+		Net.send_snapshot(int(peer), u, b, sides, GameState.t,
 			GameState.over, GameState.winner)
 
 func apply_snapshot(u: PackedFloat32Array, b: PackedFloat32Array,

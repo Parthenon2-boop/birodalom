@@ -38,6 +38,40 @@ func _ready() -> void:
 			var darab := a.substr(15).split("|")
 			print("[net] csatlakozás közvetítőn: ", darab)
 			Net.join_via_relay(str(darab[0]), int(darab[1]), "Tars")
+	# SZOBAKÓDDAL (WebRTC):
+	#   1. ablak:  -- --szobahost            kiírja a hatbetűs kódot
+	#   2. ablak:  -- --szobajoin=ABCDEF
+	# Kiegészítők:
+	#   --szobajelzo=ws://127.0.0.1:27031    a Supabase helyett helyi jelző
+	#                                        (scripts/dev/JelzoProba.gd) — a
+	#                                        kiszolgáló beállítása nélkül is próbálható
+	#   --snapdarab=2000                     a pillanatkép már ekkora mérettől
+	#                                        darabokban megy (a darabolás próbája)
+	for a in args:
+		if a.begins_with("--szobajelzo="):
+			Net.szoba.set("jelzo_url", a.substr(13))
+			print("[net] jelző: ", a.substr(13))
+		if a.begins_with("--snapdarab="):
+			Net.snap_egyben_max = int(a.substr(12))
+			Net.snap_darab = int(a.substr(12))
+	if "--szobahost" in args:
+		print("[net] WebRTC elérhető: ", Net.room_available())
+		Net.lobby_changed.connect(func() -> void:
+			if Net.room_code != "" and not _kiirt:
+				_kiirt = true
+				print("[net] szoba nyitva SZOBAKÓDDAL, kód: ", Net.pretty_code(),
+					"  (nyers: ", Net.room_code, ")"))
+		Net.lobby_changed.connect(_on_lobby)
+		Net.host_room("Hazigazda")
+	for a in args:
+		if a.begins_with("--szobajoin="):
+			print("[net] WebRTC elérhető: ", Net.room_available())
+			print("[net] csatlakozás szobakóddal: ", a.substr(12))
+			Net.state_changed.connect(func(s: String) -> void:
+				print("[net] állapot: ", s))
+			Net.lobby_changed.connect(func() -> void:
+				print("[net] lobbi a vendégnél: ", Net.players.size(), " fél, én: ", Net.my_id))
+			Net.join_room(a.substr(12), "Tars")
 	for a in args:
 		if a.begins_with("--netjoin="):
 			var code := a.substr(10)
@@ -46,7 +80,17 @@ func _ready() -> void:
 			Net.state_changed.connect(func(s: String) -> void:
 				print("[net] állapot: ", s))
 	Net.match_starting.connect(_on_start)
-	Net.error_message.connect(func(t: String) -> void: print("[net] HIBA: ", t))
+	Net.error_message.connect(func(t: String) -> void:
+		print("[net] HIBA: ", t)
+		# A szobakódos próbánál a hiba a végeredmény: nincs mire várni.
+		if "--szobahost" in args or _van(args, "--szobajoin="):
+			print("[net] JELENTES  sikertelen")
+			get_tree().quit(2))
+
+func _van(args: PackedStringArray, eleje: String) -> bool:
+	for a in args:
+		if a.begins_with(eleje): return true
+	return false
 
 func _on_lobby() -> void:
 	print("[net] lobbi: ", Net.players.size(), " fél")
@@ -98,5 +142,9 @@ func _process(delta: float) -> void:
 		print("[net] JELENTES  szerep=", Net.role, "  oldal=", GameState.en_id,
 			"  egyseg=", u, "  epulet=", b,
 			"  fa=", int(float(GameState.get_res(GameState.en_id).get("wood", 0))),
-			"  parancs-elmozdulas=", int(mozgott))
+			"  parancs-elmozdulas=", int(mozgott),
+			"  ut=", Net.transport,
+			"  pillanatkep-bajt=", (u + b) * 32)
+		# Rendes bontás: a társ lássa, hogy elmentünk, a jelzőcsatorna is zárul.
+		Net.close()
 		get_tree().quit(0)

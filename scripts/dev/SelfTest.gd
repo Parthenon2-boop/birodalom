@@ -987,11 +987,13 @@ func _test_sprites() -> void:
 	print("\n[9] Textúrabetöltés (Blenderben renderelt grafika)")
 	# --- EGYSÉGLAPOK ---
 	# A renderelt lapos szerepeknek minden korszakban saját lapjuk van; a
-	# felcser, az ostromgép és a kos rokon alak lapját kapja; a hajóknak és a
-	# repülőknek is saját lapjuk van — üres folt sehol sem lehet.
+	# felcser, az ostromgép és a kos is saját lapot kap (a rokon alak — LAP_ALIAS —
+	# már csak tartalék); a hajóknak és a repülőknek is saját lapjuk van —
+	# üres folt sehol sem lehet.
 	var roles := ["worker", "melee", "ranged", "spear", "cav", "priest", "spy", "hero",
+		"medic", "siege", "ram",
 		"fisher", "warship", "galleon", "transport", "fighter", "bomber"]
-	var rokon := {"medic": "priest", "siege": "ranged", "ram": "melee"}
+	var rokon := {}                      # ma egyik szerep sem szorul rokon lapra
 	var tartalek: Array[String] = []     # ma minden szerepnek van lapja; a régi rajz csak végső tartalék
 	var gyalogos := ["worker", "melee", "ranged", "spear", "priest", "spy", "hero", "medic"]
 	var man: Dictionary = UnitSprite.manifest()
@@ -1101,6 +1103,37 @@ func _test_sprites() -> void:
 	# Korszakonként más a katona: a 19. század lapja nem a 20.-é.
 	check("korszakonként más lap", UnitSprite.sheet_key("ranged", 2) != UnitSprite.sheet_key("ranged", 3)
 		and UnitSprite.sheet_key("melee", 3) == "melee_3")
+	# A felcser, az ostromgép és a faltörő kos saját lapja az elsődleges; a
+	# rokon alak (LAP_ALIAS) megmarad tartaléknak, és annak is létező lapra
+	# kell mutatnia.
+	var sajat_hiba: Array[String] = []
+	for r in UnitSprite.LAP_ALIAS:
+		var alias: String = str(UnitSprite.LAP_ALIAS[r])
+		for age in range(4):
+			var k := "%s_%d" % [r, age]
+			if UnitSprite.sheet_key(r, age) != k: sajat_hiba.append(k + ": nem a saját lap")
+			if not man.has(k): continue
+			var mm: Dictionary = man[k]
+			# a gépek (4 járáskocka) és az ember (8) is teljes animációt kap
+			if int(mm["anim"]["walk"][1]) < 4 or int(mm["anim"]["attack"][1]) < 4:
+				sajat_hiba.append(k + ": kevés kocka")
+			var fh := float(mm.get("fh", 0.0))
+			if fh < 8.0 or fh > 40.0: sajat_hiba.append("%s: fh %.1f" % [k, fh])
+			if not man.has("%s_%d" % [alias, age]): sajat_hiba.append(k + ": a tartalék lap hiányzik")
+	check("a felcser, az ostromgép és a kos saját lapot kap minden korszakban",
+		sajat_hiba.is_empty(), str(sajat_hiba))
+	var gs := Sprite2D.new()
+	gs.set_script(load("res://scripts/units/UnitSprite.gd"))
+	add_child(gs)
+	gs.setup("siege", 1, 0)
+	gs.update_anim(0.0, 0.0, true, false)
+	var gx0: float = gs.region_rect.position.x
+	gs.update_anim(0.0, 1.0, true, false)
+	check("az ostromgép kerekei gurulnak (lép a járáskocka), és van roncsa",
+		gs.region_rect.position.x != gx0 and gs.death_frames().size() == 4)
+	gs.setup("ram", 0, 0)
+	check("a kos saját lapja nem a közelharcosé", gs.sheet_key_of() == "ram_0" and not gs.uses_fallback())
+	gs.queue_free()
 
 	# --- ÉPÜLETKÉPEK ---
 	var bman: Dictionary = Building.art_manifest()
@@ -2375,6 +2408,35 @@ func _test_net() -> void:
 	check("alapból közvetlen a kapcsolat", Net.transport == "direkt")
 	check("a közvetítő nem játszik", not Net.relay_mode)
 
+	# --- Szobakóddal (WebRTC): hatbetűs kód ---
+	# A címet rejtő régi kódoktól (8 és 10 betű) a HOSSZA különbözteti meg.
+	# A tényleges kapcsolat itt is két folyamat (--szobahost / --szobajoin).
+	check("a WebRTC-kiegészítő betöltött (szobakódos út)", Net.room_available())
+	check("a hatbetűs szobakódot felismeri, kötőjellel és kisbetűvel is",
+		Net.room_code_of(" k7p-qm4 ") == "K7PQM4", Net.room_code_of(" k7p-qm4 "))
+	check("a címet rejtő kód és az idegen betű nem szobakód",
+		Net.room_code_of(Net.make_code("10.0.0.1", 27015)) == ""
+		and Net.room_code_of("K7PQM0") == "" and Net.room_code_of("K7PQM") == "")
+	check("a hatbetűs szobakódot nem nézi címet rejtő kódnak",
+		Net.parse_code("K7PQM4").is_empty())
+	check("a szobakód olvasható alakja három-három betű",
+		Net.pretty("K7PQM4") == "K7P-QM4", Net.pretty("K7PQM4"))
+	var uj_kodok := {}
+	for i in 50: uj_kodok[str(Net.szoba.call("uj_kod"))] = true
+	var jo_kodok := true
+	for k in uj_kodok:
+		if Net.room_code_of(str(k)) != str(k): jo_kodok = false
+	check("az új szobakódok érvényesek és nem ismétlődnek",
+		jo_kodok and uj_kodok.size() >= 49, "%d féle" % uj_kodok.size())
+	var nincs_szoba_felirat: Array[String] = []
+	for k in ["szoba_szakasz", "szoba_nincs_ilyen", "szoba_tele", "szoba_verzio",
+			"szoba_fut", "szoba_nincs_kapcsolat", "szoba_jelzes_hiba",
+			"szoba_belepes_kell", "szoba_nem_enged", "szoba_rossz_kod"]:
+		if Lang.t(k) == k: nincs_szoba_felirat.append(k)
+	check("a szobakódos út feliratai és hibaüzenetei megvannak",
+		nincs_szoba_felirat.is_empty(), str(nincs_szoba_felirat))
+	check("a szobakódos út alapból nem aktív", int(Net.szoba.get("mod")) == 0)
+
 	# A pillanatkép sorszámmal küldi a szerepkört és az épülettípust — ha
 	# valamelyik kimaradna a listából, a társnál rossz bábu jelenne meg.
 	var hianyzo: Array[String] = []
@@ -2589,11 +2651,13 @@ func _test_layout() -> void:
 # Rácsban kirakja a szerszámos szerepköröket mind a négy irányban, állva és
 # csapás közben, majd megállítja a szimulációt — így a képernyőképen
 # pontosan látszik, hova kerül a szerszám a kézhez képest.
-func weapon_test(age: int = 0) -> void:
+# `--szerepek=medic,siege,ram`: más szerepek kerülnek a rácsba.
+func weapon_test(age: int = 0, szerepek: Array = []) -> void:
 	var hq = _player_hq()
 	if hq == null: return
 	var origin: Vector2 = hq.global_position + Vector2(-230, -230)
 	var roles := ["worker", "melee", "spear", "ranged"]
+	if not szerepek.is_empty(): roles = szerepek
 	var units: Array = []
 	for r in roles.size():
 		for d in range(4):

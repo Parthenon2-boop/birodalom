@@ -27,10 +27,12 @@ extends Sprite2D
 
 const MAPPA := "res://assets/art3d/units/"
 const REGI := preload("res://scripts/units/UnitSpriteRegi.gd")
-# Azok a szerepek, amelyeknek nincs saját lapjuk, de egy rokon alak
-# illik hozzájuk — a régi rajz is ugyanígy osztotta ki őket (LPC_FOR):
-# a felcser papi ruhában, az ostromgép kezelője lövész, a kos vivője
-# közelharcos.
+# TARTALÉK rokon alak: a felcsernek, az ostromgépnek és a faltörő kosnak ma
+# már saját lapja van mind a négy korszakban (medic_N, siege_N, ram_N). Ez a
+# tábla csak akkor lép életbe, ha egy szerep saját lapja egyik korszakban
+# sem található (pl. hiányos telepítés): a felcser papi ruhában, az
+# ostromgép kezelője lövész, a kos vivője közelharcos. A sheet_key() előbb
+# a saját szerep MINDEN korszakát végignézi, csak utána a rokonét.
 const LAP_ALIAS := {"medic": "priest", "siege": "ranged", "ram": "melee"}
 # A régi rajz gyalogosa 46 képpont magas, az új 20–23: a tartalékot ennyire
 # kicsinyítjük. A hajó és a repülő kicsit nagyobb arányt kap, hogy a
@@ -150,6 +152,9 @@ static func ikon(role: String, age: int) -> AtlasTexture:
 	var szerep := key.substr(0, key.rfind("_"))
 	var fh := float(ALAK_H.get(szerep, m.get("fh", 20.0)))
 	if szerep == "melee" and age >= 3: fh = 26.0       # a harckocsi szélesebb, mint magas
+	# A gépek szélesebbek az embernél (az ostromgép mellett a kezelő is áll):
+	# nagyobb kivágás kell, hogy az egész ráférjen a gombra.
+	if IKON_H.has(szerep): fh = float(IKON_H[szerep])
 	var h := fh * s * 1.12
 	var r := Rect2(float(m["ox"]) - h * 0.5, float(m["oy"]) - h * 0.95, h, h)
 	r = r.intersection(Rect2(0.0, 0.0, cw, ch))
@@ -251,6 +256,8 @@ const ALAK_H := {
 	"worker": 19.5, "melee": 23.5, "spear": 22.5, "ranged": 21.5, "hero": 25.0,
 	"priest": 20.5, "spy": 20.5, "medic": 20.5, "cav": 32.0,
 }
+# A képzési gomb kivágásának mérete a gépeknél (világképpont).
+const IKON_H := {"siege": 30.0, "ram": 30.0}
 
 # --- animáció ---
 

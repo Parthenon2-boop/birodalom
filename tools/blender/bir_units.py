@@ -1182,7 +1182,8 @@ class Machine:
             self._orig = {}
             rnd = random.Random(11)
             for ob in bpy.context.scene.objects:
-                if ob.type == 'MESH' and not ob.get("fx") and not ob.get("catcher") and not ob.get("talaj"):
+                if ob.type == 'MESH' and not ob.get("fx") and not ob.get("catcher") and not ob.get("talaj") \
+                        and not ob.get("elo"):
                     if ob.data.users > 1:
                         ob.data = ob.data.copy()
                     mats = list(ob.data.materials)
@@ -1289,8 +1290,65 @@ def wheel(name, r, w, loc, material, parent, spokes=6):
     """Küllős kerék az X tengelyre állítva."""
     g = empty(name, loc, parent)
     cyl(name + "_abr", r, w, (0, 0, 0), material, verts=16, rot=(0, math.pi / 2, 0), base=False, parent=g)
+    # sötét belső tárcsa + világos küllőkereszt: ettől látszik, hogy a kerék forog
+    gumi = material == 'rubber'
+    cyl(name + "_koz", r * 0.78, w * 1.15, (0, 0, 0), 'tank_d' if gumi else 'iron', verts=14,
+        rot=(0, math.pi / 2, 0), base=False, parent=g)
+    for i in range(2):
+        box(f"{name}_kullo{i}", (w * 1.3, r * 1.62, r * 0.24), (0, 0, 0), 'tank' if gumi else 'wood_l',
+            bevel=0.0, parent=g, rot=(i * math.pi / 2, 0, 0), base=False)
     cyl(name + "_agy", r * 0.25, w * 1.6, (0, 0, 0), 'iron', verts=8, rot=(0, math.pi / 2, 0), base=False, parent=g)
     return g
+
+
+# Az ostromgép kezelője korszakonként (fegyvertelen tüzér).
+CREW_SPEC = [
+    dict(torso='gambeson', skirt='gambeson', arm='gambeson', tabard='team', tabard_trim='accent',
+         legs='hose', hat='kettle', boots='boot'),
+    dict(torso='team', skirt='team', skirt_len=2.2, arm='team', legs='brown', hat='felt', hat_band='accent',
+         boots='boot', boots_tall=True, cuffs='accent'),
+    dict(torso='team', skirt='team', skirt_len=2.2, arm='team', legs='white', hat='shako', hat_band='accent',
+         crossbelt='white', boots='boot', gaiters='black', cuffs='accent'),
+    dict(torso='olive', skirt='olive', arm='olive', legs='olive', hat='ww2', hat_band='team', boots='boot',
+         boots_tall=True, armband='team'),
+]
+
+
+def crew(name, loc, parent, spec, H=19.0):
+    """Kezelő a gép mellé: saját bábu (Rig), a gép gyökeréhez kötve. A
+    testrészei "elo" jelet kapnak, hogy a roncs kiégett anyaga ne fogja be."""
+    root = empty(name, loc, parent)
+    root.scale = (H / 10.0,) * 3
+    rig = Rig()
+    rig.j["root"] = root
+    human(rig, root, spec)
+    for ob in root.children_recursive:
+        ob["elo"] = True
+    return rig
+
+
+def crew_pose(rig, mode, t, k, pull=False):
+    """A kezelő pózai: tolja a gépet, elsüti (vagy kioldja), majd elesik."""
+    stand_pose(rig)
+    kk = int(round(t * 3))
+    if mode == "walk":
+        walk_legs(rig, k / 4.0, leg_amp=0.45)
+        arms_set(rig, (-1.15, 0, 0.1), (-0.35, 0, 0), (-1.15, 0, -0.1), (-0.35, 0, 0))
+        rig["pelvis"].rotation_euler = (0.22, 0, 0)
+    elif mode == "attack":
+        if pull:         # hajítógép: megrántja a kioldókötelet
+            a = [(-1.5, -0.2), (-0.5, -1.2), (-0.3, -1.0), (-0.9, -0.6)][kk]
+            arms_set(rig, (a[0], 0, 0.1), (a[1], 0, 0), (a[0], 0, -0.1), (a[1], 0, 0))
+            rig["pelvis"].rotation_euler = ([0.2, -0.15, -0.1, 0.05][kk], 0, 0)
+        else:            # ágyú: kanóc a gyújtólyukhoz, aztán elfordul a dörrenéstől
+            a = [(-1.3, -0.1), (-0.6, -1.9), (-0.6, -1.9), (-0.3, -0.8)][kk]
+            arms_set(rig, (a[0], 0, -0.25), (a[1], 0, 0), (-0.2 if kk == 0 else -0.6, 0, -0.1),
+                     (-0.3 if kk == 0 else -1.9, 0, 0))
+            rig["pelvis"].rotation_euler = ([0.15, -0.12, -0.1, 0.0][kk], 0, 0)
+    elif mode == "death":
+        death_pose(rig, t)
+    else:
+        arms_set(rig, (0.05, 0, 0.15), (-0.3, 0, 0), (0.05, 0, -0.15), (-0.3, 0, 0))
 
 
 class Siege(Machine):
@@ -1300,11 +1358,14 @@ class Siege(Machine):
 
     def build(self):
         self.root = empty("root")
-        R_ = self.root
         a = self.age
+        # A gép saját csomópont alatt van: az ágyú 1,3-szeres, hogy a mellette
+        # álló kezelőhöz képest ne legyen játékszer (a kerék derékig érjen).
+        R_ = empty("gep", (0, 0, 0), self.root)
+        if a > 0:
+            R_.scale = (1.3,) * 3
         self.parts = []
         self.wheels = []
-        wood = 'wood' if a < 2 else ('wood' if a == 2 else 'tank')
         if a == 0:
             # alváz
             for sd in (-1, 1):
@@ -1333,13 +1394,15 @@ class Siege(Machine):
             box("tengely", (9.8, 1.0, 1.0), (0, 1.0, wr), 'iron', bevel=0.1, parent=R_)
             trail_m = 'wood' if a < 3 else 'tank'
             if a < 3:
-                ob = box("farok", (3.0, 14, 2.0), (0, 8.0, 1.8), trail_m, bevel=0.3, parent=R_)
-                ob.rotation_euler = (R(12), 0, 0)
+                # a lafétafarok hátrafelé a földre ereszkedik
+                ob = box("farok", (2.4, 14, 1.8), (0, 8.0, 2.4), trail_m, bevel=0.3, parent=R_)
+                ob.rotation_euler = (R(-13), 0, 0)
                 self.parts.append(ob)
+                box("farok_vas", (2.7, 1.2, 0.5), (0, 14.3, 0.9), 'iron', bevel=0.1, parent=R_)
             else:
                 for sd in (-1, 1):
                     ob = box(f"farok{sd}", (1.4, 14, 1.4), (sd * 2.5, 8.0, 1.6), trail_m, bevel=0.3, parent=R_)
-                    ob.rotation_euler = (R(10), 0, sd * R(12))
+                    ob.rotation_euler = (R(-7), 0, sd * R(12))
                     self.parts.append(ob)
             box("bolcso", (3.4, 6.0, 2.4), (0, 0.5, wr + 0.6), trail_m, bevel=0.4, parent=R_)
             g = empty("cso_g", (0, 0.5, wr + 1.8), R_)
@@ -1359,21 +1422,24 @@ class Siege(Machine):
             self.parts.append(g)
             # csapatszín: jelvény a laféta oldalán
             for sd in (-1, 1):
-                cyl(f"jel{sd}", 1.1, 0.25, (sd * 1.8, 5.0, 2.6), 'team', verts=12, rot=(0, math.pi / 2, 0),
-                    base=False, parent=R_)
+                cyl(f"jel{sd}", 1.1, 0.25, (sd * (1.35 if a < 3 else 1.8), 5.0, 3.6 if a < 3 else 2.6), 'team',
+                    verts=12, rot=(0, math.pi / 2, 0), base=False, parent=R_)
             self.flash = sphere("tuz", 1.3, (0, -Lg + 1.5, 0), 'fire', scale=(1.5, 2.4, 1.5), parent=g)
             self.flash["fx"] = True
             self.smoke = [fx_smoke(f"fust{i}", (0, -Lg - 1 - i * 3, 0.8 + i), 2.2 + i, parent=g) for i in range(3)]
         if a == 0:
             # zászlócska a hajítógépen
             flag_small("zaszlo", (4.0, 9.5, 3.8), R_, h=9.0)
+        # a kezelő a gép bal hátsó oldalánál áll
+        self.crew = crew("kezelo", (-8.5, 9.0, 0) if a == 0 else (-9.5, 9.5, 0), self.root, CREW_SPEC[a])
         self.make_wreck_fx(8)
 
     def pose(self, mode, t=0.0, k=0):
         self.reset_wreck()
         kk = int(round(t * 3))
+        crew_pose(self.crew, mode, t, k, pull=(self.age == 0))
         for i, w in enumerate(self.wheels):
-            w.rotation_euler = (R((kk * 30) if mode == "walk" else 0), 0, 0)
+            w.rotation_euler = (R((k * 22.5) if mode == "walk" else 0), 0, 0)
         if self.age == 0:
             ang = [-62, -62, 40, 10][kk] if mode == "attack" else -62
             self.arm.rotation_euler = (R(ang), 0, 0)
@@ -1453,13 +1519,14 @@ class Ram(Machine):
             for sd in (-1, 1):
                 box(f"jel{sd}", (0.3, 3.2, 2.0), (sd * (W / 2 - 0.9), 4.0, 6.5), 'team', bevel=0.1, parent=R_)
             cyl("jel_f", 1.8, 0.2, (0, 5.0, 11.2), 'team', verts=12, parent=R_)
-        self.make_wreck_fx(8)
+        # a fedett kosnál a tűz a tető fölé kerül, különben a tető eltakarja
+        self.make_wreck_fx(15 if a <= 2 else 9)
 
     def pose(self, mode, t=0.0, k=0):
         self.reset_wreck()
         kk = int(round(t * 3))
         for w in self.wheels:
-            w.rotation_euler = (R((kk * 30) if mode == "walk" else 0), 0, 0)
+            w.rotation_euler = (R((k * 22.5) if mode == "walk" else 0), 0, 0)
         if self.age <= 2:
             push = [2.0, -3.5, -2.0, 0.5][kk] if mode == "attack" else 0.0
             self.log.location = (0, push, 8.0)
@@ -1474,7 +1541,7 @@ class Ram(Machine):
 
 
 def _siege(a):
-    return type(f"Siege{a}", (Siege,), {"age": a, "cell": (72, 72, 36, 48)})
+    return type(f"Siege{a}", (Siege,), {"age": a, "cell": (96, 88, 48, 54)})
 
 
 def _ram(a):

@@ -140,6 +140,7 @@ func _ready() -> void:
 	# Hálózati próba két folyamattal:  -- --nethost  /  -- --netjoin=KOD
 	var uargs := dev_args()
 	if ("--nethost" in uargs or _has_prefix(uargs, "--netjoin=")
+			or "--szobahost" in uargs or _has_prefix(uargs, "--szobajoin=")
 			or _has_prefix(uargs, "--netrelayhost=")
 			or _has_prefix(uargs, "--netrelayjoin=")) \
 			and get_tree().root.get_node_or_null("NetTest") == null:
@@ -236,9 +237,11 @@ func _ready() -> void:
 		var wt: Node = (load("res://scripts/dev/SelfTest.gd") as GDScript).new(self)
 		add_child(wt)
 		var kor := 0
+		var szerepek: Array = []      # `--szerepek=medic,siege,ram`: más szerepek a rácsban
 		for a in args:
 			if a.begins_with("--age="): kor = clampi(int(a.substr(6)), 0, 3)
-		wt.weapon_test(kor)
+			if a.begins_with("--szerepek="): szerepek = Array(a.substr(11).split(",", false))
+		wt.weapon_test(kor, szerepek)
 	# Nemzeti jelleg próba:  -- --skip-menu --jellegtest --shot=out.png
 	if "--jellegtest" in args:
 		var jt: Node = (load("res://scripts/dev/SelfTest.gd") as GDScript).new(self)

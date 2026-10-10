@@ -453,6 +453,41 @@ func _build_mp_screen(center: CenterContainer) -> void:
 	var helyi := _mp_section("net_helyi_cim", "net_helyi_leiras")
 	_mbtn(helyi, "helyi_csata", func() -> void: show_screen("battle"))
 
+	# --- SZOBAKÓDDAL (az ajánlott út: se kapunyitás, se közvetítő) ---
+	# Hatbetűs kód, WebRTC — lásd scripts/globals/NetSzoba.gd. Ez látszik
+	# alapból; a régi két út (cím + kapu, közvetítő) a „haladó” gomb mögött van.
+	var kodos := _mp_section("szoba_szakasz", "szoba_leiras")
+	_room_panel = kodos.get_parent() as Control
+	var nyit := _mbtn(kodos, "szoba_nyitas_kod", func() -> void:
+		if Net.host_room(_name_edit.text):
+			show_screen("lobby"))
+	nyit.add_theme_color_override("font_color", Style.GOLD)
+	var kod_sor := HBoxContainer.new()
+	kod_sor.add_theme_constant_override("separation", 10)
+	var kcl := Label.new()
+	kcl.text = Lang.t("szoba_kod_cimke")
+	_kulcs(kcl, "szoba_kod_cimke")
+	kcl.custom_minimum_size = Vector2(120, 0)
+	kod_sor.add_child(kcl)
+	_room_code = LineEdit.new()
+	_room_code.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_room_code.max_length = 12
+	_room_code.placeholder_text = "ABC-DEF"
+	kod_sor.add_child(_room_code)
+	kodos.add_child(kod_sor)
+	var belep := _mbtn(kodos, "szoba_csatlakozas_kod", func() -> void:
+		if Net.join_room(_room_code.text, _name_edit.text):
+			show_screen("lobby"))
+	_room_code.text_submitted.connect(func(_t: String) -> void: belep.pressed.emit())
+	if not Net.room_available():
+		# A WebRTC-kiegészítő nem töltött be ezen a gépen: marad a régi két út.
+		nyit.disabled = true
+		belep.disabled = true
+		_room_code.editable = false
+		var nincs := _kulcs(_note(kodos, Lang.t("szoba_nincs_rtc")), "szoba_nincs_rtc") as Label
+		nincs.add_theme_color_override("font_color", Style.GOLD)
+	_room_adv_btn = _mbtn(_mp_box, "szoba_halado", func() -> void: _mp_set_adv(true))
+
 	# --- SZOBA NYITÁSA (házigazda) ---
 	var gazda := _mp_section("net_gazda_cim", "net_gazda_leiras")
 	var gazda_sor := HBoxContainer.new()
@@ -494,6 +529,11 @@ func _build_mp_screen(center: CenterContainer) -> void:
 	_mbtn(vendeg, "csatlakozas", func() -> void:
 		Settings.set_net_port(int(_join_port.value))
 		var szoveg := _mp_code.text.strip_edges()
+		# Ha valaki ide írja a hatbetűs szobakódot, az is jó.
+		if Net.room_code_of(szoveg) != "":
+			if Net.join_room(szoveg, _name_edit.text):
+				show_screen("lobby")
+			return
 		var cim := Net.parse_code(szoveg)
 		if cim.size() >= 3:
 			if Net.join_via_relay("%s:%d" % [cim[0], cim[1]], int(cim[2]),
@@ -530,10 +570,30 @@ func _build_mp_screen(center: CenterContainer) -> void:
 		if Net.host_via_relay(_relay_edit.text, _name_edit.text):
 			show_screen("lobby"))
 
+	_room_back_btn = _mbtn(_mp_box, "szoba_vissza_kodhoz", func() -> void: _mp_set_adv(false))
+	_mp_adv_panels = [gazda.get_parent(), vendeg.get_parent(), relay.get_parent()]
+	# Alapból a szobakódos út látszik; ha a gépen nincs WebRTC, a régi kettő.
+	_mp_set_adv(not Net.room_available())
+
 	_mp_note2 = _note(_mp_box, "")
 	_mp_note2.add_theme_color_override("font_color", Style.GOLD)
 	_mp_box.add_child(HSeparator.new())
 	_mbtn(_mp_box, "vissza", func() -> void: show_screen("home"))
+
+var _room_panel    : Control = null
+var _room_code     : LineEdit = null
+var _room_adv_btn  : Button = null
+var _room_back_btn : Button = null
+var _mp_adv_panels : Array = []
+
+# A többjátékos képernyő két nézete: a szobakódos (alap) és a haladó (cím +
+# kapu, közvetítő). Egyszerre csak az egyik látszik, így a képernyő nem nő
+# magasabbra, mint korábban.
+func _mp_set_adv(halado: bool) -> void:
+	for p in _mp_adv_panels: (p as Control).visible = halado
+	_room_panel.visible = not halado
+	_room_adv_btn.visible = not halado
+	_room_back_btn.visible = halado
 
 # Egy keretezett szakasz címmel és rövid magyarázattal (netDoboz / MP_*_HEADER).
 func _mp_section(cim_kulcs: String, leiras_kulcs: String) -> VBoxContainer:
@@ -655,6 +715,17 @@ func _refresh_lobby() -> void:
 			Net.pretty(Net.room_code)]
 		_lobby_lan.visible = false
 		_lobby_net.text = Lang.t("net_relay_sugo")
+	elif Net.transport == "szoba":
+		# Szobakódos út: egyetlen hatbetűs kód. A házigazdánál egy pillanatig
+		# még nincs meg (a jelzőcsatorna megnyílásakor érkezik).
+		if Net.room_code == "":
+			_lobby_code.text = Lang.t("szoba_nyitas_folyamatban")
+		else:
+			_lobby_code.text = "%s:  %s" % [Lang.t("szobakod"), Net.pretty_code()]
+		_lobby_lan.visible = false
+		if Net.is_host(): _lobby_net.text = Lang.t("szoba_lobbi_sugo")
+		elif Net.players.is_empty(): _lobby_net.text = Lang.t("szoba_kapcsolodas")
+		else: _lobby_net.text = ""
 	elif Net.is_host():
 		# A CÍM az első: ezt írja be a vendég. Mellette a gép ÖSSZES helyi
 		# címe és a kapu (mint a Heptarchia lobbijában), másodsorban a

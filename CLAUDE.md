@@ -12,7 +12,10 @@ van — **csak történeti anyag**, a benne lévő kód és táblák elavultak. 
   (`GameState.pirate`, nagyobb pálya, hírnév, karibi városok), hadjárat (`Campaign` autoload,
   `assets/campaign`), oktatómód, visszajátszás (`user://replays/*.brep`).
 - Hálózati többjátékos mód: a szimuláció a **házigazdán** fut, a kliens (`GameState.net_client`)
-  csak a pillanatképet rajzolja ki (`Net` autoload, `scripts/systems/NetSync.gd`).
+  csak a pillanatképet rajzolja ki (`Net` autoload, `scripts/systems/NetSync.gd`). Három úton
+  lehet összejönni: szobakóddal (WebRTC, `scripts/globals/NetSzoba.gd` — ehhez kell az
+  `addons/webrtc_native` kiegészítő és a kiszolgálón a `server/supabase/schema_birodalom_szoba.sql`),
+  közvetlenül (cím + kapu) vagy közvetítőn át (`--relay=27020`).
 - Magyar, angol és német nyelv: `assets/lang/*`, a `Lang` autoload.
 
 ## Felépítés
@@ -60,6 +63,9 @@ Nyelvi fájlok (hu/en/de egyezés, formázójelek, a kódban használt kulcsok):
 `Godot_v4.7.2-stable_win64_console.exe --headless --path . --script res://scripts/dev/LangCheck.gd`
 — új felirat csak nyelvi kulccsal kerüljön a kódba. Képernyőkép adott nyelven: `-- --lang=en`
 (a játékos mentett nyelvét nem írja felül).
+Kétpéldányos hálózati próba (`scripts/dev/NetTest.gd`): `-- --nethost` / `-- --netjoin=KOD`,
+szobakóddal `-- --szobahost` / `-- --szobajoin=KOD`; a Supabase helyett helyi jelzővel:
+`--script res://scripts/dev/JelzoProba.gd`, majd mindkét példánynak `--szobajelzo=ws://127.0.0.1:27031/ws`.
 További kapcsolók (`Main.gd`): `--pirate`, `--tutorial`, `--replay`, `--nethost`, `--reveal`,
 `--nocull`, `--nobloom`, valamint képernyőképes nézetek: `--showcase`, `--shiptest`,
 `--weapontest`, `--jellegtest`, `--bloomtest`, `--portmenu`, `--gamemenu`, `--gamemenu-settings`

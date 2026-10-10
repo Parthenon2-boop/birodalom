@@ -23,6 +23,12 @@ extends Node
 #
 # A játszma mindkét esetben a HÁZIGAZDA gépén fut: a közvetítő csak postás,
 # nem számol semmit.
+#
+# 3. SZOBAKÓDDAL (szoba). Hatbetűs kód, kapunyitás és saját közvetítő
+#    nélkül: a gépek WebRTC-vel, közvetlenül kapcsolódnak, a kapcsolat
+#    felépítéséhez szükséges jelzést pedig a Supabase Realtime viszi. A
+#    részletek és a feltételek a NetSzoba.gd elején. Ez az AJÁNLOTT út; a
+#    fenti kettő változatlanul megmaradt haladó lehetőségnek.
 
 signal lobby_changed              # a résztvevők listája vagy a beállítás változott
 signal state_changed(state: String)
@@ -69,8 +75,11 @@ var my_id: int = 0
 # gép), közvetítőn át viszont a szobát nyitó játékos rendes peer-száma —
 # ezért sehol nem szabad "1"-et írni a házigazda helyett.
 var host_peer: int = 1
-# "direkt" | "relay"
+# "direkt" | "relay" | "szoba"
 var transport: String = "direkt"
+# A szobakódos (WebRTC) út jelzései — lásd NetSzoba.gd.
+const NetSzoba := preload("res://scripts/globals/NetSzoba.gd")
+var szoba: Node = null
 # Közvetítő üzemmódban maga a közvetítő gép: csak postás, nem játszik.
 var relay_mode: bool = false
 const RELAY_PORT := 27020
@@ -79,6 +88,12 @@ const RELAY_PORT := 27020
 var setup: Dictionary = {"age": 0, "diff": 1, "pirate": false, "map": "mezo"}
 
 func _ready() -> void:
+	szoba = NetSzoba.new()
+	szoba.name = "Szoba"
+	add_child(szoba)
+	szoba.connect("kesz", _on_szoba_kesz)
+	szoba.connect("hiba", _on_szoba_hiba)
+	szoba.connect("vendeg_peer", _on_szoba_peer)
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.connected_to_server.connect(_on_connected)
@@ -229,6 +244,142 @@ func _srv_cmd(kind: String, args: Array) -> void:
 	if sync != null and is_instance_valid(sync):
 		sync.handle_cmd(multiplayer.get_remote_sender_id(), kind, args)
 
+# --- NAGY PILLANATKÉP DARABOLÁSA (csak a szobakódos úton) ---
+#
+# Egy WebRTC-üzenet legfeljebb 256 KB lehet (kimérve: 250 000 bájt átmegy,
+# 300 000 már küldési hiba), és a Godot nem darabol. Egy egység 32 bájt, így
+# a szokásos játszma pillanatképe ennek a töredéke — de egy nagyon nagy
+# csatánál a határ fölé nőhetne, és akkor a társ képe szó nélkül megállna.
+# Ezért a nagy pillanatkép megbízható darabokban megy, a fogadó összerakja.
+# ENet-en (közvetlen és közvetítős út) minden marad a régiben.
+const SNAP_DARAB_MAX := 48 * 1024
+var snap_egyben_max: int = 60 * 1024     # efölött darabolunk (a próba leviszi)
+var snap_darab: int = SNAP_DARAB_MAX
+var _snap_sorszam: int = 0
+var _snap_be: Dictionary = {}            # {"s": sorszám, "n": darabszám, "r": [darabok], "db": megjött}
+
+# A pillanatkép küldése egy társnak. A NetSync hívja.
+func send_snapshot(peer: int, u: PackedFloat32Array, b: PackedFloat32Array,
+		sides: Array, t: float, over: bool, winner: int) -> void:
+	if transport != "szoba":
+		rpc_id(peer, "_cli_snapshot", u, b, sides, t, over, winner)
+		return
+	# A most kilépő társ adatcsatornája előbb zárul, mint ahogy a kilépéséről
+	# értesülünk: addig ne írjunk bele (hibaüzenet lenne belőle).
+	if not _szoba_el(peer): return
+	if (u.size() + b.size()) * 4 <= snap_egyben_max:
+		rpc_id(peer, "_cli_snapshot", u, b, sides, t, over, winner)
+		return
+	var adat := var_to_bytes([u, b, sides, t, over, winner])
+	_snap_sorszam = _snap_sorszam % 1000000 + 1
+	var n := ceili(adat.size() / float(snap_darab))
+	for i in n:
+		rpc_id(peer, "_cli_snap_darab", _snap_sorszam, i, n,
+			adat.slice(i * snap_darab, mini((i + 1) * snap_darab, adat.size())))
+
+func _szoba_el(peer: int) -> bool:
+	var r := multiplayer.multiplayer_peer as WebRTCMultiplayerPeer
+	if r == null or not r.has_peer(peer): return false
+	var d: Dictionary = r.get_peer(peer)
+	if not bool(d.get("connected", false)): return false
+	for ch in d.get("channels", []):
+		if (ch as WebRTCDataChannel).get_ready_state() != WebRTCDataChannel.STATE_OPEN:
+			return false
+	return true
+
+@rpc("any_peer", "call_remote", "reliable")
+func _cli_snap_darab(sorszam: int, i: int, n: int, resz: PackedByteArray) -> void:
+	if not _from_host(): return
+	if n < 1 or n > 256 or i < 0 or i >= n or resz.size() > SNAP_DARAB_MAX: return
+	if int(_snap_be.get("s", -1)) != sorszam or int(_snap_be.get("n", 0)) != n:
+		# Új pillanatkép kezdődik: a félbemaradt régi elveszett.
+		var ures: Array = []
+		ures.resize(n)
+		_snap_be = {"s": sorszam, "n": n, "r": ures, "db": 0}
+	var r: Array = _snap_be["r"]
+	if r[i] != null: return
+	r[i] = resz
+	_snap_be["db"] = int(_snap_be["db"]) + 1
+	if int(_snap_be["db"]) < n: return
+	var adat := PackedByteArray()
+	for d in r: adat.append_array(d)
+	_snap_be = {}
+	# (bytes_to_var: objektumot nem épít fel, csak adatot.)
+	var v: Variant = bytes_to_var(adat)
+	if not (v is Array) or (v as Array).size() != 6: return
+	var a: Array = v
+	if not (a[0] is PackedFloat32Array and a[1] is PackedFloat32Array
+			and a[2] is Array and a[3] is float and a[4] is bool and a[5] is int):
+		return
+	if sync != null and is_instance_valid(sync):
+		sync.apply_snapshot(a[0], a[1], a[2], a[3], a[4], a[5])
+
+# --- 3. ÚT: SZOBA SZOBAKÓDDAL (WebRTC) ---
+#
+# Itt csak a Net oldala van: a jelzés és a kapcsolat felépítése a
+# NetSzoba.gd dolga. A szoba megnyitása után minden ugyanúgy megy, mint a
+# közvetlen úton — a házigazda az 1-es hely.
+
+# Van-e WebRTC ezen a gépen (betöltött-e a webrtc-native kiegészítő).
+func room_available() -> bool:
+	return NetSzoba.elerheto()
+
+# A beírt szöveg hatbetűs szobakód-e. Ha igen, a tisztított kód; ha nem, üres.
+func room_code_of(text: String) -> String:
+	return str(szoba.call("kod_tisztit", text))
+
+func host_room(player_name: String = "") -> bool:
+	close()
+	var peer: MultiplayerPeer = szoba.call("gazda_nyit")
+	if peer == null:
+		error_message.emit(Lang.t("szoba_nincs_rtc"))
+		return false
+	multiplayer.multiplayer_peer = peer
+	role = "hazigazda"
+	transport = "szoba"
+	host_peer = 1
+	phase = "lobbi"
+	my_id = 1
+	room_code = ""              # a kód a jelzőcsatorna megnyílásakor jön
+	players = {1: _new_player(player_name, 0, true)}
+	state_changed.emit("lobbi")
+	lobby_changed.emit()
+	return true
+
+func join_room(code: String, player_name: String = "") -> bool:
+	var kod := room_code_of(code)
+	if kod == "":
+		error_message.emit(Lang.t("szoba_rossz_kod"))
+		return false
+	close()
+	if not bool(szoba.call("vendeg_belep", kod)):
+		error_message.emit(Lang.t("szoba_nincs_rtc"))
+		return false
+	role = "csatlakozo"
+	transport = "szoba"
+	host_peer = 1
+	phase = "lobbi"
+	room_code = kod
+	_pending_name = player_name
+	state_changed.emit("csatlakozas")
+	return true
+
+func _on_szoba_kesz(kod: String) -> void:
+	if transport != "szoba" or not is_host(): return
+	room_code = kod
+	lobby_changed.emit()
+
+# A vendéget a házigazda befogadta: innen a Godot többjátékos rendszere
+# viszi a kapcsolatot, és a `connected_to_server` jelzésre lépünk a lobbiba.
+func _on_szoba_peer(peer: MultiplayerPeer) -> void:
+	if transport != "szoba" or not is_client(): return
+	multiplayer.multiplayer_peer = peer
+
+func _on_szoba_hiba(kulcs: String) -> void:
+	if transport != "szoba" or role == "ki": return
+	close()
+	error_message.emit(Lang.t(kulcs))
+
 var _room_no: int = -1
 var _relay_ip: String = ""
 var _relay_port: int = RELAY_PORT
@@ -339,6 +490,7 @@ func pretty_code() -> String:
 	return pretty(room_code)
 
 func pretty(code: String) -> String:
+	if code.length() == 6: return code.substr(0, 3) + "-" + code.substr(3, 3)   # szobakódos út
 	if code.length() == 8: return code.substr(0, 4) + "-" + code.substr(4, 4)
 	if code.length() == 10: return code.substr(0, 5) + "-" + code.substr(5, 5)
 	return code
@@ -485,6 +637,8 @@ var _pending_name: String = ""
 
 func close() -> void:
 	_close_upnp()
+	if szoba != null: szoba.call("bezar")
+	_snap_be = {}
 	if multiplayer.multiplayer_peer != null \
 			and not (multiplayer.multiplayer_peer is OfflineMultiplayerPeer):
 		multiplayer.multiplayer_peer.close()
@@ -542,7 +696,9 @@ func lan_addresses() -> Array:
 
 func _on_peer_connected(id: int) -> void:
 	if relay_mode: return                     # a közvetítő a szobákat várja
-	if not is_host() or transport != "direkt": return
+	# (Közvetítőn át a névsort a közvetítő adja; a közvetlen és a szobakódos
+	# úton mi magunk vesszük fel az érkezőt.)
+	if not is_host() or transport == "relay": return
 	if players.size() >= MAX_PLAYERS:
 		multiplayer.multiplayer_peer.disconnect_peer(id)
 		return
