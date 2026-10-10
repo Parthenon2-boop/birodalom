@@ -56,6 +56,10 @@
 	figure { margin: 0; }
 	figure img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; display: block; }
 	figcaption { color: var(--muted); font-size: 15px; margin-top: 6px; text-align: center; }
+	/* előzetes videó: csak kattintásra tölt be (preload="none"), a poszterkép addig is kitölti a helyét */
+	.video { margin-top: 12px; }
+	.video video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border: 1px solid var(--line); border-radius: 8px; }
+	.video video:hover, .video video:focus-visible { border-color: var(--gold); }
 	.faq dt { color: var(--gold-2); font-weight: 600; margin-top: 14px; }
 	.faq dd { margin: 4px 0 0; }
 	footer { border-top: 1px solid var(--line); padding: 22px 0 40px; color: var(--muted); font-size: 15px; text-align: center; }
@@ -107,6 +111,19 @@
 			<p style="color:var(--muted);font-size:16px" data-i18n="web_note">A böngészős változathoz ingyenes regisztráció kell (ugyanaz a fiók, mint a ParthLauncherben). Barátaiddal szobakóddal játszhatsz; kiegészítők nélkül.</p>
 		</div>
 	</div>
+
+	<section id="elozetes">
+		<div class="wrap">
+			<h2 data-i18n="video.title">Előzetes</h2>
+			<figure class="video">
+				<video controls preload="none" playsinline muted poster="video/heptarchia.jpg?v=1" width="1280" height="720" aria-label="Heptarchia – előzetes videó" data-i18n-label="video.label">
+					<source src="video/heptarchia.mp4?v=1" type="video/mp4">
+					<a href="video/heptarchia.mp4?v=1">heptarchia.mp4</a>
+				</video>
+				<figcaption data-i18n="video.cap">Bő fél perc az alapjátékból: Britannia térképe a színes országhatárokkal, egy útközben átirányított sereg, Offa sánca, a Hadvezérek ablak, csata a két hadvezérrel, tengeri ütközet partraszállással és egy részlet a vezetett csatából. Hang nélküli felvétel.</figcaption>
+			</figure>
+		</div>
+	</section>
 
 	<section>
 		<div class="wrap">
@@ -223,6 +240,8 @@
 		en: {
 			"nav.home": "Home", "nav.download": "Download", "nav.games": "Games", "nav.allgames": "All games", "nav.dlc": "Add-ons", "nav.account": "Account / sign in",
 			"lead": "Anglo-Saxon grand strategy from 790. Seven kingdoms, one island, and ships closing in from the sea. Lead Wessex, Mercia or Northumbria – or the Scots, Picts and Irish – and decide what the chronicles will say about you.",
+			"video.title": "Trailer", "video.label": "Heptarchia – trailer video",
+			"video.cap": "Just over half a minute of the base game: the map of Britain with its coloured realm borders, an army redirected on the march, Offa's Dyke, the Generals window, a battle between two generals, a sea battle with a landing, and a glimpse of a battle you lead yourself. No sound. (Recorded with the Hungarian interface.)",
 			"cta": "Free download", "cta_web": "Play in your browser", "web_note": "The browser version needs a free account (the same as in the ParthLauncher). Play with friends using a room code; no add-ons.", "free": "Free · Windows and macOS · updated by the ParthLauncher",
 			"what.title": "What is it?",
 			"what.body": "A turn-based grand strategy game set in late 8th-century Britain. You run a kingdom: collect taxes, grow villages and towns, build churches, raise armies from your population, and marry or fight your neighbours. In 793 the first viking ships arrive, and from then on every coast is dangerous.",
@@ -266,6 +285,8 @@
 		de: {
 			"nav.home": "Startseite", "nav.download": "Download", "nav.games": "Spiele", "nav.allgames": "Alle Spiele", "nav.dlc": "Erweiterungen", "nav.account": "Konto / Anmelden",
 			"lead": "Angelsächsische Großstrategie ab 790. Sieben Königreiche, eine Insel und Schiffe, die sich vom Meer her nähern. Führe Wessex, Mercia oder Northumbria – oder die Schotten, Pikten und Iren – und entscheide, was die Chroniken über dich schreiben.",
+			"video.title": "Trailer", "video.label": "Heptarchia – Trailer-Video",
+			"video.cap": "Gut eine halbe Minute aus dem Grundspiel: die Karte Britanniens mit den farbigen Reichsgrenzen, ein unterwegs umgelenktes Heer, Offa's Dyke, das Fenster der Heerführer, eine Schlacht zweier Heerführer, ein Seegefecht mit Landung und ein Ausschnitt aus einer selbst geführten Schlacht. Ohne Ton. (Aufgenommen mit der ungarischen Oberfläche.)",
 			"cta": "Kostenlos herunterladen", "cta_web": "Im Browser spielen", "web_note": "Für die Browserversion brauchst du ein kostenloses Konto (dasselbe wie im ParthLauncher). Mit Freunden spielst du über einen Raumcode; ohne Erweiterungen.", "free": "Kostenlos · Windows und macOS · vom ParthLauncher aktualisiert",
 			"what.title": "Worum geht es?",
 			"what.body": "Ein rundenbasiertes Großstrategiespiel im Britannien des späten 8. Jahrhunderts. Du führst ein Königreich: Steuern eintreiben, Dörfer und Städte ausbauen, Kirchen errichten, Heere aus der Bevölkerung ausheben und mit den Nachbarn heiraten oder Krieg führen. 793 kommen die ersten Wikingerschiffe – ab da ist jede Küste gefährlich.",
@@ -317,7 +338,7 @@
 	const urlLang = new URLSearchParams(location.search).get("lang");
 	if (LANGS[urlLang]) lang = urlLang;
 	if (!LANGS[lang]) { const n = (navigator.language || "hu").slice(0, 2).toLowerCase(); lang = LANGS[n] ? n : "en"; }
-	const HU_TEXT = new Map();
+	const HU_TEXT = new Map(), HU_LABEL = new Map();
 	document.querySelectorAll("[data-i18n]").forEach(el => HU_TEXT.set(el, el.innerHTML));
 	// a képek alt-szövege is nyelvfüggő (data-i18n-alt); a magyar a lapban van
 	const HU_ALT = new Map();
@@ -334,6 +355,12 @@
 		document.querySelectorAll("[data-i18n]").forEach(el => {
 			const v = lang === "hu" ? HU_TEXT.get(el) : (I18N[lang] || {})[el.dataset.i18n];
 			if (v != null) el.innerHTML = v;
+		});
+		// a videó akadálymentes neve is nyelvet vált
+		document.querySelectorAll("[data-i18n-label]").forEach(el => {
+			if (!HU_LABEL.has(el)) HU_LABEL.set(el, el.getAttribute("aria-label"));
+			const v = lang === "hu" ? HU_LABEL.get(el) : (I18N[lang] || {})[el.dataset.i18nLabel];
+			if (v != null) el.setAttribute("aria-label", v);
 		});
 		document.querySelectorAll("#langs button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
 		try { localStorage.setItem("parth_lang", lang); } catch (e) {}
