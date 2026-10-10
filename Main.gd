@@ -202,6 +202,10 @@ func _ready() -> void:
 				if a.begins_with("--age="): kor = clampi(int(a.substr(6)), 0, 3)
 				if a.begins_with("--sides="): felek = clampi(int(a.substr(8)), 2, 6)
 				if a.begins_with("--map="): taj = a.substr(6)
+				# `--nemzet=fr`: a saját nemzet (az előzetes felvételéhez).
+				if a.begins_with("--nemzet=") and not pir \
+						and a.substr(9) in Style.NATION_ORDER:
+					GameState.nation = a.substr(9)
 			if taj != "": GameState.map_type = taj
 			if felek > 0:
 				var lista: Array = [{"tipus": "ember", "nemzet": GameState.nation,
@@ -213,6 +217,11 @@ func _ready() -> void:
 				GameState.new_battle(lista, kor, pir, 0, 0, taj)
 			else:
 				GameState.new_game("ns" if pir else GameState.nation, kor, pir, taj)
+				# `--ellenfel=at`: a gépi ellenfél nemzete (felvételhez).
+				for a in dev_args():
+					if a.begins_with("--ellenfel=") and not pir \
+							and a.substr(11) in Style.NATION_ORDER:
+						GameState.get_side(1)["nemzet"] = a.substr(11)
 			if "--tutorial" in dev_args():
 				GameState.tutorial = true
 	if not GameState.on:
@@ -311,6 +320,12 @@ func _ready() -> void:
 			camera.zoom = Vector2(z, z)
 			camera.position = Vector2(GameState.WORLD_W, GameState.WORLD_H) * 0.5
 			camera.reset_smoothing()
+	# Előzetes-felvétel (scripts/dev/Felvevo.gd):  -- --skip-menu --felvetel=ostrom
+	for arg in args:
+		if arg.begins_with("--felvetel="):
+			var fv: Node = (load("res://scripts/dev/Felvevo.gd") as GDScript).new(self)
+			add_child(fv)
+			fv.indit(arg.substr(11))
 	# Képernyőkép a játékról:  godot -- --skip-menu --shot=<útvonal>
 	for arg in dev_args():
 		if arg.begins_with("--shot="):

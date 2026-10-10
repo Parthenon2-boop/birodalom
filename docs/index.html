@@ -115,6 +115,9 @@
 	.shot img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 11; object-fit: cover; transition: transform .25s; }
 	.shot:hover img { transform: scale(1.03); }
 	.card.game .shot { margin-bottom: 14px; }
+	/* előzetes videó a játékkártyán: a borítókép helyén, ugyanakkora dobozban; csak kattintásra tölt be */
+	.card.game video.elozetes { display: block; width: 100%; height: auto; aspect-ratio: 16 / 11; object-fit: contain; background: #000; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 14px; }
+	.card.game video.elozetes:hover, .card.game video.elozetes:focus-visible { border-color: var(--gold); }
 	.gallery { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
 	.gallery figure { margin: 0; min-width: 0; }
 	.gallery figcaption { font-size: 15px; color: var(--muted); margin-top: 6px; text-align: center; }
@@ -242,14 +245,14 @@
 					<span class="pill" id="ver-heptarchia">…</span>
 				</article>
 				<article class="card game" id="jatek-birodalom">
-					<button class="shot" data-full="kepek/bir_csata.jpg?v=5" aria-label="Birodalom"><img src="kepek/bir_csata.jpg?v=5" alt="Birodalom" loading="lazy" width="1028" height="720"></button>
+					<video class="elozetes" controls preload="none" playsinline muted poster="video/birodalom.jpg?v=1" width="1280" height="720" aria-label="Birodalom – előzetes videó" data-i18n-label="games.bir.video"><source src="video/birodalom.mp4?v=1" type="video/mp4"><a href="video/birodalom.mp4?v=1">birodalom.mp4</a></video>
 					<h3><a href="birodalom.html" style="color:inherit;text-decoration:none">Birodalom</a></h3>
 					<span class="tag" data-i18n="games.bir.tag">Valós idejű stratégia, 1400 – 1945</span>
 					<p data-i18n="games.bir.desc">Építs birodalmat öt és fél évszázadon át: gazdaság, hadsereg és nagyhatalmi politika a késő középkortól a modern korig.</p>
 					<span class="pill" id="ver-birodalom">…</span>
 				</article>
 				<article class="card game" id="jatek-kard">
-					<button class="shot" data-full="kepek/borito_kard_es_magia.jpg?v=5" aria-label="Kard és Mágia"><img src="kepek/borito_kard_es_magia.jpg?v=5" alt="Kard és Mágia" loading="lazy" width="960" height="540"></button>
+					<video class="elozetes" controls preload="none" playsinline muted poster="video/kard-es-magia.jpg?v=1" width="1280" height="720" aria-label="Kard és Mágia – előzetes videó" data-i18n-label="games.kard.video"><source src="video/kard-es-magia.mp4?v=1" type="video/mp4"><a href="video/kard-es-magia.mp4?v=1">kard-es-magia.mp4</a></video>
 					<h3><a href="kard-es-magia.html" style="color:inherit;text-decoration:none">Kard és Mágia</a></h3>
 					<span class="tag" data-i18n="games.kard.tag">Roguelike kaland · négy zóna</span>
 					<p data-i18n="games.kard.desc">Lovag, mágus vagy íjász: ereszkedj le Gorgona négy zónáján át a Belső Magig. A lovag közelharcban erős, az íjász messziről sebez, a mágus kék varázsgömböt lő. Minden pálya bejárható.</p>
@@ -398,6 +401,7 @@
 			"games.title": "Games", "games.sub": "All free. The ParthLauncher downloads and updates them for you.",
 			"games.hep.tag": "Anglo-Saxon grand strategy, from 790",
 			"games.hep.desc": "Lead Wessex, Mercia or Northumbria – or the Scots, Picts and Irish. Diplomacy, the Witan, the church, population and recruitment, and the coming of the vikings – and you lead the battles and sieges yourself on the battlefield.",
+			"games.bir.video": "Birodalom – trailer video", "games.kard.video": "Kard és Mágia – trailer video",
 			"games.bir.tag": "Real-time strategy, 1400 – 1945",
 			"games.bir.desc": "Build an empire across five and a half centuries: economy, armies and great-power politics from the late Middle Ages to the modern era.",
 			"games.kard.tag": "Roguelike adventure · four zones",
@@ -450,6 +454,7 @@
 			"games.title": "Spiele", "games.sub": "Alle kostenlos. Der ParthLauncher lädt sie herunter und hält sie aktuell.",
 			"games.hep.tag": "Angelsächsische Großstrategie, ab 790",
 			"games.hep.desc": "Führe Wessex, Mercia oder Northumbria – oder die Schotten, Pikten und Iren. Diplomatie, Witan, Kirche, Bevölkerung und Aushebung sowie die Ankunft der Wikinger – und Schlachten und Belagerungen führst du selbst auf dem Schlachtfeld.",
+			"games.bir.video": "Birodalom – Trailer-Video", "games.kard.video": "Kard és Mágia – Trailer-Video",
 			"games.bir.tag": "Echtzeitstrategie, 1400 – 1945",
 			"games.bir.desc": "Baue ein Reich über fünfeinhalb Jahrhunderte auf: Wirtschaft, Heer und Großmachtpolitik vom Spätmittelalter bis in die Moderne.",
 			"games.kard.tag": "Roguelike-Abenteuer · vier Zonen",
@@ -504,7 +509,7 @@
 	const T = key => (lang === "hu" ? HU_DEFAULTS[key] : (I18N[lang] || {})[key]) ?? HU_DEFAULTS[key] ?? key;
 
 	// a magyar szövegeket a lapról mentjük el, hogy vissza lehessen váltani
-	const HU_TEXT = new Map();
+	const HU_TEXT = new Map(), HU_LABEL = new Map();
 	document.querySelectorAll("[data-i18n]").forEach(el => HU_TEXT.set(el, el.innerHTML));
 
 	function applyLang() {
@@ -513,6 +518,12 @@
 			const key = el.dataset.i18n;
 			const val = lang === "hu" ? HU_TEXT.get(el) : (I18N[lang] || {})[key];
 			if (val != null) el.innerHTML = val;
+		});
+		// a kártyák előzetes videóinak akadálymentes neve is nyelvet vált
+		document.querySelectorAll("[data-i18n-label]").forEach(el => {
+			if (!HU_LABEL.has(el)) HU_LABEL.set(el, el.getAttribute("aria-label"));
+			const val = lang === "hu" ? HU_LABEL.get(el) : (I18N[lang] || {})[el.dataset.i18nLabel];
+			if (val != null) el.setAttribute("aria-label", val);
 		});
 		document.querySelectorAll("#langs button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
 		try { localStorage.setItem("parth_lang", lang); } catch (e) {}

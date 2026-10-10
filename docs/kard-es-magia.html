@@ -61,6 +61,10 @@
 	figure { margin: 0; min-width: 0; }
 	figure img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; display: block; }
 	figcaption { color: var(--muted); font-size: 15px; margin-top: 6px; text-align: center; }
+	/* előzetes videó: csak kattintásra tölt be (preload="none"), a poszterkép addig is kitölti a helyét */
+	.video { margin-top: 12px; }
+	.video video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border: 1px solid var(--line); border-radius: 8px; }
+	.video video:hover, .video video:focus-visible { border-color: var(--gold); }
 	.shot { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
 	.shot img { transition: border-color .15s; }
 	.shot:hover img { border-color: var(--gold); }
@@ -123,6 +127,19 @@
 			<p class="note" data-i18n="macnote">Mac: első indításkor egyszer engedélyezni kell az <i>Adatvédelem és biztonság</i> beállításban – <a href="./#mac">így csináld</a>.</p>
 		</div>
 	</div>
+
+	<section id="elozetes">
+		<div class="wrap">
+			<h2 data-i18n="video.title">Előzetes</h2>
+			<figure class="video">
+				<video controls preload="none" playsinline muted poster="video/kard-es-magia.jpg?v=1" width="1280" height="720" aria-label="Kard és Mágia – előzetes videó" data-i18n-label="video.label">
+					<source src="video/kard-es-magia.mp4?v=1" type="video/mp4">
+					<a href="video/kard-es-magia.mp4?v=1">kard-es-magia.mp4</a>
+				</video>
+				<figcaption data-i18n="video.cap">Fél perc a játékból: a négy zóna a saját pályaelemével – gőzzsilip, sínen ingázó szike, spóragubó, forgó fogaskerék-padló –, a rejtvényszoba, és a Rozsdaféreg, az első zóna ura mindkét fázisában. Hang nélküli felvétel.</figcaption>
+			</figure>
+		</div>
+	</section>
 
 	<section>
 		<div class="wrap">
@@ -231,6 +248,8 @@
 			"cta.win": "Download for Windows", "cta.mac": "Download for macOS",
 			"free": "Free · Windows and macOS · installed and updated by the ParthLauncher",
 			"macnote": "Mac: on first launch you have to allow it once under <i>Privacy &amp; Security</i> – <a href=\"./#mac\">how to do it</a>.",
+			"video.title": "Trailer", "video.label": "Kard és Mágia – trailer video",
+			"video.cap": "Half a minute of gameplay: the four zones, each with its own hazard – steam locks, saw blades running on rails, spore pods, a rotating gear floor –, the puzzle room, and the Rust-Worm, lord of the first zone, in both of its phases. No sound. (Recorded with the Hungarian interface.)",
 			"what.title": "What is it?",
 			"what.body": "A turn-based, tile-by-tile dungeon crawl. The story of Vane, the Forgotten Surgeon: four zones, each a new, randomly built level with a two-phase boss at the end – the Rust-Worm, Doctor Karel, the Symbiote Mother and the Grand Weaver. Bosses telegraph their strikes, and you answer with a dash and your hero's own skill. Monsters keep moving even while you hesitate. If you fall, you wake in a new body in the Operating Theatre and can sew permanent upgrades onto it from what you gathered. You can keep several saves, and when signed in they belong to your account, so you can continue on another computer. There are three difficulty levels to choose from.",
 			"heroes.title": "Three heroes",
@@ -263,6 +282,8 @@
 			"cta.win": "Download für Windows", "cta.mac": "Download für macOS",
 			"free": "Kostenlos · Windows und macOS · vom ParthLauncher installiert und aktualisiert",
 			"macnote": "Mac: Beim ersten Start musst du es einmal unter <i>Datenschutz &amp; Sicherheit</i> erlauben – <a href=\"./#mac\">so geht es</a>.",
+			"video.title": "Trailer", "video.label": "Kard és Mágia – Trailer-Video",
+			"video.cap": "Eine halbe Minute aus dem Spiel: die vier Zonen mit ihrem jeweiligen Hindernis – Dampfschleuse, Sägeblätter auf Schienen, Sporenkapseln, drehender Zahnradboden –, der Rätselraum und der Rostwurm, Herr der ersten Zone, in beiden Phasen. Ohne Ton. (Aufgenommen mit der ungarischen Oberfläche.)",
 			"what.title": "Worum geht es?",
 			"what.body": "Ein rundenbasierter Dungeon-Crawler, Feld für Feld. Die Geschichte von Vane, dem Vergessenen Chirurgen: vier Zonen, jede eine neue, zufällig gebaute Ebene mit einem zweiphasigen Endgegner – dem Rostwurm, Doktor Karel, der Symbionten-Mutter und dem Ersten Weber. Die Endgegner kündigen ihre Schläge an, und du antwortest mit Ausweichen und der Fähigkeit deines Helden. Die Monster ziehen weiter, auch wenn du zögerst. Fällst du, erwachst du im Operationssaal in einem neuen Körper und kannst ihm aus dem Gesammelten dauerhafte Verbesserungen annähen. Du kannst mehrere Spielstände anlegen; angemeldet gehören sie zu deinem Konto, sodass du auf einem anderen Rechner weiterspielen kannst. Drei Schwierigkeitsgrade stehen zur Wahl.",
 			"heroes.title": "Drei Helden",
@@ -300,7 +321,7 @@
 	const urlLang = new URLSearchParams(location.search).get("lang");
 	if (LANGS[urlLang]) lang = urlLang;
 	if (!LANGS[lang]) { const n = (navigator.language || "hu").slice(0, 2).toLowerCase(); lang = LANGS[n] ? n : "en"; }
-	const HU_TEXT = new Map();
+	const HU_TEXT = new Map(), HU_LABEL = new Map();
 	document.querySelectorAll("[data-i18n]").forEach(el => HU_TEXT.set(el, el.innerHTML));
 	function applyLang() {
 		document.documentElement.lang = lang;
@@ -310,6 +331,12 @@
 		document.querySelectorAll("[data-i18n]").forEach(el => {
 			const v = lang === "hu" ? HU_TEXT.get(el) : (I18N[lang] || {})[el.dataset.i18n];
 			if (v != null) el.innerHTML = v;
+		});
+		// a videó (és más, szöveg nélküli elem) akadálymentes neve is nyelvet vált
+		document.querySelectorAll("[data-i18n-label]").forEach(el => {
+			if (!HU_LABEL.has(el)) HU_LABEL.set(el, el.getAttribute("aria-label"));
+			const v = lang === "hu" ? HU_LABEL.get(el) : (I18N[lang] || {})[el.dataset.i18nLabel];
+			if (v != null) el.setAttribute("aria-label", v);
 		});
 		document.querySelectorAll("#langs button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
 		try { localStorage.setItem("parth_lang", lang); } catch (e) {}
