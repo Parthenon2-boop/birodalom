@@ -104,6 +104,7 @@ func _billentyuk(box: VBoxContainer) -> void:
 	fejlec.add_child(vissza)
 	# Görgethető lista: sok akció van, a panel viszont ne nyúljon el.
 	var gorgo := ScrollContainer.new()
+	Style.gorgeto_hezag(gorgo)
 	gorgo.custom_minimum_size = Vector2(0, 190)
 	gorgo.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	box.add_child(gorgo)

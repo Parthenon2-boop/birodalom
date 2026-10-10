@@ -96,6 +96,7 @@ func _build_screens() -> void:
 	# nem, le lehet görgetni — semmi nem lóg ki a képből.
 	remove_child(center)
 	var scroll := ScrollContainer.new()
+	Style.gorgeto_hezag(scroll)
 	scroll.name = "Scroll"
 	scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -361,6 +362,7 @@ func _build_replay_screen(center: CenterContainer) -> void:
 	_replay_box.custom_minimum_size = Vector2(560, 0)
 	_replay_title = _kulcs(_title_of(_replay_box, Lang.t("visszajatszas_nyit"), 26), "visszajatszas_nyit") as Label
 	var scroll := ScrollContainer.new()
+	Style.gorgeto_hezag(scroll)
 	scroll.custom_minimum_size = Vector2(540, 300)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_replay_list = VBoxContainer.new()
@@ -796,6 +798,7 @@ func _build_ach_screen(center: CenterContainer) -> void:
 	_ach_box.custom_minimum_size = Vector2(560, 0)
 	_ach_head = _title_of(_ach_box, Lang.t("teljesitmenyek"), 26)
 	var scroll := ScrollContainer.new()
+	Style.gorgeto_hezag(scroll)
 	scroll.custom_minimum_size = Vector2(540, 360)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_ach_list = VBoxContainer.new()

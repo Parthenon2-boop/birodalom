@@ -443,3 +443,23 @@ static func make_theme(age: int = 0, nation := "") -> Theme:
 	sep.color = line
 	th.set_stylebox("separator", "HSeparator", sep)
 	return th
+
+# A görgetősáv és a tartalom közé hézag: a függőleges sáv a tartalom felőli
+# oldalán HEZAG képpontnyi üres helyet foglal (maga a sáv ugyanolyan keskeny
+# marad), így a sor vége soha nem kerül a sáv alá.
+const GORGETO_HEZAG := 6.0
+
+static func gorgeto_hezag(sc: ScrollContainer) -> void:
+	var vb := sc.get_v_scroll_bar()
+	if vb == null or vb.has_meta("hezag"): return
+	vb.set_meta("hezag", true)
+	for nev in ["scroll", "scroll_focus", "grabber", "grabber_highlight", "grabber_pressed"]:
+		var sb := vb.get_theme_stylebox(nev)
+		if sb == null: continue
+		var uj := sb.duplicate() as StyleBox
+		if uj is StyleBoxFlat:
+			var f := uj as StyleBoxFlat
+			if nev.begins_with("scroll"):
+				f.content_margin_left = maxf(f.content_margin_left, 0.0) + GORGETO_HEZAG
+			f.expand_margin_left -= GORGETO_HEZAG
+		vb.add_theme_stylebox_override(nev, uj)

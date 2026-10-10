@@ -987,12 +987,12 @@ func _test_sprites() -> void:
 	print("\n[9] Textúrabetöltés (Blenderben renderelt grafika)")
 	# --- EGYSÉGLAPOK ---
 	# A renderelt lapos szerepeknek minden korszakban saját lapjuk van; a
-	# felcser, az ostromgép és a kos rokon alak lapját kapja; a hajók és a
-	# repülők (még nincs lapjuk) a régi rajzzal jelennek meg — üres folt
-	# sehol sem lehet.
-	var roles := ["worker", "melee", "ranged", "spear", "cav", "priest", "spy", "hero"]
+	# felcser, az ostromgép és a kos rokon alak lapját kapja; a hajóknak és a
+	# repülőknek is saját lapjuk van — üres folt sehol sem lehet.
+	var roles := ["worker", "melee", "ranged", "spear", "cav", "priest", "spy", "hero",
+		"fisher", "warship", "galleon", "transport", "fighter", "bomber"]
 	var rokon := {"medic": "priest", "siege": "ranged", "ram": "melee"}
-	var tartalek := ["fisher", "warship", "galleon", "transport", "fighter", "bomber"]
+	var tartalek: Array[String] = []     # ma minden szerepnek van lapja; a régi rajz csak végső tartalék
 	var gyalogos := ["worker", "melee", "ranged", "spear", "priest", "spy", "hero", "medic"]
 	var man: Dictionary = UnitSprite.manifest()
 	check("az egységlapok leírása (manifest) betölt", not man.is_empty(), "%d lap" % man.size())
@@ -1084,21 +1084,19 @@ func _test_sprites() -> void:
 	for r in ["worker", "melee", "cav", "medic", "siege", "galleon", "fighter"]:
 		if hud_script.egyseg_ikon(r, 3 if r == "fighter" else 2) == null: ik.append(r)
 	check("minden képzési gombnak van képe", ik.is_empty(), str(ik))
-	# A régi rajz a tartalék: a hajó az új alakokhoz kicsinyítve, a
-	# menetirányba fordulva (oldalnézet, tükrözve), nem az oldalára dőlve.
+	# A hajók és a repülők is Blenderben renderelt lapot kapnak, nyolc irányban.
 	var hs := Sprite2D.new()
 	hs.set_script(load("res://scripts/units/UnitSprite.gd"))
 	add_child(hs)
 	hs.setup("warship", 1, 0)
-	check("a hadihajó a régi rajzzal jelenik meg", hs.uses_fallback() and hs.fallback_sprite().texture != null)
+	check("a hadihajó saját renderelt lapot kap", hs.has_art() and not hs.uses_fallback() and hs.sheet_key_of() == "warship_1")
 	hs.update_anim(0.0, 0.0, true, false)
-	var kelet_sx: float = hs.fallback_sprite().scale.x
+	var kelet_y: float = hs.region_rect.position.y
 	hs.update_anim(PI, 0.0, true, false)
-	check("a régi rajzú hajó orra a menetirányba néz", kelet_sx < 0.0 and hs.fallback_sprite().scale.x > 0.0)
-	var hossz: float = hs.fallback_sprite().texture.get_width() * absf(hs.fallback_sprite().scale.x) * hs.scale.x
-	check("a régi rajzú hadihajó az új alakokhoz méretezett", hossz > 40.0 and hossz < 90.0, "%.1f px" % hossz)
-	hs.setup("warship", 3, 0)
-	check("a 20. századi hajó rajzolt acélhajó", hs.fallback_sprite().is_drawn_ship())
+	check("a hajó a menetirány szerinti sort mutatja", kelet_y != hs.region_rect.position.y)
+	check("a hajónak is négy halál-kockája van (elsüllyedés)", hs.death_frames().size() == 4)
+	hs.setup("fighter", 3, 0)
+	check("a vadászgép saját lapot kap", hs.has_art() and hs.sheet_key_of() == "fighter_3")
 	hs.queue_free()
 	# Korszakonként más a katona: a 19. század lapja nem a 20.-é.
 	check("korszakonként más lap", UnitSprite.sheet_key("ranged", 2) != UnitSprite.sheet_key("ranged", 3)
