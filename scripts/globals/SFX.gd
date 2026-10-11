@@ -144,29 +144,68 @@ func play_death() -> void:
 #
 # A beállításokban mindig ott volt a „Zene be/ki" kapcsoló és a hangerő-
 # csúszka, csak éppen a play_music() SEHONNAN nem hívódott meg, és
-# zenefájl sem létezett — a kapcsoló semmit nem csinált.
+# zenefájl sem létezett — a kapcsoló semmit nem csinált. Utána a négy
+# zenefájl megvolt ugyan, de csupa nulla mintát tartalmazott (néma
+# helyőrző volt); a mostani négy darabot a tools/zene szkriptjei állítják
+# elő, és az önteszt azt is nézi, hogy tényleg szól-e bennük valami.
 #
-# A hurkolást magunk intézzük: a szám végén újraindítjuk. (A WAV
-# hurokjelölőjét az importbeállítás adná, ezt viszont a hangfájl mellett
-# külön karban kellene tartani.)
+# A korszakzenék Ogg Vorbis fájlok, és VARRAT NÉLKÜL ismétlődnek: a végük
+# zengése a darab elejére van visszakeverve, a hurkolást pedig az
+# importbeállítás (`loop=true` a .ogg.import fájlban) adja, mintára
+# pontosan. A `finished` jelre kötött újraindítás csak tartalék arra az
+# esetre, ha egy fájl importjából kimaradna a hurok — az egy képkockányi
+# szünettel jár.
 var _music_path: String = ""
+var _fade: Tween = null
 
-const MUSIC_MENU := "res://assets/audio/music_age0.wav"
+const MUSIC_ERA := "res://assets/audio/music_age%d.ogg"
+const MUSIC_MENU := "res://assets/audio/music_age0.ogg"
+const MUSIC_DB := -10.0
+# Váltáskor a régi szám ennyi idő alatt halkul el, az új ennyi alatt úszik
+# be: a korszakváltás ne vágja el a zenét egy hang közepén.
+const MUSIC_FADE := 0.7
+const MUSIC_FADE_DB := -40.0
 
-func play_music(path: String, vol_db: float = -10.0) -> void:
+func play_music(path: String, vol_db: float = MUSIC_DB) -> void:
 	if _music == null: return
 	# Ha már ez szól, nem kezdjük elölről: a korszakváltás és a jelenetváltás
 	# különben minden alkalommal visszaugratná a zenét az elejére.
 	if _music_path == path and _music.playing: return
 	_music_path = path
+	_stop_fade()
 	if _silent or not ResourceLoader.exists(path):
 		_music.stop()
 		return
-	_music.stream = load(path)
-	_music.volume_db = vol_db
 	if not _music.finished.is_connected(_loop_music):
 		_music.finished.connect(_loop_music)
+	if _music.playing:
+		# Szól valami más: előbb elhalkítjuk, csak utána cserélünk.
+		_fade = _new_fade()
+		_fade.tween_property(_music, "volume_db", MUSIC_FADE_DB, MUSIC_FADE)
+		_fade.tween_callback(_start_music.bind(path, vol_db))
+	else:
+		_start_music(path, vol_db)
+
+func _start_music(path: String, vol_db: float) -> void:
+	_music.stop()
+	_music.stream = load(path)
+	_music.volume_db = MUSIC_FADE_DB
 	_music.play()
+	_fade = _new_fade()
+	_fade.tween_property(_music, "volume_db", vol_db, MUSIC_FADE) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+# A halkítás a szünetmenü alatt is végigfut (különben a félbemaradt
+# áttűnés a folytatáskor érne véget).
+func _new_fade() -> Tween:
+	var t := create_tween()
+	t.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	return t
+
+func _stop_fade() -> void:
+	if _fade != null and _fade.is_valid():
+		_fade.kill()
+	_fade = null
 
 func _loop_music() -> void:
 	if _music != null and _music.stream != null and not _silent:
@@ -174,13 +213,14 @@ func _loop_music() -> void:
 
 # A korszak zenéje. A menü a legkorábbi korszak dallamával szól.
 func play_era_music(age: int) -> void:
-	play_music("res://assets/audio/music_age%d.wav" % clampi(age, 0, 3))
+	play_music(MUSIC_ERA % clampi(age, 0, 3))
 
 func play_menu_music() -> void:
 	play_music(MUSIC_MENU)
 
 func stop_music() -> void:
 	_music_path = ""
+	_stop_fade()
 	if _music: _music.stop()
 
 # Kilépéskor mindent elhallgattatunk, és elengedjük a hangmintákat. A

@@ -30,7 +30,8 @@ van — **csak történeti anyag**, a benne lévő kód és táblák elavultak. 
 | `scripts/systems/` | gazdaság, piac, városok, diplomácia, események, időjárás, napszak, fejlesztések, küldetéscél, oktató, visszajátszás, hálózati szinkron, utófeldolgozás |
 | `scripts/ai/BotAI.gd` | a gépi ellenfél |
 | `scripts/ui/` | `HUD`, `Menu`, `MiniMap`, `PortMenu`, `Scoreboard`, `SettingsPanel`, `Style` |
-| `scripts/dev/` | `SelfTest.gd`, `NetTest.gd` — önteszt, a kiadásba nem kerül bele |
+| `scripts/dev/` | `SelfTest.gd`, `NetTest.gd` — önteszt, a kiadásba nem kerül bele; `ZeneProba.gd` — ablakos zenelejátszás-próba |
+| `tools/zene/` | a négy korszakzene (`assets/audio/music_age0–3.ogg`) kottája és szintetizátora — Blender-Pythonnal futtatható, lásd az ottani `README.md`-t; a `.ogg.import` fájlokban `loop=true` kell |
 | `assets/shaders/` | víz, köd és utófeldolgozás shaderek |
 | `launcher/` | **ParthLauncher**: önálló Godot-projekt, közös indító és frissítő a Birodalomhoz, a Heptarchiához és a Kard és Mágiához (fiók, vásárolt DLC-k letöltése) |
 | `server/supabase/` | a fiókrendszer (Supabase adatbázis + Edge Functions, Gumroad-ping) beállítása |

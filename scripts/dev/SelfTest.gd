@@ -157,7 +157,7 @@ func run() -> void:
 	await _test_modules()
 	await _test_net()
 	await _test_layout()
-	_test_audio()
+	await _test_audio()
 	await _test_healing()
 	await _test_unlocked()
 	await _test_upgrades()
@@ -2922,11 +2922,62 @@ func _test_audio() -> void:
 	# és zenefájl sem létezett: a kapcsoló semmit nem csinált.
 	var nincs_zene: Array[String] = []
 	for a in range(4):
-		var utvonal := "res://assets/audio/music_age%d.wav" % a
+		var utvonal: String = SFX.MUSIC_ERA % a
 		if not ResourceLoader.exists(utvonal): nincs_zene.append(utvonal)
 	check("mind a négy korszaknak van zenéje", nincs_zene.is_empty(),
 		str(nincs_zene))
 	check("a menüzene megvan", ResourceLoader.exists(SFX.MUSIC_MENU))
+	# A fájl megléte kevés: a négy zenefájl sokáig CSUPA NULLA mintából állt
+	# (néma helyőrző), és ezt semmi nem vette észre, mert csak a létezésüket
+	# néztük. Ezért a motor saját visszafejtőjével belehallgatunk mindegyikbe
+	# – ez hangkimenet nélkül (headless) is működik.
+	var nema_zene: Array[String] = []
+	var rovid: Array[String] = []
+	var nem_hurkol: Array[String] = []
+	for a in range(4):
+		var utvonal: String = SFX.MUSIC_ERA % a
+		if not ResourceLoader.exists(utvonal): continue
+		var zene: AudioStream = load(utvonal)
+		var adat := "%d: %.1f mp" % [a, zene.get_length()]
+		# Háttérzenének egy perc alatti hurok hamar unalmas.
+		if zene.get_length() < 60.0: rovid.append(adat)
+		if not bool(zene.get("loop")): nem_hurkol.append(utvonal)
+		var csucs := 0.0
+		var lej: AudioStreamPlayback = zene.instantiate_playback()
+		# Három helyen hallgatunk bele: az elején, a közepén és a vége előtt.
+		for hely in [0.0, zene.get_length() * 0.5, maxf(0.0, zene.get_length() - 3.0)]:
+			lej.start(hely)
+			for _i in range(8):
+				for v in lej.mix_audio(1.0, 2048):
+					csucs = maxf(csucs, maxf(absf(v.x), absf(v.y)))
+			lej.stop()
+		if csucs < 0.02 or csucs > 0.99: nema_zene.append("%s, csúcs %.4f" % [adat, csucs])
+	check("a korszakzenék nem némák (és nincsenek túlvezérelve)", nema_zene.is_empty(), str(nema_zene))
+	check("a korszakzenék legalább egypercesek", rovid.is_empty(), str(rovid))
+	check("a korszakzenék varrat nélkül ismétlődnek (hurok az importban)",
+		nem_hurkol.is_empty(), str(nem_hurkol))
+	# A zene a saját buszán megy: a némítás és a hangerő-csúszka arra hat.
+	var zb := AudioServer.get_bus_index("Music")
+	check("a zenelejátszó a Music buszra megy", zb != -1 and SFX._music.bus == &"Music")
+	var z_on := Settings.music_on
+	var z_vol := Settings.music_vol
+	Settings.set_music_on(false)
+	check("a zene némítása a zenebuszt némítja", AudioServer.is_bus_mute(zb))
+	Settings.set_music_on(true)
+	check("a zene visszakapcsolható", not AudioServer.is_bus_mute(zb))
+	Settings.set_music_vol(0.25)
+	check("a zenehangerő a zenebusz hangerejét állítja",
+		absf(AudioServer.get_bus_volume_db(zb) - linear_to_db(0.25)) < 0.01,
+		"%.2f dB" % AudioServer.get_bus_volume_db(zb))
+	Settings.set_music_vol(z_vol)
+	Settings.set_music_on(z_on)
+	# Ablakos futásnál (van hangkimenet) a lejátszónak tényleg szólnia kell.
+	if not SFX._silent:
+		SFX.play_era_music(1)
+		await _frames(3)
+		check("a zenelejátszó játszik, és van mit játszania",
+			SFX._music.playing and SFX._music.stream != null
+			and SFX._music.stream.get_length() > 60.0)
 	# A korszakváltás tényleg másik számra vált.
 	SFX.play_era_music(0)
 	var zene0 := SFX._music_path
