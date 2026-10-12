@@ -146,21 +146,32 @@ body { color: #e8d9b8; background: #120c07; touch-action: none; -webkit-text-siz
 	});
 }());
 
-// ── Többjátékos: a pillanatnyi hálózati akadás ne bontsa a játékot ───────────
-// A böngésző a WebRTC-kapcsolatot már néhány másodpercnyi csend után „disconnected” állapotba teszi (wifi-
-// váltás, mobilnet, a közvetítő akadása) – ez átmeneti, a kapcsolat többnyire magától visszaáll. A Godot
-// viszont ezt végleges szakadásnak veszi, és azonnal kidobja a játékost (élő csatában a gép veszi át az
-// oldalát, a vendégnél „A gazdagép kilépett”). Ezért a játék felé az átmeneti állapot „connected” marad;
-// a valódi szakadást („failed”, „closed”, a bezárt adatcsatorna) ugyanúgy megkapja. Ha AKADAS_MAX_MP alatt
-// sem áll helyre, a szakadás átmegy (az asztali változat ENet-kapcsolata ugyanennyit vár – Net.ENET_TIMEOUT).
-// A valódi állapotváltások a konzolra kerülnek ([hep-rtc]), hibakereséshez.
+// ── Többjátékos: a hálózati akadás ne bontsa a játékot, a megszakadt kapcsolat épüljön újra ──
+// A böngésző a WebRTC-kapcsolatot már néhány másodpercnyi csend után „disconnected”, hálózatváltás (wifi ↔
+// mobilnet, új cím a mobilneten) vagy a lezárt / háttérbe tett telefon után „failed” állapotba teszi. A Godot
+// mindkettőt végleges szakadásnak veszi, és azonnal kidobja a játékost (élő csatában a gép veszi át az oldalát,
+// a vendégnél „A gazdagép kilépett”). Ezért:
+//   – a játék felé a megakadt kapcsolat „connected” marad, amíg a helyreállítás tart (legfeljebb TURELEM_MP
+//     másodpercig – az asztali változat ENet-kapcsolata is ennyit vár, Net.ENET_TIMEOUT);
+//   – közben a kapcsolat ÚJRAÉPÜL (ICE-újraindítás): a gazdagép új ajánlatot küld, a vendég válaszol – a
+//     jelzéseket a játék viszi át a szoba csatornáján (scripts/net_szoba.gd: „rs” üzenetek, hepRtc.kivesz / be);
+//     az adatcsatorna közben megmarad, a játék ott folytatódik, ahol megakadt;
+//   – a szabályos kilépést (bezárt adatcsatorna, „closed”) a játék ugyanúgy azonnal megkapja.
+// A régebbi játékcsomaggal (amely nem jelöli meg a kapcsolatait) marad a régi viselkedés: csak a „disconnected”
+// állapotot várja ki, REGI_MP másodpercig. A valódi állapotváltások a konzolra kerülnek ([hep-rtc]).
 (function () {
 	const RTC = window.RTCPeerConnection;
 	if (!RTC) return;
-	const AKADAS_MAX_MP = 45;
-	const lejart = new WeakSet();
-	const idozito = new WeakMap();
+	const TURELEM_MP = 90;      // ennyi (ébren töltött) másodpercig próbálja helyreállítani
+	const REGI_MP = 45;
+	const UJRA_ELSO_MP = 3;     // ennyi akadás után az első újraépítés („failed” állapotnál azonnal)
+	const UJRA_ISM_MP = 8;      // utána ennyinként újra, amíg vissza nem áll
+	const GYUJTES_MP = 3;       // legfeljebb ennyit vár a saját kapcsolódási címeire, mielőtt elküldi a leírást
+	const lista = [];           // az élő kapcsolatok: {pc, kulcs, gazda, volt, baj, mp, kov, lejart, n, tn, s, sor}
+	const adat = new WeakMap();
+	const ki = [];              // a játéknak átadandó jelzések
 	const valodi = {};
+	const JO = { connected: 1, completed: 1, closed: 1 };
 	for (const nev of ['connectionState', 'iceConnectionState']) {
 		const d = Object.getOwnPropertyDescriptor(RTC.prototype, nev);
 		if (!d || !d.get || !d.configurable) continue;
@@ -169,35 +180,201 @@ body { color: #e8d9b8; background: #120c07; touch-action: none; -webkit-text-siz
 			configurable: true, enumerable: d.enumerable,
 			get: function () {
 				const s = d.get.call(this);
-				return s === 'disconnected' && !lejart.has(this) ? 'connected' : s;
+				const r = adat.get(this);
+				if (!r || !r.volt || JO[s]) return s;
+				if (r.lejart) return 'failed';
+				// (megjelöletlen kapcsolatnál csak az átmeneti állapot marad rejtve)
+				return r.kulcs || s === 'disconnected' ? 'connected' : s;
 			},
 		});
 	}
-	function figyel(pc, nev, esemeny) {
-		if (!valodi[nev]) return;
-		pc.addEventListener(esemeny, function () {
-			const s = valodi[nev].call(pc);
-			console.warn('[hep-rtc] ' + nev + ': ' + s);
-			clearTimeout(idozito.get(pc));
-			if (s !== 'disconnected') { lejart.delete(pc); return; }
-			idozito.set(pc, setTimeout(function () {
-				if (valodi[nev].call(pc) !== 'disconnected') return;
-				// nem állt helyre: a játék most kapja meg a szakadást
-				lejart.add(pc);
-				pc.dispatchEvent(new Event(esemeny));
-			}, AKADAS_MAX_MP * 1000));
+	// (a Godot a connectionState-et figyeli, ahol van; különben az iceConnectionState-et)
+	const NEV = valodi.connectionState ? 'connectionState' : 'iceConnectionState';
+	const ESEMENY = valodi.connectionState ? 'connectionstatechange' : 'iceconnectionstatechange';
+	if (!valodi[NEV]) return;
+	function allapot(r) {
+		if (r.pc.signalingState === 'closed') return 'closed';
+		const s = valodi[NEV].call(r.pc);
+		return s === 'completed' ? 'connected' : s;
+	}
+	function kuld(r, m) {
+		m.t = 'rs';
+		m.k = r.kulcs;
+		ki.push(m);
+		if (ki.length > 12) ki.shift();
+	}
+	// a játék most kapja meg a szakadást
+	function lejar(r) {
+		if (r.lejart) return;
+		r.lejart = true;
+		console.warn('[hep-rtc] nem állt helyre');
+		r.pc.dispatchEvent(new Event(ESEMENY));
+	}
+	// a saját kapcsolódási címek összegyűjtése (a leírás így egyben megy át, külön címüzenetek nélkül)
+	function gyujtes(pc) {
+		return new Promise(function (kesz) {
+			const vege = function () { pc.removeEventListener('icecandidate', figy); clearTimeout(t); kesz(); };
+			const figy = function (e) { if (!e.candidate) vege(); };
+			const t = setTimeout(vege, GYUJTES_MP * 1000);
+			pc.addEventListener('icecandidate', figy);
 		});
 	}
+	// gazdagép: új ajánlat, új címekkel
+	async function ajanl(r) {
+		const n = ++r.n;
+		r.utolso = Date.now();
+		const pc = r.pc;
+		const o = await pc.createOffer({ iceRestart: true });
+		if (n !== r.n) return;
+		const var_ = gyujtes(pc);
+		await pc.setLocalDescription(o);
+		await var_;
+		if (n !== r.n || !pc.localDescription || pc.signalingState === 'closed') return;
+		kuld(r, { a: 'o', n: n, sdp: pc.localDescription.sdp });
+	}
+	// vendég: a gazdagép ajánlatára válasz
+	async function valaszol(r, j) {
+		const n = Number(j.n) || 0;
+		if (n <= r.tn) return;
+		r.tn = n;
+		const pc = r.pc;
+		await pc.setRemoteDescription({ type: 'offer', sdp: String(j.sdp) });
+		const v = await pc.createAnswer();
+		const var_ = gyujtes(pc);
+		await pc.setLocalDescription(v);
+		await var_;
+		if (n !== r.tn || !pc.localDescription || pc.signalingState === 'closed') return;
+		kuld(r, { a: 'v', n: n, sdp: pc.localDescription.sdp });
+	}
+	function sorba(r, f) {
+		r.sor = r.sor.then(f).catch(function (e) { console.warn('[hep-rtc] ' + e); });
+	}
+	function ujra(r) {
+		console.warn('[hep-rtc] újraépítés (' + (r.gazda ? 'ajánlat' : 'kérés') + ')');
+		if (r.gazda) sorba(r, function () { return ajanl(r); });
+		else kuld(r, { a: 'k' });
+	}
+	// egy kapcsolat állapotának követése; lepes: az eltelt másodpercek (eseménynél 0)
+	function nez(r, lepes) {
+		const s = allapot(r);
+		const valtott = s !== r.s;
+		if (valtott) console.warn('[hep-rtc] ' + s);
+		r.s = s;
+		if (s === 'closed' || r.lejart) return;
+		if (s === 'connected') {
+			r.volt = true; r.baj = false; r.mp = 0;
+			return;
+		}
+		if (!r.volt) return;        // az első felépülés a játék dolga
+		if (!r.baj) { r.baj = true; r.mp = 0; r.kov = UJRA_ELSO_MP; }
+		r.mp += lepes;
+		if (!r.kulcs) {
+			if (s !== 'disconnected' || r.mp >= REGI_MP) lejar(r);
+			return;
+		}
+		if (r.mp >= TURELEM_MP) { lejar(r); return; }
+		if (valtott && s === 'failed') r.kov = Math.min(r.kov, r.mp);
+		if (r.mp >= r.kov) {
+			r.kov = r.mp + UJRA_ISM_MP;
+			ujra(r);
+		}
+	}
+	function mind(lepes) {
+		for (let i = lista.length - 1; i >= 0; i--) {
+			if (lista[i].pc.signalingState === 'closed') lista.splice(i, 1);
+			else nez(lista[i], lepes);
+		}
+	}
+	// (a lefagyasztott – lezárt, háttérbe tett – lapon az óra áll: a türelmi idő csak ébren telik)
+	setInterval(function () { mind(1); }, 1000);
+	// visszatért a hálózat / a lap: ne várjon a következő körre
+	function ebreszt() {
+		for (const r of lista) if (r.baj) r.kov = Math.min(r.kov, r.mp);
+		mind(0);
+	}
+	addEventListener('online', ebreszt);
+	document.addEventListener('visibilitychange', function () { if (!document.hidden) ebreszt(); });
+
 	window.RTCPeerConnection = function (beallitas) {
 		const pc = new RTC(beallitas);
-		// (a Godot a connectionState-et figyeli, ahol van; különben az iceConnectionState-et)
-		if (valodi.connectionState) figyel(pc, 'connectionState', 'connectionstatechange');
-		else figyel(pc, 'iceConnectionState', 'iceconnectionstatechange');
+		const r = { pc: pc, kulcs: '', gazda: false, volt: false, baj: false, mp: 0, kov: 0, lejart: false,
+			n: 0, tn: 0, s: '', utolso: 0, sor: Promise.resolve() };
+		adat.set(pc, r);
+		lista.push(r);
+		pc.addEventListener(ESEMENY, function () { nez(r, 0); });
 		return pc;
 	};
 	window.RTCPeerConnection.prototype = RTC.prototype;
+
+	// ── a játék (scripts/net_szoba.gd) felőli oldal ──
+	window.hepRtc = {
+		// a legutóbb létrehozott kapcsolat megjelölése: a vendég kulcsa, és hogy ez a gazdagép oldala-e
+		jelol: function (kulcs, gazda) {
+			for (let i = lista.length - 1; i >= 0; i--) {
+				const r = lista[i];
+				if (r.pc.signalingState === 'closed' || r.kulcs) continue;
+				r.kulcs = String(kulcs);
+				r.gazda = !!gazda;
+				return 1;
+			}
+			return 0;
+		},
+		// az elküldendő jelzések (JSON-tömb; üres szöveg, ha nincs)
+		kivesz: function () {
+			if (!ki.length) return '';
+			return JSON.stringify(ki.splice(0, ki.length));
+		},
+		// a másik féltől érkezett jelzés
+		be: function (j) {
+			if (!j || j.t !== 'rs') return;
+			let r = null;
+			for (const x of lista) if (x.kulcs === String(j.k) && x.pc.signalingState !== 'closed') r = x;
+			if (!r) return;
+			if (r.gazda) {
+				if (j.a === 'k') {
+					// a vendég kéri (nála akadt meg): új ajánlat, ha nem épp most ment egy
+					if (Date.now() - r.utolso > 2500) sorba(r, function () { return ajanl(r); });
+				} else if (j.a === 'v' && Number(j.n) === r.n) {
+					sorba(r, function () {
+						if (r.pc.signalingState !== 'have-local-offer') return null;
+						return r.pc.setRemoteDescription({ type: 'answer', sdp: String(j.sdp) });
+					});
+				}
+			} else if (j.a === 'o') {
+				sorba(r, function () { return valaszol(r, j); });
+			} else if (j.a === 'x') {
+				// a gazdagép már lemondott rólunk (kivárta a türelmi időt): nincs mire várni
+				if (r.baj) lejar(r);
+			}
+		},
+		// van-e épp megakadt (helyreállítás alatt lévő) kapcsolat – a játék ebből tudja, hogy kiírja
+		akad: function () {
+			for (const r of lista) if (r.baj && !r.lejart && r.pc.signalingState !== 'closed') return 1;
+			return 0;
+		},
+	};
 }());
 
+// ── A képernyő ne aludjon el játék közben ────────────────────────────────────
+// Telefonon a másik játékos körére várva (érintés nélkül) a képernyő fél perc után elsötétül és lezár, a lezárt
+// telefonon pedig a böngésző megállítja a lapot – a többjátékos kapcsolat ilyenkor megszakad. A zárat a
+// böngésző elengedi, ha a lap háttérbe kerül: visszatéréskor (és érintésre) újra kérjük.
+(function () {
+	if (!navigator.wakeLock || !navigator.wakeLock.request) return;
+	let zar = null;
+	let keres = false;
+	function ker() {
+		if (zar || keres || document.hidden || !document.body.classList.contains('jatekban')) return;
+		keres = true;
+		navigator.wakeLock.request('screen').then(function (z) {
+			zar = z;
+			z.addEventListener('release', function () { zar = null; });
+		}).catch(function () { /* nem engedte (pl. akkukímélő mód): marad a rendszer beállítása */ }).then(function () { keres = false; });
+	}
+	window.hepEbren = ker;
+	document.addEventListener('visibilitychange', ker);
+	['touchend', 'pointerup', 'keydown'].forEach(function (e) { addEventListener(e, ker, { capture: true, passive: true }); });
+}());
 
 // ── Telefon, táblagép ────────────────────────────────────────────────────────
 // ERINTO: van érintőképernyő – a játék (scripts/erintes.gd) ebből tudja, hogy az érintést maga fordítsa
@@ -513,6 +690,7 @@ const engine = new Engine(GODOT_CONFIG);
 		if (document.activeElement && document.activeElement !== $('canvas') && document.activeElement.blur) document.activeElement.blur();
 		tolto.remove();
 		document.body.classList.add('jatekban');
+		if (window.hepEbren) window.hepEbren();
 		lap_helyre();
 	}
 
