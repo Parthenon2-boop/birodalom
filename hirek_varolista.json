@@ -1,1 +1,12 @@
-[]
+[{
+    "cim":  "Böngészős Heptarchia telefonon – stabilabb többjátékos, nagyobb felület",
+    "cimke":  "Heptarchia",
+    "szoveg":  "Telefonon a többjátékos kapcsolat már nem szakad meg olyan könnyen: ha a telefon hálózatot vált (wifi és mobilnet között) vagy rövid időre megakad a net, a kapcsolat magától újraépül, és a játék ott folytatódik, ahol megállt – közben felirat jelzi a helyreállítást. Játék közben a képernyő nem sötétül el és nem zár le. A Beállításokban a Felület mérete érintőképernyőn 150%-ig növelhető, hogy a gombok és a menüsor kényelmesen eltalálhatók legyenek.",
+    "cim_en":  "Heptarchia in the browser on phones – steadier multiplayer, larger interface",
+    "szoveg_en":  "Multiplayer on phones no longer drops so easily: if your phone switches networks (between Wi-Fi and mobile data) or the connection stalls for a moment, it is rebuilt automatically and the game carries on where it stopped – a notice shows while it reconnects. The screen no longer dims or locks while you play. In Settings, UI scale can now go up to 150% on touch screens, so buttons and the menu bar are easy to hit.",
+    "cim_de":  "Heptarchia im Browser auf dem Handy – stabilerer Mehrspieler, größere Oberfläche",
+    "szoveg_de":  "Der Mehrspielermodus bricht auf dem Handy nicht mehr so leicht ab: Wechselt das Handy das Netz (zwischen WLAN und mobilen Daten) oder stockt die Verbindung kurz, wird sie automatisch neu aufgebaut, und das Spiel geht dort weiter, wo es stehen blieb – ein Hinweis zeigt die Wiederherstellung an. Der Bildschirm wird beim Spielen nicht mehr dunkel und sperrt nicht. In den Einstellungen lässt sich die Größe der Oberfläche auf Touchscreens jetzt bis 150% erhöhen, damit Knöpfe und Menüleiste gut zu treffen sind.",
+    "cimke_en":  "Heptarchia",
+    "cimke_de":  "Heptarchia",
+    "datum":  "2026-10-12"
+}]
