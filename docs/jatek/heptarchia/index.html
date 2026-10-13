@@ -116,7 +116,11 @@ body { color: #e8d9b8; background: #120c07; touch-action: none; -webkit-text-siz
 // A böngésző a rejtett lapon nem hívja a requestAnimationFrame-et, így a játék (és a többjátékos gazdagép
 // is) megállna, amíg a játékos másik lapon van. Rejtett lapon egy Web Worker ütemez (másodpercenként ~20
 // képkocka); a Worker üzeneteit a böngésző nem fojtja vissza úgy, mint a sima időzítőket.
+// iPhone-on / iPaden NEM: ott a háttérbe került lap (lehúzott értesítési központ, lezárt képernyő) nem rajzolhat –
+// a rejtve tovább rajzoló játékot az iOS leállítja, és visszatéréskor az egész lap újratölt (a játék elvész).
+// Ott a játék a háttérben áll, és visszatéréskor folytatódik; a többjátékos kapcsolatot a lenti őr állítja helyre.
 (function () {
+	if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return;
 	const eredeti = window.requestAnimationFrame.bind(window);
 	let varo = [];
 	let worker = null;
