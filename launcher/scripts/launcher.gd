@@ -911,6 +911,10 @@ func _needs_download() -> bool:
 # újabb a kiadottnál (pl. fejlesztői vagy visszavont kiadás), nem ajánlunk fel "frissítést" egy régebbire.
 static func _ujabb(a: String, b: String) -> bool:
 	if b == "": return a != ""
+	# A forrásból telepített változat jele nem verziószám, hanem azonosító (pl. „dc15fe6”): számként olvasva
+	# (156) minden kiadásnál újabbnak látszott, és a launcher soha nem ajánlotta föl a frissítést. Ha bármelyik
+	# oldal nem verziószám, az eltérő jel számít újabbnak.
+	if not _verzioszam(a) or not _verzioszam(b): return a != b
 	var x := a.trim_prefix("v").split(".")
 	var y := b.trim_prefix("v").split(".")
 	for i in maxi(x.size(), y.size()):
@@ -918,6 +922,14 @@ static func _ujabb(a: String, b: String) -> bool:
 		var q := y[i].to_int() if i < y.size() else 0
 		if p != q: return p > q
 	return false
+
+## Verziószám-e (v1.95, 0.11.2 …), nem pedig egy változat azonosítója
+static func _verzioszam(s: String) -> bool:
+	var r := s.trim_prefix("v")
+	if r == "": return false
+	for resz in r.split("."):
+		if not resz.is_valid_int() or resz.begins_with("-") or resz.begins_with("+"): return false
+	return true
 
 func _checkbox(parent: Node, text: String, value: bool, action: Callable) -> CheckBox:
 	var c := CheckBox.new()
