@@ -1,5 +1,17 @@
 [
 	{
+		"cim": "Heptarchia 1.95 – új hang a bevezetőben",
+		"cimke": "Heptarchia",
+		"szoveg": "A bevezető képsor magyar felolvasása új, természetesebb hangot kapott: Alfréd király most mély, öreges hangon meséli el, hogyan jött a vihar északról. A bevezetőt a főmenü Bevezető gombjával bármikor újranézheted. A böngészős változatban iPhone-on a játék már nem töltődik újra, ha közben lehúzod az értesítéseket vagy rövid időre lezárod a telefont.",
+		"cim_en": "Heptarchia 1.95 – a new voice for the intro",
+		"szoveg_en": "The Hungarian narration of the intro sequence has a new, more natural voice: King Alfred now tells in a deep, aged voice how the storm came from the north. You can rewatch the intro any time with the Intro button in the main menu. In the browser version on iPhone, the game no longer reloads when you pull down notifications or briefly lock the phone.",
+		"cim_de": "Heptarchia 1.95 – neue Stimme im Intro",
+		"szoveg_de": "Die ungarische Erzählstimme der Einleitung ist neu und klingt natürlicher: König Alfred erzählt nun mit tiefer, alter Stimme, wie der Sturm aus dem Norden kam. Die Einleitung lässt sich jederzeit über den Intro-Knopf im Hauptmenü erneut ansehen. In der Browserversion auf dem iPhone lädt das Spiel nicht mehr neu, wenn du die Mitteilungen herunterziehst oder das Handy kurz sperrst.",
+		"cimke_en": "Heptarchia",
+		"cimke_de": "Heptarchia",
+		"datum": "2026-10-13"
+	},
+	{
 		"cim": "Böngészős Heptarchia telefonon – stabilabb többjátékos, nagyobb felület",
 		"cimke": "Heptarchia",
 		"szoveg": "Telefonon a többjátékos kapcsolat már nem szakad meg olyan könnyen: ha a telefon hálózatot vált (wifi és mobilnet között) vagy rövid időre megakad a net, a kapcsolat magától újraépül, és a játék ott folytatódik, ahol megállt – közben felirat jelzi a helyreállítást. Játék közben a képernyő nem sötétül el és nem zár le. A Beállításokban a Felület mérete érintőképernyőn 150%-ig növelhető, hogy a gombok és a menüsor kényelmesen eltalálhatók legyenek.",
