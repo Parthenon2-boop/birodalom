@@ -34,5 +34,17 @@
         "cimke_en":  "Heptarchia",
         "cimke_de":  "Heptarchia",
         "datum":  "2026-10-15"
+    },
+    {
+        "cim":  "Heptarchia 1.99.1 – a katonák a helyükön maradnak",
+        "cimke":  "Heptarchia",
+        "szoveg":  "A taktikai csatában a parancs nélkül álló csapataid most helyben maradnak: nem rontanak magától a közeledő ellenségre, nem üldözik a hátrálót, és a tolongás sem tolja el őket – csak a közeledő ellenség felé fordulnak. Arra mennek, amerre küldöd őket.",
+        "cim_en":  "Heptarchia 1.99.1 – soldiers hold their ground",
+        "szoveg_en":  "In tactical battles your troops without orders now stay where they are: they no longer charge approaching enemies on their own, chase retreating ones, or get shoved aside in the crush – they only turn to face the approaching enemy. They go where you send them.",
+        "cim_de":  "Heptarchia 1.99.1 – die Soldaten halten ihre Stellung",
+        "szoveg_de":  "In der taktischen Schlacht bleiben deine Truppen ohne Befehl jetzt stehen: Sie stürmen nicht mehr von selbst auf nahende Feinde los, verfolgen keine zurückweichenden und werden im Gedränge nicht weggeschoben – sie wenden sich nur dem nahenden Feind zu. Sie gehen dorthin, wohin du sie schickst.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-10-15"
     }
 ]
