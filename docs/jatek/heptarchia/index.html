@@ -150,6 +150,41 @@ body { color: #e8d9b8; background: #120c07; touch-action: none; -webkit-text-siz
 	});
 }());
 
+// ── A háttérbe kerülő lapon a játék ment ─────────────────────────────────────
+// iPhone-on / iPaden a háttérbe került lapot (lezárt telefon, lehúzott értesítési központ, másik alkalmazás) a
+// rendszer memóriahiánykor eldobja, és visszatéréskor a böngésző az egész lapot újratölti. Ezt megakadályozni
+// nem lehet, ezért a lap elrejtésekor a játék (scripts/Net.gd, _lap_rejtve) egyjátékos hadjáratban azonnal ment,
+// és a lap munkamenet-tárába (sessionStorage) írja a mentés azonosítóját; újratöltés után a főmenü ezt betölti.
+// A mentés a böngésző tárhelyére (IndexedDB) a játék következő képkockájában íródik ki – a rejtett lapon az iOS
+// már nem ad képkockát, ezért ott még néhányat magunk futtatunk le (rajzolás nélkül ez nem tart sokáig).
+(function () {
+	const IOS_ = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+	let varo = [];
+	if (IOS_) {
+		const eredeti = window.requestAnimationFrame.bind(window);
+		window.requestAnimationFrame = function (cb) {
+			varo.push(cb);
+			return eredeti(function (t) {
+				const i = varo.indexOf(cb);
+				if (i < 0) return;         // (már lefutott a rejtett lapon)
+				varo.splice(i, 1);
+				cb(t);
+			});
+		};
+	}
+	function kocka() {
+		const lista = varo;
+		varo = [];
+		const most = performance.now();
+		for (const cb of lista) { try { cb(most); } catch (e) { console.error(e); } }
+	}
+	document.addEventListener('visibilitychange', function () {
+		if (!document.hidden) return;
+		try { if (window.hepRejtve) window.hepRejtve(); } catch (e) { console.error(e); }
+		if (IOS_) [0, 100, 400, 1000].forEach(function (ms) { setTimeout(function () { if (document.hidden) kocka(); }, ms); });
+	});
+}());
+
 // ── Többjátékos: a hálózati akadás ne bontsa a játékot, a megszakadt kapcsolat épüljön újra ──
 // A böngésző a WebRTC-kapcsolatot már néhány másodpercnyi csend után „disconnected”, hálózatváltás (wifi ↔
 // mobilnet, új cím a mobilneten) vagy a lezárt / háttérbe tett telefon után „failed” állapotba teszi. A Godot
