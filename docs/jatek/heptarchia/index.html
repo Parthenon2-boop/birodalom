@@ -478,6 +478,40 @@ if (window.visualViewport) {
 	visualViewport.addEventListener('scroll', lap_helyre_kesobb, { passive: true });
 }
 
+// ── iPhone / iPad: a vászon pontosan a LÁTHATÓ részt tölti ki ─────────────────
+// A Godot magától az ablak méretére (innerWidth × innerHeight) állítja a vásznat a lap bal felső sarkába. Az iPhone
+// Safari fekvő helyzetben (címsor, alsó eszköztár) ennél kisebb vagy eltolt részt mutat – a kép így az egyik sarok
+// felé elcsúszva látszott, a széle lelógott. Itt ezért a vásznat mi méretezzük a látható nézethez (visualViewport),
+// a Godot pedig nem nyúl hozzá (canvasResizePolicy 0), csak a vászon képpontjait követi. ?nezet=1: próba gépen.
+const VASZON_NEZETHEZ = IOS || /[?&]nezet=1/.test(location.search);
+function vaszon_igazit() {
+	const c = document.getElementById('canvas');
+	if (!c) return;
+	const vv = window.visualViewport;
+	// (felnagyított lapnál – amit a lap_helyre visszaállít – és nézet híján az ablak mérete)
+	const jo = vv && Math.abs(vv.scale - 1) < 0.01 && vv.width > 0 && vv.height > 0;
+	const w = jo ? vv.width : innerWidth, h = jo ? vv.height : innerHeight;
+	const x = jo ? vv.pageLeft : 0, y = jo ? vv.pageTop : 0;
+	const dpr = window.devicePixelRatio || 1;
+	const pw = Math.floor(w * dpr), ph = Math.floor(h * dpr);
+	if (c.width !== pw || c.height !== ph) { c.width = pw; c.height = ph; }
+	const s = c.style, sw = (pw / dpr) + 'px', sh = (ph / dpr) + 'px', sx = x + 'px', sy = y + 'px';
+	if (s.width !== sw) s.width = sw;
+	if (s.height !== sh) s.height = sh;
+	if (s.left !== sx) s.left = sx;
+	if (s.top !== sy) s.top = sy;
+}
+if (VASZON_NEZETHEZ) {
+	['resize', 'orientationchange', 'pageshow', 'scroll'].forEach(function (e) { addEventListener(e, vaszon_igazit, { passive: true }); });
+	if (window.visualViewport) {
+		visualViewport.addEventListener('resize', vaszon_igazit, { passive: true });
+		visualViewport.addEventListener('scroll', vaszon_igazit, { passive: true });
+	}
+	// (az iOS nem minden változásról szól – pl. a címsor összecsukódásáról –, ezért időnként rá is nézünk)
+	setInterval(vaszon_igazit, 500);
+	vaszon_igazit();
+}
+
 // Egy érintést pontosan EGY úton kap meg a játék: a Godot érintéseseményként (ebből csinál egéreseményt a játék
 // scripts/erintes.gd-je). Ha a böngésző az érintés után még utánzott egéreseményt is küld a vászonra (mousedown,
 // mouseup, click – iOS-en és Androidon is előfordul), azt a játék nem kapja meg, különben kétszer sülne el.
@@ -652,8 +686,9 @@ const AKTIV = 'parth_utolso_aktiv';
 // a játék (web_fiok.gd) ebből olvassa a belépést
 window.hepFiok = { token: '', nev: '', teszt: false, kilep: function () {} };
 
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":40360604,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":true,"fileSizes":{"index.pck":49303612,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
+if (VASZON_NEZETHEZ) GODOT_CONFIG.canvasResizePolicy = 0;   // (a vásznat a vaszon_igazit() méretezi)
 const engine = new Engine(GODOT_CONFIG);
 
 (function () {
@@ -909,3 +944,4 @@ const engine = new Engine(GODOT_CONFIG);
 </script>
 </body>
 </html>
+
