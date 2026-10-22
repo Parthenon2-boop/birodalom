@@ -97,10 +97,11 @@ Deno.serve(async (req: Request) => {
 			const { error } = await db.storage.from(TAROLO).upload(AKTUALIS, tartalom, { upsert: true, contentType: "application/json" });
 			if (error) return json({ error: "storage", message: error.message }, 500);
 			// a régi verziók törlése (az aktuálison kívül)
-			const { data: lista } = await db.storage.from(TAROLO).list("", { limit: 100 });
+			// (mappa = id nélküli bejegyzés; a verziónévben lehet pont, pl. „v1.99.4-7021143”)
+			const { data: lista } = await db.storage.from(TAROLO).list("", { limit: 1000 });
 			const regiek: string[] = [];
 			for (const e of lista ?? []) {
-				if (e.name !== AKTUALIS && e.name !== ver && !e.name.includes(".")) regiek.push(`${e.name}/index.pck`);
+				if (e.id == null && e.name !== ver) regiek.push(`${e.name}/index.pck`);
 			}
 			if (regiek.length > 0) await db.storage.from(TAROLO).remove(regiek);
 			return json({ ok: true, ver, torolve: regiek.length });
