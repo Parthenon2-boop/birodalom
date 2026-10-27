@@ -1,1 +1,14 @@
-[]
+[
+    {
+        "cim":  "Heptarchia 1.99.7 – élethűbb, korhű katonák",
+        "cimke":  "Heptarchia",
+        "szoveg":  "A taktikai csata katonái változatosabbak: mindenki más színű, festett gyapjúruhát visel, a pajzsok festettek. A népek is jól megkülönböztethetők: a berzerker félmeztelen, medvebőr csuklyában, fejszével harcol; a thegn és a normann térdig érő láncingben, a pikt szögletes pajzzsal és festett bőrrel, a gael sáfrányszínű tunikában, mezítláb. A várakozó katonák sem állnak mereven.",
+        "cim_en":  "Heptarchia 1.99.7 – more lifelike, period-accurate soldiers",
+        "szoveg_en":  "Soldiers in tactical battles are more varied: each wears differently dyed woollen clothes, and the shields are painted. Peoples are easy to tell apart: the berserker fights bare-chested in a bearskin hood with an axe; thegns and Normans wear knee-length mail, Picts carry square shields and painted skin, Gaels wear saffron tunics and go barefoot. Waiting soldiers no longer stand stiffly.",
+        "cim_de":  "Heptarchia 1.99.7 – lebensechtere, zeitgemäße Krieger",
+        "szoveg_de":  "Die Krieger in der taktischen Schlacht sind abwechslungsreicher: Jeder trägt anders gefärbte Wollkleidung, die Schilde sind bemalt. Die Völker sind gut zu unterscheiden: Der Berserker kämpft mit nacktem Oberkörper, Bärenfellhaube und Axt; Thegns und Normannen tragen knielange Kettenhemden, Pikten viereckige Schilde und bemalte Haut, Gälen safrangelbe Tuniken und gehen barfuß. Wartende Krieger stehen nicht mehr starr.",
+        "cimke_en":  "Heptarchia",
+        "cimke_de":  "Heptarchia",
+        "datum":  "2026-10-27"
+    }
+]
